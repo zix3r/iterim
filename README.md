@@ -18,6 +18,6 @@
 ## 🛠️ Technologijų Stakas (Tech Stack)
 *Ši sekcija bus pildoma vystant projektą.*
 
-* **Frontend:** [Pvz. React / Next.js]
-* **Backend:** [Pvz. Node.js / Go]
-* **Duomenų bazė:** [Pvz. PostgreSQL / MongoDB]
+* **Frontend:** React
+* **Backend:** C#
+* **Duomenų bazė:**  MySQL
