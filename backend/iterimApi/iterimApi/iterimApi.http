@@ -1,0 +1,6 @@
+@iterimApi_HostAddress = http://localhost:5031
+
+GET {{iterimApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

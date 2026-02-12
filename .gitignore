@@ -1,0 +1,83 @@
+# OS specific files
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*~
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.code-workspace
+
+# Build outputs and dependencies
+
+## Backend (.NET/C#)
+backend/**/bin/
+backend/**/obj/
+backend/**/*.dll
+backend/**/*.exe
+backend/**/*.pdb
+backend/**/*.cache
+backend/**/*.log
+backend/**/*.vsidx
+backend/**/*.v2
+backend/**/*.suo
+backend/**/*.user
+backend/**/*.userosscache
+backend/**/*.sln.docstates
+
+# .NET specific
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+*.pubxml
+*.azurePubxml
+project.lock.json
+project.fragment.lock.json
+artifacts/
+**/Properties/launchSettings.json
+
+# NuGet packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+
+## Frontend (Node.js/React/Vite)
+frontend/**/node_modules/
+frontend/**/dist/
+frontend/**/build/
+frontend/**/.vite/
+frontend/**/.cache/
+frontend/**/coverage/
+frontend/**/*.local
+frontend/**/npm-debug.log*
+frontend/**/yarn-debug.log*
+frontend/**/yarn-error.log*
+frontend/**/pnpm-debug.log*
+frontend/**/lerna-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
