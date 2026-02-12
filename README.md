@@ -19,5 +19,5 @@
 *Ši sekcija bus pildoma vystant projektą.*
 
 * **Frontend:** React
-* **Backend:** C#
+* **Backend:** ASP.NET Core
 * **Duomenų bazė:**  MySQL
