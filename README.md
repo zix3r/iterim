@@ -241,3 +241,45 @@ dotnet tool install --global dotnet-ef
 **`npm install` fails:** Make sure you have Node.js 20+ installed. Delete `node_modules` and `package-lock.json`, then run `npm install` again.
 
 **Path alias `@/` not working:** Make sure both `tsconfig.json` and `tsconfig.app.json` have the `baseUrl` and `paths` config.
+
+## Documentation for tech used
+
+### 1. ASP.NET Core & EF Core:
+
+- ASP.NET Core fundamentals — https://learn.microsoft.com/en-us/aspnet/core/fundamentals
+- EF Core docs (migrations, DbContext, relationships) — https://learn.microsoft.com/en-us/ef/core 
+- Pomelo MySQL provider — https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql
+
+### 2. Docker:
+
+- Docker Compose docs — https://docs.docker.com/compose 
+- MySQL Docker image reference — https://hub.docker.com/_/mysql  
+
+### 3. Frontend:
+
+- Vite docs https://vite.dev/guide 
+- React 19 docs — https://react.dev/learn
+- Tailwind CSS v4 — https://tailwindcss.com/docs
+- shadcn/ui component library — https://ui.shadcn.com/docs
+- React Router docs — https://reactrouter.com/start/framework/routing
+- TypeScript handbook — https://www.typescriptlang.org/docs 
+
+### 4. JWT Authentication:
+
+- ASP.NET Core auth overview — https://learn.microsoft.com/en-us/aspnet/core/security/authentication 
+- What JWTs are and how they work — https://jwt.io/introduction
+- JwtBearer package reference — https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.authentication.jwtbearer
+
+### 5. Password Hashing:
+
+- PasswordHasher<T> docs — https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/consumer-apis/password-hashing  
+
+### 6. Refresh Tokens & Cookies:
+
+- Cookie auth in ASP.NET Core — https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie  
+- OWASP JWT security best practices (applies to any language) — https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html  
+- OWASP session/token management — https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html  
+
+### 7. CORS:
+
+- CORS in ASP.NET Core — https://learn.microsoft.com/en-us/aspnet/core/security/cors  

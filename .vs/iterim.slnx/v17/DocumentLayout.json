@@ -11,6 +11,42 @@
       "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\helpers\\cookiehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\helpers\\cookiehelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\services\\refreshtokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\services\\refreshtokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\services\\irefreshtokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\services\\irefreshtokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\services\\ijwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\services\\ijwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\settings\\jwtsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\settings\\jwtsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\workitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\workitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\memberabsence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\memberabsence.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -21,10 +57,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\workitemcomment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\workitemcomment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\workitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\workitem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\iteration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -49,10 +81,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\organization.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\organization.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\models\\entities\\organizationconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -99,10 +127,6 @@
       "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\models\\enums\\userrole.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|e:\\github\\iterim\\backend\\iterimapi\\controllers\\healthcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{020E8000-5D3A-400B-114D-6086D80F3DA5}|backend\\iterimApi\\iterimApi.csproj|solutionrelative:backend\\iterimapi\\controllers\\healthcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -114,8 +138,86 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 6,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "CookieHelper.cs",
+              "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Helpers\\CookieHelper.cs",
+              "RelativeDocumentMoniker": "backend\\iterimApi\\Helpers\\CookieHelper.cs",
+              "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Helpers\\CookieHelper.cs",
+              "RelativeToolTip": "backend\\iterimApi\\Helpers\\CookieHelper.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACAAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-28T13:12:16.527Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "RefreshTokenService.cs",
+              "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\RefreshTokenService.cs",
+              "RelativeDocumentMoniker": "backend\\iterimApi\\Services\\RefreshTokenService.cs",
+              "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\RefreshTokenService.cs",
+              "RelativeToolTip": "backend\\iterimApi\\Services\\RefreshTokenService.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAowE8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-28T13:10:48.043Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "IRefreshTokenService.cs",
+              "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\IRefreshTokenService.cs",
+              "RelativeDocumentMoniker": "backend\\iterimApi\\Services\\IRefreshTokenService.cs",
+              "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\IRefreshTokenService.cs",
+              "RelativeToolTip": "backend\\iterimApi\\Services\\IRefreshTokenService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-28T13:10:26.428Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "JwtService.cs",
+              "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\JwtService.cs",
+              "RelativeDocumentMoniker": "backend\\iterimApi\\Services\\JwtService.cs",
+              "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\JwtService.cs",
+              "RelativeToolTip": "backend\\iterimApi\\Services\\JwtService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAA/AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-28T13:09:05.382Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "IJwtService.cs",
+              "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\IJwtService.cs",
+              "RelativeDocumentMoniker": "backend\\iterimApi\\Services\\IJwtService.cs",
+              "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Services\\IJwtService.cs",
+              "RelativeToolTip": "backend\\iterimApi\\Services\\IJwtService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-28T13:08:39.223Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "JwtSettings.cs",
+              "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Settings\\JwtSettings.cs",
+              "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Settings\\JwtSettings.cs",
+              "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Settings\\JwtSettings.cs",
+              "RelativeToolTip": "backend\\iterimApi\\Models\\Settings\\JwtSettings.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-28T13:08:03.556Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
@@ -124,14 +226,14 @@
               "RelativeDocumentMoniker": "backend\\iterimApi\\Controllers\\TestController.cs",
               "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Controllers\\TestController.cs",
               "RelativeToolTip": "backend\\iterimApi\\Controllers\\TestController.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAADMAAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-28T08:40:41.112Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 11,
               "Title": "MemberAbsence.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\MemberAbsence.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\MemberAbsence.cs",
@@ -143,7 +245,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 12,
               "Title": "WorkItemHistory.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\WorkItemHistory.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\WorkItemHistory.cs",
@@ -155,7 +257,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 13,
               "Title": "WorkItemComment.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\WorkItemComment.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\WorkItemComment.cs",
@@ -167,7 +269,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 10,
               "Title": "WorkItem.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\WorkItem.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\WorkItem.cs",
@@ -175,11 +277,12 @@
               "RelativeToolTip": "backend\\iterimApi\\Models\\Entities\\WorkItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-28T08:30:30.951Z"
+              "WhenOpened": "2026-02-28T08:30:30.951Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 14,
               "Title": "Iteration.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\Iteration.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\Iteration.cs",
@@ -191,7 +294,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 15,
               "Title": "TeamMember.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\TeamMember.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\TeamMember.cs",
@@ -203,7 +306,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 16,
               "Title": "Team.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\Team.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\Team.cs",
@@ -215,7 +318,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 17,
               "Title": "Product.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\Product.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\Product.cs",
@@ -227,7 +330,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 20,
               "Title": "OrganizationConfig.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\OrganizationConfig.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\OrganizationConfig.cs",
@@ -239,7 +342,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 18,
               "Title": "OrganizationMember.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\OrganizationMember.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\OrganizationMember.cs",
@@ -251,7 +354,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 19,
               "Title": "Organization.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\Organization.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\Organization.cs",
@@ -263,7 +366,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 21,
               "Title": "RefreshToken.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\RefreshToken.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\RefreshToken.cs",
@@ -275,19 +378,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 9,
               "Title": "User.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\User.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Entities\\User.cs",
               "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Entities\\User.cs",
               "RelativeToolTip": "backend\\iterimApi\\Models\\Entities\\User.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAEAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAqwBUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-28T08:24:13.053Z"
+              "WhenOpened": "2026-02-28T08:24:13.053Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 22,
               "Title": "AbsenceReason.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\AbsenceReason.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\AbsenceReason.cs",
@@ -299,7 +403,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 23,
               "Title": "WorkItemPriority.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\WorkItemPriority.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\WorkItemPriority.cs",
@@ -311,7 +415,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 24,
               "Title": "WorkItemStatus.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\WorkItemStatus.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\WorkItemStatus.cs",
@@ -323,7 +427,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 25,
               "Title": "WorkItemType.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\WorkItemType.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\WorkItemType.cs",
@@ -335,7 +439,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 26,
               "Title": "IterationStatus.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\IterationStatus.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\IterationStatus.cs",
@@ -347,7 +451,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 27,
               "Title": "TeamMemberRole.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\TeamMemberRole.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\TeamMemberRole.cs",
@@ -359,7 +463,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 28,
               "Title": "OrgMemberStatus.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\OrgMemberStatus.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\OrgMemberStatus.cs",
@@ -371,7 +475,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 29,
               "Title": "OrgMemberRole.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\OrgMemberRole.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\OrgMemberRole.cs",
@@ -383,7 +487,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 30,
               "Title": "UserRole.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Models\\Enums\\UserRole.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Models\\Enums\\UserRole.cs",
@@ -395,7 +499,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 31,
               "Title": "HealthController.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Controllers\\HealthController.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Controllers\\HealthController.cs",
@@ -407,15 +511,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "E:\\GitHub\\iterim\\backend\\iterimApi\\Program.cs",
               "RelativeDocumentMoniker": "backend\\iterimApi\\Program.cs",
               "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Program.cs",
               "RelativeToolTip": "backend\\iterimApi\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEoAAABTAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T22:50:48.302Z"
+              "WhenOpened": "2026-02-27T22:50:48.302Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -425,9 +530,10 @@
               "RelativeDocumentMoniker": "backend\\iterimApi\\Data\\AppDbContext.cs",
               "ToolTip": "E:\\GitHub\\iterim\\backend\\iterimApi\\Data\\AppDbContext.cs",
               "RelativeToolTip": "backend\\iterimApi\\Data\\AppDbContext.cs",
-              "ViewState": "AgIAABYBAAAAAAAAAAAAAD4BAAABAAAAAAAAAA==",
+              "ViewState": "AgIAABQAAAAAAAAAAADwvzkAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T22:50:30.941Z"
+              "WhenOpened": "2026-02-27T22:50:30.941Z",
+              "EditorCaption": ""
             }
           ]
         }
