@@ -13,5 +13,18 @@ services:
     volumes:
       - iterim_mysql_data:/var/lib/mysql
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: iterim-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: interim_user
+      PMA_PASSWORD: interim_dev_pass
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+
 volumes:
   iterim_mysql_data:
