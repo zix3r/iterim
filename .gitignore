@@ -8,6 +8,7 @@ Thumbs.db
 # IDEs and editors
 .idea/
 .vscode/
+.vs/
 *.suo
 *.user
 *.userosscache
@@ -23,7 +24,6 @@ backend/**/*.dll
 backend/**/*.exe
 backend/**/*.pdb
 backend/**/*.cache
-backend/**/*.log
 backend/**/*.vsidx
 backend/**/*.v2
 backend/**/*.suo
@@ -41,7 +41,6 @@ backend/**/*.sln.docstates
 project.lock.json
 project.fragment.lock.json
 artifacts/
-**/Properties/launchSettings.json
 
 # NuGet packages
 *.nupkg
@@ -81,3 +80,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Docker
+docker-compose.override.yml
