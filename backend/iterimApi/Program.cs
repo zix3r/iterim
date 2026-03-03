@@ -3,6 +3,8 @@ using iterimApi.Data;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
 using iterimApi.Services;
+using iterimApi.Services.Implementations;
+using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +66,7 @@ builder.Services.AddAuthentication(options =>
 // DI - Services
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // CORS
