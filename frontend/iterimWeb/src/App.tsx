@@ -1,15 +1,30 @@
-import { Button } from '@/components/ui/button'
+import { Routes, Route, Outlet } from 'react-router';
+import { Sidebar } from '@/components/ui/Sidebar';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { OrganizationPage } from '@/pages/OrganizationPage';
+
+// Bendras išdėstymas su Sidebar
+function MainLayout() {
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto bg-background">
+        <Outlet />
+      </main>
+    </div>
+  );
+}
 
 function App() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold">iterim</h1>
-        <p className="text-muted-foreground">Iteration & Quarter Planning</p>
-        <Button>Get Started</Button>
-      </div>
-    </div>
-  )
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/org/:orgId" element={<OrganizationPage />} />
+        {/* Pridėkite daugiau org-lygio maršrutų čia */}
+      </Route>
+    </Routes>
+  );
 }
 
-export default App
+export default App;
