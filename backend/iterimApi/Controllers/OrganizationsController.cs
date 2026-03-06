@@ -56,7 +56,7 @@ public class OrganizationsController : ControllerBase
         }
         catch (UnauthorizedAccessException ex)
         {
-            return Forbid(ex.Message); // Grąžina 403
+            return Forbid(); 
         }
         catch (KeyNotFoundException ex)
         {
