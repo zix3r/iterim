@@ -16,29 +16,67 @@ export interface OrganizationDetail extends Organization {
   members: OrganizationMember[];
 }
 
-// API funkcijos (čia prielaida, kad turite bazinį fetcherį ar axios su pridėtu JWT tokenu)
-const API_URL = 'http://localhost:5229/api'; // Pakeiskite pagal poreikį
+// ── Core fetch wrapper ────────────────────────────────────────────────────────
+// Uses HttpOnly cookies (credentials: 'include') — no localStorage, no Bearer token.
+// Automatically attempts one token refresh on 401 before giving up.
 
-async function fetchWithAuth(url: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('token'); // Jūsų JWT saugojimo vieta
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-  const response = await fetch(`${API_URL}${url}`, { ...options, headers });
-  if (!response.ok) throw new Error('API Error');
-  return response.json();
+const API_URL = 'http://localhost:5229/api';
+
+let isRefreshing = false;
+let refreshQueue: Array<(ok: boolean) => void> = [];
+
+export async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+  retry = true,
+): Promise<Response> {
+  const res = await fetch(`${API_URL}${url}`, {
+    ...options,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+  if (res.status === 401 && retry) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      try {
+        const r = await fetch(`${API_URL}/auth/refresh`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+        const ok = r.ok;
+        refreshQueue.forEach((cb) => cb(ok));
+        refreshQueue = [];
+        isRefreshing = false;
+        if (!ok) return res;
+      } catch {
+        refreshQueue.forEach((cb) => cb(false));
+        refreshQueue = [];
+        isRefreshing = false;
+        return res;
+      }
+    } else {
+      await new Promise<boolean>((resolve) => refreshQueue.push(resolve));
+    }
+    return fetchWithAuth(url, options, false);
+  }
+
+  return res;
 }
 
-export const getOrganizations = (): Promise<Organization[]> => 
-  fetchWithAuth('/organizations');
+// ── API helpers ───────────────────────────────────────────────────────────────
 
-export const getOrganizationById = (id: number): Promise<OrganizationDetail> => 
-  fetchWithAuth(`/organizations/${id}`);
+export const getOrganizations = (): Promise<Organization[]> =>
+  fetchWithAuth('/organizations').then((r) => r.json());
 
-export const createOrganization = (name: string): Promise<Organization> => 
+export const getOrganizationById = (id: number): Promise<OrganizationDetail> =>
+  fetchWithAuth(`/organizations/${id}`).then((r) => r.json());
+
+export const createOrganization = (name: string): Promise<Organization> =>
   fetchWithAuth('/organizations', {
     method: 'POST',
     body: JSON.stringify({ name }),
-  });
+  }).then((r) => r.json());
