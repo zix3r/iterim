@@ -40,7 +40,8 @@ public class OrganizationService : IOrganizationService
         if (organization == null)
             throw new KeyNotFoundException("Organization not found.");
 
-        if (!organization.Members.Any(m => m.UserId == userId))
+        var currentUserMember = organization.Members.FirstOrDefault(m => m.UserId == userId);
+        if (currentUserMember == null)
             throw new UnauthorizedAccessException("You do not have permission to view this organization.");
 
         return new OrganizationDetailDto
@@ -48,6 +49,7 @@ public class OrganizationService : IOrganizationService
             Id = organization.Id,
             Name = organization.Name,
             Slug = organization.Slug,
+            UserRole = currentUserMember.Role.ToString(),
             Members = organization.Members.Select(m => new OrganizationMemberDto
             {
                 UserId = m.UserId,

@@ -106,6 +106,39 @@ public class ProductsController : ControllerBase
     }
 
     /// <summary>
+    /// Update a product by ID
+    /// </summary>
+    [HttpPut("api/products/{id}")]
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] UpdateProductDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            var product = await _productService.UpdateProductAsync(id, dto, userId);
+
+            if (product == null)
+            {
+                return NotFound(new { message = "Product not found" });
+            }
+
+            return Ok(product);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while updating the product", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Delete a product by ID
     /// </summary>
     [HttpDelete("api/products/{id}")]

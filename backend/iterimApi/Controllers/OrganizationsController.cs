@@ -54,7 +54,7 @@ public class OrganizationsController : ControllerBase
             var organization = await _organizationService.GetOrganizationByIdAsync(id, GetUserId());
             return Ok(organization);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid(); 
         }
