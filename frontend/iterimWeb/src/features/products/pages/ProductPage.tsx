@@ -4,7 +4,7 @@ import { getProductById, deleteProduct } from '@/lib/api';
 import type { ProductDetail } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { EditProductModal } from '@/components/ui/EditProductModal';
+import { EditProductModal } from '@/features/products/components/EditProductModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { LoadingPage } from '@/components/ui/spinner';

@@ -2,7 +2,9 @@
  * Format a date string to a readable format
  */
 export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
+  // Ensure UTC dates are properly parsed by appending 'Z' if not present
+  const isoString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+  const date = new Date(isoString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 

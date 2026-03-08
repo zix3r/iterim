@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createOrganization } from '@/lib/api';
@@ -38,6 +38,9 @@ export function CreateOrganizationModal({ onCreated }: Props) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Organization</DialogTitle>
+          <DialogDescription>
+            Create a new organization to manage your products and teams.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <Input 

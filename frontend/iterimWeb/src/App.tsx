@@ -1,12 +1,14 @@
-import { Routes, Route, Outlet } from 'react-router';
-import { Sidebar } from '@/components/ui/Sidebar';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { OrganizationPage } from '@/pages/OrganizationPage';
-import { ProductsListPage } from '@/pages/ProductsListPage';
-import { ProductPage } from '@/pages/ProductPage';
+import { Routes, Route, Navigate, Outlet } from 'react-router';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
+import { OrganizationPage } from '@/features/organizations/pages/OrganizationPage';
+import { ProductsListPage } from '@/features/products/pages/ProductsListPage';
+import { ProductPage } from '@/features/products/pages/ProductPage';
 import { ToastProvider } from '@/components/ui/toast';
+import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 
-// Bendras išdėstymas su Sidebar
 function MainLayout() {
   return (
     <div className="flex h-screen overflow-hidden">
@@ -22,13 +24,22 @@ function App() {
   return (
     <ToastProvider>
       <Routes>
-        <Route element={<MainLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/org/:orgId" element={<OrganizationPage />} />
-          <Route path="/org/:orgId/products" element={<ProductsListPage />} />
-          <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
-          {/* Pridėkite daugiau org-lygio maršrutų čia */}
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/org/:orgId" element={<OrganizationPage />} />
+            <Route path="/org/:orgId/products" element={<ProductsListPage />} />
+            <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
+          </Route>
         </Route>
+
+        {/* Default redirect */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </ToastProvider>
   );
