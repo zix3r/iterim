@@ -66,15 +66,17 @@ public class ProductService : IProductService
         }
 
         // Check if user is a member of the organization
-        var isMember = await _db.OrganizationMembers
-            .AnyAsync(m => m.OrganizationId == product.OrganizationId && 
+        var member = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == product.OrganizationId && 
                           m.UserId == userId && 
                           m.Status == OrgMemberStatus.Active);
 
-        if (!isMember)
+        if (member == null)
         {
             throw new UnauthorizedAccessException("User is not a member of this organization");
         }
+
+        var userRole = member.Role.ToString();
 
         return new ProductDetailDto
         {
@@ -89,7 +91,8 @@ public class ProductService : IProductService
             UpdatedBy = product.UpdatedBy,
             CreatedByName = product.CreatedByUser.Name,
             UpdatedByName = product.UpdatedByUser.Name,
-            TeamCount = product.Teams.Count
+            TeamCount = product.Teams.Count,
+            UserRole = userRole
         };
     }
 
@@ -129,6 +132,63 @@ public class ProductService : IProductService
         // Load navigation properties for DTO
         await _db.Entry(product).Reference(p => p.CreatedByUser).LoadAsync();
         await _db.Entry(product).Reference(p => p.UpdatedByUser).LoadAsync();
+
+        return new ProductDto
+        {
+            Id = product.Id,
+            OrganizationId = product.OrganizationId,
+            Name = product.Name,
+            Description = product.Description,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt,
+            CreatedBy = product.CreatedBy,
+            UpdatedBy = product.UpdatedBy,
+            CreatedByName = product.CreatedByUser.Name,
+            UpdatedByName = product.UpdatedByUser.Name
+        };
+    }
+
+    public async Task<ProductDto?> UpdateProductAsync(int productId, UpdateProductDto dto, int userId)
+    {
+        var product = await _db.Products
+            .Include(p => p.CreatedByUser)
+            .Include(p => p.UpdatedByUser)
+            .FirstOrDefaultAsync(p => p.Id == productId);
+
+        if (product == null)
+        {
+            return null;
+        }
+
+        // Check if user is a member of the organization with appropriate permissions
+        var member = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == product.OrganizationId && 
+                                     m.UserId == userId && 
+                                     m.Status == OrgMemberStatus.Active);
+
+        if (member == null)
+        {
+            throw new UnauthorizedAccessException("User is not a member of this organization");
+        }
+
+        // Only Admin can update products
+        if (member.Role != OrgMemberRole.Admin)
+        {
+            throw new UnauthorizedAccessException("User does not have permission to update products");
+        }
+
+        product.Name = dto.Name;
+        product.Description = dto.Description;
+        product.UpdatedBy = userId;
+        product.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        // Reload the updated user if it changed
+        if (product.UpdatedBy != product.UpdatedByUser.Id)
+        {
+            await _db.Entry(product).Reference(p => p.UpdatedByUser).LoadAsync();
+        }
 
         return new ProductDto
         {

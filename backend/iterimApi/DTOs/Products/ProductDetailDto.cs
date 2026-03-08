@@ -14,4 +14,5 @@ public class ProductDetailDto
     public string CreatedByName { get; set; } = string.Empty;
     public string UpdatedByName { get; set; } = string.Empty;
     public int TeamCount { get; set; }
+    public string UserRole { get; set; } = string.Empty; // Current user's role in the organization
 }

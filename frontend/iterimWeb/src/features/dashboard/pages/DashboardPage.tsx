@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { OrganizationCard } from '@/components/ui/OrganizationCard';
-import { CreateOrganizationModal } from '@/components/ui/CreateOrganizationModal';
+import { OrganizationCard } from '@/features/organizations/components/OrganizationCard';
+import { CreateOrganizationModal } from '@/features/organizations/components/CreateOrganizationModal';
 import { getOrganizations} from '@/lib/api';
 import type { Organization } from '@/lib/api';
 
