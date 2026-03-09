@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using iterimApi.Models.DTOs.Organizations;
 using iterimApi.Services.Interfaces;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace iterimApi.Controllers;
 
