@@ -4,6 +4,8 @@ import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { OrganizationPage } from '@/features/organizations/pages/OrganizationPage';
 import { ProductsListPage } from '@/features/products/pages/ProductsListPage';
 import { ProductPage } from '@/features/products/pages/ProductPage';
+import { TeamsListPage } from '@/features/teams/pages/TeamsListPage';
+import { TeamDetailPage } from '@/features/teams/pages/TeamDetailPage';
 import { ToastProvider } from '@/components/ui/toast';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
@@ -35,6 +37,8 @@ function App() {
             <Route path="/org/:orgId" element={<OrganizationPage />} />
             <Route path="/org/:orgId/products" element={<ProductsListPage />} />
             <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
+            <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
           </Route>
         </Route>
 

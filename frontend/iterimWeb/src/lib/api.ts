@@ -6,6 +6,7 @@ export interface Organization {
 }
 
 export interface OrganizationMember {
+  id: number; // Organization Member ID (orgMemberId)
   userId: number;
   email: string;
   role: string;
@@ -44,6 +45,58 @@ export interface CreateProductRequest {
 export interface UpdateProductRequest {
   name: string;
   description?: string;
+}
+
+// Teams
+export interface TeamMember {
+  id: number;
+  teamId: number;
+  orgMemberId: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface Team {
+  id: number;
+  productId: number;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+  updatedBy: number;
+  createdByName: string;
+  updatedByName: string;
+  memberCount: number;
+}
+
+export interface TeamDetail extends Omit<Team, 'memberCount'> {
+  productName: string;
+  productCreatedBy: number;
+  currentUserId: number;
+  members: TeamMember[];
+}
+
+export interface CreateTeamRequest {
+  name: string;
+  description?: string;
+}
+
+export interface AddTeamMemberRequest {
+  orgMemberId: number;
+  role?: number; // TeamMemberRole enum: 0=Admin, 1=Member
+}
+
+export interface UpdateTeamRequest {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateTeamMemberRoleRequest {
+  role: number; // TeamMemberRole enum: 0=Admin, 1=Member
 }
 
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
@@ -96,41 +149,166 @@ export async function fetchWithAuth(
 
   return res;
 }
-
+// Helper to extract error message from API response
+async function getErrorMessage(response: Response): Promise<string> {
+  const text = await response.text();
+  try {
+    const json = JSON.parse(text);
+    return json.message || text;
+  } catch {
+    return text;
+  }
+}
 // ── API helpers ───────────────────────────────────────────────────────────────
 
 export const getOrganizations = (): Promise<Organization[]> =>
-  fetchWithAuth('/organizations').then((r) => r.json());
+  fetchWithAuth('/organizations').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 export const getOrganizationById = (id: number): Promise<OrganizationDetail> =>
-  fetchWithAuth(`/organizations/${id}`).then((r) => r.json());
+  fetchWithAuth(`/organizations/${id}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 export const createOrganization = (name: string): Promise<Organization> =>
   fetchWithAuth('/organizations', {
     method: 'POST',
     body: JSON.stringify({ name }),
-  }).then((r) => r.json());
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const addOrganizationMember = (
+  orgId: number,
+  email: string,
+  role: string = 'Member'
+): Promise<OrganizationMember> =>
+  fetchWithAuth(`/organizations/${orgId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getPendingInvitations = (): Promise<Organization[]> =>
+  fetchWithAuth('/organizations/invitations').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>
+  fetchWithAuth(`/organizations/${orgId}/accept`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 // Products API
 export const getProductsByOrganization = (orgId: number): Promise<Product[]> => 
-  fetchWithAuth(`/organizations/${orgId}/products`).then((r) => r.json());
+  fetchWithAuth(`/organizations/${orgId}/products`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 export const getProductById = (productId: number): Promise<ProductDetail> => 
-  fetchWithAuth(`/products/${productId}`).then((r) => r.json());
+  fetchWithAuth(`/products/${productId}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 export const createProduct = (orgId: number, data: CreateProductRequest): Promise<Product> => 
   fetchWithAuth(`/organizations/${orgId}/products`, {
     method: 'POST',
     body: JSON.stringify(data),
-  }).then((r) => r.json());
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 export const updateProduct = (productId: number, data: UpdateProductRequest): Promise<Product> => 
   fetchWithAuth(`/products/${productId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
-  }).then((r) => r.json());
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
 
 export const deleteProduct = (productId: number): Promise<void> => 
   fetchWithAuth(`/products/${productId}`, {
     method: 'DELETE',
-  }).then((r) => r.json());
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// Teams API
+export const getTeamsByProduct = (productId: number): Promise<Team[]> => 
+  fetchWithAuth(`/products/${productId}/teams`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getTeamById = (teamId: number): Promise<TeamDetail> => 
+  fetchWithAuth(`/teams/${teamId}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createTeam = (productId: number, data: CreateTeamRequest): Promise<Team> => 
+  fetchWithAuth(`/products/${productId}/teams`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateTeam = (teamId: number, data: UpdateTeamRequest): Promise<Team> => 
+  fetchWithAuth(`/teams/${teamId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const addTeamMember = (teamId: number, data: AddTeamMemberRequest): Promise<TeamMember> => 
+  fetchWithAuth(`/teams/${teamId}/members`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateTeamMemberRole = (teamId: number, userId: number, data: UpdateTeamMemberRoleRequest): Promise<TeamMember> => 
+  fetchWithAuth(`/teams/${teamId}/members/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const removeTeamMember = (teamId: number, userId: number): Promise<void> => 
+  fetchWithAuth(`/teams/${teamId}/members/${userId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteTeam = (teamId: number): Promise<void> => 
+  fetchWithAuth(`/teams/${teamId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });

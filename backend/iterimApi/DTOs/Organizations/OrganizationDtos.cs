@@ -20,8 +20,15 @@ public class OrganizationDetailDto : OrganizationDto
 
 public class OrganizationMemberDto
 {
-	public int UserId { get; set; }
+	public int Id { get; set; } // Organization Member table primary Id
+	public int UserId { get; set; } // Organization User Id
 	public string Email { get; set; } = string.Empty;
 	public string Role { get; set; } = string.Empty;
 	public string Status { get; set; } = string.Empty;
+}
+
+public class AddOrganizationMemberDto
+{
+	public string Email { get; set; } = string.Empty;
+	public string Role { get; set; } = "Member"; // Default to Member, can be Admin or Viewer
 }

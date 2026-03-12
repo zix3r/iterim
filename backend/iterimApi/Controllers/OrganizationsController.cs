@@ -64,4 +64,54 @@ public class OrganizationsController : ControllerBase
             return NotFound(ex.Message); // Grąžina 404
         }
     }
+
+    // POST /api/organizations/:id/members
+    [HttpPost("{id:int}/members")]
+    public async Task<ActionResult<OrganizationMemberDto>> AddMemberToOrganization(int id, [FromBody] AddOrganizationMemberDto dto)
+    {
+        try
+        {
+            var member = await _organizationService.AddMemberToOrganizationAsync(id, dto, GetUserId());
+            return Ok(member);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Forbid();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // GET /api/organizations/invitations
+    [HttpGet("invitations")]
+    public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetPendingInvitations()
+    {
+        var invitations = await _organizationService.GetPendingInvitationsAsync(GetUserId());
+        return Ok(invitations);
+    }
+
+    // POST /api/organizations/:id/accept
+    [HttpPost("{id:int}/accept")]
+    public async Task<ActionResult<OrganizationMemberDto>> AcceptInvitation(int id)
+    {
+        try
+        {
+            var member = await _organizationService.AcceptInvitationAsync(id, GetUserId());
+            return Ok(member);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+    }
 }
