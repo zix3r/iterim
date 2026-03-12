@@ -114,6 +114,43 @@ public class TeamsController : ControllerBase
     }
 
     /// <summary>
+    /// Update team details
+    /// </summary>
+    [HttpPut("api/teams/{id}")]
+    public async Task<IActionResult> UpdateTeam(int id, [FromBody] UpdateTeamDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            var team = await _teamService.UpdateTeamAsync(id, dto, userId);
+
+            if (team == null)
+            {
+                return NotFound(new { message = "Team not found" });
+            }
+
+            return Ok(team);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while updating the team", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Add a member to a team
     /// </summary>
     [HttpPost("api/teams/{id}/members")]
@@ -155,6 +192,47 @@ public class TeamsController : ControllerBase
     }
 
     /// <summary>
+    /// Update a team member's role
+    /// </summary>
+    [HttpPut("api/teams/{id}/members/{memberUserId}")]
+    public async Task<IActionResult> UpdateTeamMemberRole(int id, int memberUserId, [FromBody] UpdateTeamMemberRoleDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            var teamMember = await _teamService.UpdateTeamMemberRoleAsync(id, memberUserId, dto, userId);
+
+            if (teamMember == null)
+            {
+                return NotFound(new { message = "Team member not found" });
+            }
+
+            return Ok(teamMember);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while updating the team member role", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Remove a member from a team
     /// </summary>
     [HttpDelete("api/teams/{id}/members/{userId}")]
@@ -183,6 +261,38 @@ public class TeamsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred while removing the team member", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Delete a team
+    /// </summary>
+    [HttpDelete("api/teams/{id}")]
+    public async Task<IActionResult> DeleteTeam(int id)
+    {
+        try
+        {
+            var userId = GetUserId();
+            var result = await _teamService.DeleteTeamAsync(id, userId);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Team not found" });
+            }
+
+            return Ok(new { message = "Team deleted successfully" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while deleting the team", error = ex.Message });
         }
     }
 

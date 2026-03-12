@@ -96,6 +96,8 @@ public class TeamService : ITeamService
             Id = team.Id,
             ProductId = team.ProductId,
             ProductName = team.Product.Name,
+            ProductCreatedBy = team.Product.CreatedBy,
+            CurrentUserId = userId,
             Name = team.Name,
             Description = team.Description,
             CreatedAt = team.CreatedAt,
@@ -161,10 +163,90 @@ public class TeamService : ITeamService
         _db.Teams.Add(team);
         await _db.SaveChangesAsync();
 
+        // Automatically add the creator as a team admin
+        var creatorTeamMember = new TeamMember
+        {
+            TeamId = team.Id,
+            OrgMemberId = member.Id,
+            Role = TeamMemberRole.Admin,
+            CreatedBy = userId,
+            UpdatedBy = userId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        
+        _db.TeamMembers.Add(creatorTeamMember);
+        await _db.SaveChangesAsync();
+
         // Load navigation properties for DTO
         await _db.Entry(team).Reference(t => t.CreatedByUser).LoadAsync();
         await _db.Entry(team).Reference(t => t.UpdatedByUser).LoadAsync();
         await _db.Entry(team).Collection(t => t.Members).LoadAsync();
+
+        return new TeamDto
+        {
+            Id = team.Id,
+            ProductId = team.ProductId,
+            Name = team.Name,
+            Description = team.Description,
+            CreatedAt = team.CreatedAt,
+            UpdatedAt = team.UpdatedAt,
+            CreatedBy = team.CreatedBy,
+            UpdatedBy = team.UpdatedBy,
+            CreatedByName = team.CreatedByUser.Name,
+            UpdatedByName = team.UpdatedByUser.Name,
+            MemberCount = team.Members.Count
+        };
+    }
+
+    public async Task<TeamDto?> UpdateTeamAsync(int teamId, UpdateTeamDto dto, int userId)
+    {
+        // Check if team exists
+        var team = await _db.Teams
+            .Include(t => t.Product)
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.UpdatedByUser)
+            .Include(t => t.Members)
+            .FirstOrDefaultAsync(t => t.Id == teamId);
+
+        if (team == null)
+        {
+            throw new KeyNotFoundException("Team not found");
+        }
+
+        // Check if the requester is a member of the organization
+        var requesterMember = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == team.Product.OrganizationId && 
+                                     m.UserId == userId && 
+                                     m.Status == OrgMemberStatus.Active);
+
+        if (requesterMember == null)
+        {
+            throw new UnauthorizedAccessException("User is not a member of this organization");
+        }
+
+        // Check if user can manage this team (product creator OR team admin)
+        var isProductCreator = team.Product.CreatedBy == userId;
+        var isTeamAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId && 
+                           tm.OrgMember.UserId == userId && 
+                           tm.Role == TeamMemberRole.Admin);
+
+        if (!isProductCreator && !isTeamAdmin)
+        {
+            throw new UnauthorizedAccessException("Only the product creator or team admin can update the team");
+        }
+
+        // Update team properties
+        team.Name = dto.Name;
+        team.Description = dto.Description;
+        team.UpdatedBy = userId;
+        team.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        // Reload navigation properties to get updated user names
+        await _db.Entry(team).Reference(t => t.UpdatedByUser).LoadAsync();
 
         return new TeamDto
         {
@@ -205,17 +287,16 @@ public class TeamService : ITeamService
             throw new UnauthorizedAccessException("User is not a member of this organization");
         }
 
-        // Only Admin, ProductOwner, or team Members with Admin role can add members
+        // Check if user can manage this team (product creator OR team admin)
+        var isProductCreator = team.Product.CreatedBy == userId;
         var isTeamAdmin = await _db.TeamMembers
             .AnyAsync(tm => tm.TeamId == teamId && 
                            tm.OrgMember.UserId == userId && 
                            tm.Role == TeamMemberRole.Admin);
 
-        if (requesterMember.Role != OrgMemberRole.Admin && 
-            /*requesterMember.Role != OrgMemberRole.ProductOwner &&*/ 
-            !isTeamAdmin)
+        if (!isProductCreator && !isTeamAdmin)
         {
-            throw new UnauthorizedAccessException("User does not have permission to add team members");
+            throw new UnauthorizedAccessException("Only the product creator or team admin can add members");
         }
 
         // Check if the organization member exists
@@ -266,6 +347,89 @@ public class TeamService : ITeamService
         };
     }
 
+    public async Task<TeamMemberDto?> UpdateTeamMemberRoleAsync(int teamId, int memberUserId, UpdateTeamMemberRoleDto dto, int userId)
+    {
+        // Check if team exists
+        var team = await _db.Teams
+            .Include(t => t.Product)
+            .FirstOrDefaultAsync(t => t.Id == teamId);
+
+        if (team == null)
+        {
+            throw new KeyNotFoundException("Team not found");
+        }
+
+        // Check if the requester is a member of the organization with appropriate permissions
+        var requesterMember = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == team.Product.OrganizationId && 
+                                     m.UserId == userId && 
+                                     m.Status == OrgMemberStatus.Active);
+
+        if (requesterMember == null)
+        {
+            throw new UnauthorizedAccessException("User is not a member of this organization");
+        }
+
+        // Check if user can manage this team (product creator OR team admin)
+        var isProductCreator = team.Product.CreatedBy == userId;
+        var isTeamAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId && 
+                           tm.OrgMember.UserId == userId && 
+                           tm.Role == TeamMemberRole.Admin);
+
+        if (!isProductCreator && !isTeamAdmin)
+        {
+            throw new UnauthorizedAccessException("Only the product creator or team admin can update member roles");
+        }
+
+        // Find the team member to update
+        var teamMember = await _db.TeamMembers
+            .Include(tm => tm.OrgMember)
+                .ThenInclude(om => om.User)
+            .FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.OrgMember.UserId == memberUserId);
+
+        if (teamMember == null)
+        {
+            throw new KeyNotFoundException("Team member not found");
+        }
+
+        // If trying to demote from Admin to Member, check if user is the team creator and the only admin
+        if (teamMember.Role == TeamMemberRole.Admin && dto.Role == TeamMemberRole.Member)
+        {
+            var isTeamCreator = team.CreatedBy == memberUserId;
+            if (isTeamCreator)
+            {
+                // Count how many admins are in the team
+                var adminCount = await _db.TeamMembers
+                    .CountAsync(tm => tm.TeamId == teamId && tm.Role == TeamMemberRole.Admin);
+
+                if (adminCount <= 1)
+                {
+                    throw new InvalidOperationException("Cannot demote the team creator from admin when they are the only admin. Add another admin first.");
+                }
+            }
+        }
+
+        // Update the role
+        teamMember.Role = dto.Role;
+        teamMember.UpdatedBy = userId;
+        teamMember.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        return new TeamMemberDto
+        {
+            Id = teamMember.Id,
+            TeamId = teamMember.TeamId,
+            OrgMemberId = teamMember.OrgMemberId,
+            UserId = teamMember.OrgMember.UserId,
+            UserName = teamMember.OrgMember.User.Name,
+            UserEmail = teamMember.OrgMember.User.Email,
+            Role = teamMember.Role.ToString(),
+            CreatedAt = teamMember.CreatedAt
+        };
+    }
+
     public async Task<bool> RemoveTeamMemberAsync(int teamId, int userId, int memberUserId)
     {
         // Check if team exists
@@ -289,17 +453,16 @@ public class TeamService : ITeamService
             throw new UnauthorizedAccessException("User is not a member of this organization");
         }
 
-        // Only Admin, ProductOwner, or team Members with Admin role can remove members
+        // Check if user can manage this team (product creator OR team admin)
+        var isProductCreator = team.Product.CreatedBy == userId;
         var isTeamAdmin = await _db.TeamMembers
             .AnyAsync(tm => tm.TeamId == teamId && 
                            tm.OrgMember.UserId == userId && 
                            tm.Role == TeamMemberRole.Admin);
 
-        if (requesterMember.Role != OrgMemberRole.Admin && 
-            /*requesterMember.Role != OrgMemberRole.ProductOwner &&*/
-            !isTeamAdmin)
+        if (!isProductCreator && !isTeamAdmin)
         {
-            throw new UnauthorizedAccessException("User does not have permission to remove team members");
+            throw new UnauthorizedAccessException("Only the product creator or team admin can remove members");
         }
 
         // Find the team member to remove
@@ -312,7 +475,62 @@ public class TeamService : ITeamService
             return false;
         }
 
+        // Check if the member being removed is the team creator and the only admin
+        var isTeamCreator = team.CreatedBy == memberUserId;
+        if (isTeamCreator && teamMember.Role == TeamMemberRole.Admin)
+        {
+            // Count how many admins are in the team
+            var adminCount = await _db.TeamMembers
+                .CountAsync(tm => tm.TeamId == teamId && tm.Role == TeamMemberRole.Admin);
+
+            if (adminCount <= 1)
+            {
+                throw new InvalidOperationException("Cannot remove the team creator when they are the only admin. Add another admin first.");
+            }
+        }
+
         _db.TeamMembers.Remove(teamMember);
+        await _db.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> DeleteTeamAsync(int teamId, int userId)
+    {
+        // Check if team exists
+        var team = await _db.Teams
+            .Include(t => t.Product)
+            .FirstOrDefaultAsync(t => t.Id == teamId);
+
+        if (team == null)
+        {
+            throw new KeyNotFoundException("Team not found");
+        }
+
+        // Check if the requester is a member of the organization with appropriate permissions
+        var requesterMember = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == team.Product.OrganizationId && 
+                                     m.UserId == userId && 
+                                     m.Status == OrgMemberStatus.Active);
+
+        if (requesterMember == null)
+        {
+            throw new UnauthorizedAccessException("User is not a member of this organization");
+        }
+
+        // Check if user can manage this team (product creator OR team admin)
+        var isProductCreator = team.Product.CreatedBy == userId;
+        var isTeamAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId && 
+                           tm.OrgMember.UserId == userId && 
+                           tm.Role == TeamMemberRole.Admin);
+
+        if (!isProductCreator && !isTeamAdmin)
+        {
+            throw new UnauthorizedAccessException("Only the product creator or team admin can delete teams");
+        }
+
+        _db.Teams.Remove(team);
         await _db.SaveChangesAsync();
 
         return true;
