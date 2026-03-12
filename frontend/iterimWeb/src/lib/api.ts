@@ -182,6 +182,33 @@ export const createOrganization = (name: string): Promise<Organization> =>
     return r.json();
   });
 
+export const addOrganizationMember = (
+  orgId: number,
+  email: string,
+  role: string = 'Member'
+): Promise<OrganizationMember> =>
+  fetchWithAuth(`/organizations/${orgId}/members`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getPendingInvitations = (): Promise<Organization[]> =>
+  fetchWithAuth('/organizations/invitations').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>
+  fetchWithAuth(`/organizations/${orgId}/accept`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
 // Products API
 export const getProductsByOrganization = (orgId: number): Promise<Product[]> => 
   fetchWithAuth(`/organizations/${orgId}/products`).then(async (r) => {

@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { LoadingPage } from '@/components/ui/spinner';
 import { AlertCircleIcon } from 'lucide-react';
+import { AddMemberModal } from '../components/AddMemberModal';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
@@ -108,7 +109,15 @@ export function OrganizationPage() {
 
       {/* Members Table */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Members</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Members</h2>
+          {organization.userRole === 'Admin' && (
+            <AddMemberModal 
+              organizationId={organization.id} 
+              onMemberAdded={loadData} 
+            />
+          )}
+        </div>
         <div className="border rounded-md">
           <Table>
             <TableHeader>

@@ -26,3 +26,9 @@ public class OrganizationMemberDto
 	public string Role { get; set; } = string.Empty;
 	public string Status { get; set; } = string.Empty;
 }
+
+public class AddOrganizationMemberDto
+{
+	public string Email { get; set; } = string.Empty;
+	public string Role { get; set; } = "Member"; // Default to Member, can be Admin or Viewer
+}

@@ -20,7 +20,7 @@ public class OrganizationService : IOrganizationService
     public async Task<IEnumerable<OrganizationDto>> GetUserOrganizationsAsync(int userId)
     {
         return await _context.Organizations
-            .Where(o => o.Members.Any(m => m.UserId == userId))
+            .Where(o => o.Members.Any(m => m.UserId == userId && m.Status == OrgMemberStatus.Active))
             .Select(o => new OrganizationDto
             {
                 Id = o.Id,
@@ -102,6 +102,101 @@ public class OrganizationService : IOrganizationService
             Name = organization.Name,
             Slug = organization.Slug
         };
+    }
+
+    public async Task<OrganizationMemberDto> AddMemberToOrganizationAsync(int organizationId, AddOrganizationMemberDto dto, int currentUserId)
+    {
+        // Check if organization exists
+        var organization = await _context.Organizations
+            .Include(o => o.Members)
+            .FirstOrDefaultAsync(o => o.Id == organizationId);
+
+        if (organization == null)
+            throw new KeyNotFoundException("Organization not found.");
+
+        // Check if current user is an admin of the organization
+        var currentUserMember = organization.Members.FirstOrDefault(m => m.UserId == currentUserId);
+        if (currentUserMember == null || currentUserMember.Role != OrgMemberRole.Admin)
+            throw new UnauthorizedAccessException("Only organization admins can add members.");
+
+        // Check if user with this email exists
+        var userToAdd = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+        if (userToAdd == null)
+            throw new KeyNotFoundException($"User with email '{dto.Email}' not found.");
+
+        // Check if user is already a member
+        if (organization.Members.Any(m => m.UserId == userToAdd.Id))
+            throw new InvalidOperationException($"User '{dto.Email}' is already a member of this organization.");
+
+        // Parse the role from string to enum
+        if (!Enum.TryParse<OrgMemberRole>(dto.Role, true, out var role))
+            throw new ArgumentException($"Invalid role: {dto.Role}. Valid roles are: Admin, Member, Viewer");
+
+        // Create new organization member
+        var newMember = new OrganizationMember
+        {
+            OrganizationId = organizationId,
+            UserId = userToAdd.Id,
+            Email = userToAdd.Email,
+            Role = role,
+            Status = OrgMemberStatus.Invited,
+            InvitedAt = DateTime.UtcNow,
+            InvitedBy = currentUserId
+        };
+
+        _context.OrganizationMembers.Add(newMember);
+        await _context.SaveChangesAsync();
+
+        return new OrganizationMemberDto
+        {
+            Id = newMember.Id,
+            UserId = newMember.UserId,
+            Email = newMember.Email,
+            Role = newMember.Role.ToString(),
+            Status = newMember.Status.ToString()
+        };
+    }
+
+    public async Task<OrganizationMemberDto> AcceptInvitationAsync(int organizationId, int userId)
+    {
+        // Find the pending invitation
+        var invitation = await _context.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && 
+                                     m.UserId == userId && 
+                                     m.Status == OrgMemberStatus.Invited);
+
+        if (invitation == null)
+            throw new KeyNotFoundException("Invitation not found or already accepted.");
+
+        // Accept the invitation
+        invitation.Status = OrgMemberStatus.Active;
+        invitation.JoinedAt = DateTime.UtcNow;
+        invitation.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new OrganizationMemberDto
+        {
+            Id = invitation.Id,
+            UserId = invitation.UserId,
+            Email = invitation.Email,
+            Role = invitation.Role.ToString(),
+            Status = invitation.Status.ToString()
+        };
+    }
+
+    public async Task<IEnumerable<OrganizationDto>> GetPendingInvitationsAsync(int userId)
+    {
+        return await _context.OrganizationMembers
+            .Where(m => m.UserId == userId && m.Status == OrgMemberStatus.Invited)
+            .Include(m => m.Organization)
+            .Select(m => new OrganizationDto
+            {
+                Id = m.Organization.Id,
+                Name = m.Organization.Name,
+                Slug = m.Organization.Slug
+            })
+            .ToListAsync();
     }
 
     private string GenerateSlug(string phrase)
