@@ -118,12 +118,25 @@ export function ProductPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
+        <Card 
+          className="cursor-pointer hover:border-primary/50 transition-colors"
+          onClick={() => navigate(`/org/${orgId}/products/${productId}/teams`)}
+        >
           <CardHeader>
             <CardTitle className="text-sm font-medium">Teams</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{product.teamCount}</div>
+            <Button 
+              variant="link" 
+              className="p-0 h-auto mt-2" 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/org/${orgId}/products/${productId}/teams`);
+              }}
+            >
+              View Teams →
+            </Button>
           </CardContent>
         </Card>
         <Card>

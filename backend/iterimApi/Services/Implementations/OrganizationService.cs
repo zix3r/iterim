@@ -52,6 +52,7 @@ public class OrganizationService : IOrganizationService
             UserRole = currentUserMember.Role.ToString(),
             Members = organization.Members.Select(m => new OrganizationMemberDto
             {
+                Id = m.Id,
                 UserId = m.UserId,
                 Email = m.Email,
                 Role = m.Role.ToString(),
