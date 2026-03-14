@@ -100,6 +100,99 @@ export interface UpdateTeamMemberRoleRequest {
   role: number; // TeamMemberRole enum: 0=Admin, 1=Member
 }
 
+// ── WorkItem Types ────────────────────────────────────────────
+
+export interface WorkItem {
+  id: number;
+  teamId: number;
+  iterationId: number | null;
+  assignedTo: number | null;
+  title: string;
+  description: string | null;
+  points: number | null;
+  type: string;       // "Story" | "Task" | "Bug"
+  priority: string;   // "Low" | "Medium" | "High" | "Critical"
+  status: string;     // "Backlog" | "Todo" | "InProgress" | "Review" | "Done"
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+  updatedBy: number;
+  createdByName: string;
+  updatedByName: string;
+  assignedMember: TeamMember | null;
+}
+
+export interface CreateWorkItemRequest {
+  title: string;
+  description?: string;
+  type: number;       // 0=Story, 1=Task, 2=Bug
+  priority?: number;  // 0=Low, 1=Medium, 2=High, 3=Critical
+  points?: number;
+  assignedTo?: number; // TeamMember.Id
+}
+
+export interface UpdateWorkItemRequest {
+  title: string;
+  description?: string;
+  priority: number;
+  points?: number;
+  status: number;
+  assignedTo?: number | null;
+  iterationId?: number | null;
+}
+
+export interface WorkItemFilter {
+  type?: string;
+  status?: string;
+  assignedTo?: number;
+  iterationId?: number;
+}
+
+// ── Iteration Types ───────────────────────────────────────────
+
+export interface Iteration {
+  id: number;
+  teamId: number;
+  name: string | null;
+  startDate: string;
+  endDate: string;
+  goal: string | null;
+  status: string;     // "Planning" | "Active" | "Completed"
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+  updatedBy: number;
+  createdByName: string;
+  updatedByName: string;
+  workItemCount: number;
+  totalPoints: number;
+}
+
+export interface CreateIterationRequest {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  goal?: string;
+}
+
+export interface UpdateIterationRequest {
+  name?: string;
+  startDate: string;
+  endDate: string;
+  goal?: string;
+}
+
+export interface CompleteIterationRequest {
+  moveUnfinishedToIterationId?: number | null;
+}
+
+export interface BacklogGroup {
+  iterationId: number | null;
+  iterationName: string | null;
+  iterationStatus: string | null;
+  workItems: WorkItem[];
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
 // Uses HttpOnly cookies (credentials: 'include') — no localStorage, no Bearer token.
 // Automatically attempts one token refresh on 401 before giving up.
@@ -404,4 +497,111 @@ export const getDashboard = (): Promise<DashboardData> =>
     return r.json();
   });
 
+// ── WorkItem API ──────────────────────────────────────────────
+
+export const getWorkItemsByTeam = (teamId: number, filters?: WorkItemFilter): Promise<WorkItem[]> => {
+  const params = new URLSearchParams();
+  if (filters?.type) params.set('type', filters.type);
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.assignedTo) params.set('assignedTo', filters.assignedTo.toString());
+  if (filters?.iterationId !== undefined) params.set('iterationId', filters.iterationId.toString());
+  const qs = params.toString();
+  return fetchWithAuth(`/teams/${teamId}/workitems${qs ? `?${qs}` : ''}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+};
+
+export const getWorkItemsGrouped = (teamId: number): Promise<BacklogGroup[]> =>
+  fetchWithAuth(`/teams/${teamId}/workitems/grouped`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getWorkItemById = (id: number): Promise<WorkItem> =>
+  fetchWithAuth(`/workitems/${id}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createWorkItem = (teamId: number, data: CreateWorkItemRequest): Promise<WorkItem> =>
+  fetchWithAuth(`/teams/${teamId}/workitems`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise<WorkItem> =>
+  fetchWithAuth(`/workitems/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteWorkItem = (id: number): Promise<void> =>
+  fetchWithAuth(`/workitems/${id}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Iteration API ─────────────────────────────────────────────
+
+export const getIterationsByTeam = (teamId: number): Promise<Iteration[]> =>
+  fetchWithAuth(`/teams/${teamId}/iterations`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getIterationById = (id: number): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createIteration = (teamId: number, data: CreateIterationRequest): Promise<Iteration> =>
+  fetchWithAuth(`/teams/${teamId}/iterations`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateIteration = (id: number, data: UpdateIterationRequest): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const startIteration = (id: number): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}/start`, {
+    method: 'PATCH',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const completeIteration = (id: number, data?: CompleteIterationRequest): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}/complete`, {
+    method: 'PATCH',
+    body: JSON.stringify(data ?? {}),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteIteration = (id: number): Promise<void> =>
+  fetchWithAuth(`/iterations/${id}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
 

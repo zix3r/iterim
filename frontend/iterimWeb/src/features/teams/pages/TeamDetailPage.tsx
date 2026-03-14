@@ -13,6 +13,7 @@ import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon, XIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Link } from 'react-router';
 
 export function TeamDetailPage() {
   const { orgId, productId, teamId } = useParams();
@@ -265,14 +266,23 @@ export function TeamDetailPage() {
             </div>
           )}
         </div>
-        {canManageTeam && !isEditing && (
-          <Button 
-            variant="destructive" 
-            onClick={() => setDeleteTeamDialogOpen(true)}
-          >
-            Delete Team
-          </Button>
-        )}
+        {!isEditing && (
+		  <div className="flex items-center gap-2">
+            <Button asChild>
+              <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
+                Open Backlog
+              </Link>
+            </Button>
+            {canManageTeam && (
+              <Button 
+                variant="destructive" 
+                onClick={() => setDeleteTeamDialogOpen(true)}
+              >
+                Delete Team
+            </Button>
+		    )}
+		</div>
+	    )}
       </div>
 
       {/* Team Info Card */}

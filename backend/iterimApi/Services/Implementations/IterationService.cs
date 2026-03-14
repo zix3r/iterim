@@ -189,6 +189,13 @@ public class IterationService : IIterationService
         foreach (var wi in unfinishedItems)
         {
             wi.IterationId = moveUnfinishedToIterationId; // null = back to backlog
+            
+            // Demote to Backlog if moving to backlog, promote to Todo if moving to another sprint
+            if (moveUnfinishedToIterationId == null && wi.Status == WorkItemStatus.Todo)
+                wi.Status = WorkItemStatus.Backlog;
+            else if (moveUnfinishedToIterationId != null && wi.Status == WorkItemStatus.Backlog)
+                wi.Status = WorkItemStatus.Todo;
+
             wi.UpdatedBy = userId;
             wi.UpdatedAt = DateTime.UtcNow;
         }
