@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Plus, ChevronRight, LayoutList, Package, Layers } from 'lucide-react';
+import { Users, Plus, LayoutList, Package, Layers } from 'lucide-react';
 import type { DashboardOrganization, DashboardProduct, DashboardTeam } from '@/lib/api';
 
 interface OrgCardProps {
@@ -36,16 +36,23 @@ export function OrganizationHierarchyCard({ organization }: OrgCardProps) {
               <Package className="h-10 w-10 text-muted-foreground/30" />
               <p>No products yet</p>
               <Button variant="outline" size="sm" asChild className="h-8">
-                <Link to={`/org/${organization.id}/products/new`}>
+                <Link to={`/org/${organization.id}/products`}>
                   <Plus className="mr-2 h-3 w-3" /> Create Product
                 </Link>
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-border/40 mb-2">
-                 <Package className="h-3.5 w-3.5 text-muted-foreground" />
-                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Products</span>
+              <div className="flex items-center justify-between pb-2 border-b border-border/40 mb-2">
+                 <div className="flex items-center gap-2">
+                    <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Products</span>
+                 </div>
+                 <Button variant="ghost" size="icon" className="h-6 w-6" asChild title="Create Product">
+                   <Link to={`/org/${organization.id}/products`}>
+                     <Plus className="h-3.5 w-3.5" />
+                   </Link>
+                 </Button>
               </div>
               {organization.products.map(product => (
                 <ProductItem 
@@ -58,19 +65,6 @@ export function OrganizationHierarchyCard({ organization }: OrgCardProps) {
           )}
         </div>
       </CardContent>
-
-      <div className="p-3 border-t bg-background">
-         <Button 
-           variant="outline" 
-           size="sm" 
-           className="w-full justify-center border-dashed text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors" 
-           asChild
-         >
-            <Link to={`/org/${organization.id}/products`}>
-              <Plus className="mr-2 h-3.5 w-3.5" /> Add New Product
-            </Link>
-         </Button>
-      </div>
     </Card>
   );
 }
