@@ -306,7 +306,7 @@ export function TeamDetailPage() {
           {canManageTeam && (
             <AddTeamMemberModal 
               teamId={Number(teamId)} 
-              availableMembers={organization.members}
+              availableMembers={organization.members.filter(m => m.status === 'Active')}
               currentMembers={team.members}
               onAdded={loadTeam}
             />

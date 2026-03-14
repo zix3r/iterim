@@ -16,6 +16,7 @@ export interface OrganizationMember {
 export interface OrganizationDetail extends Organization {
   members: OrganizationMember[];
   userRole: string;
+  currentUserId: number;
 }
 
 export interface Product {
@@ -195,10 +196,32 @@ export const addOrganizationMember = (
     return r.json();
   });
 
-export const getPendingInvitations = (): Promise<Organization[]> =>
+export interface Invitation {
+  organizationId: number;
+  organizationName: string;
+  organizationSlug: string;
+  role: string;
+  invitedAt: string;
+}
+
+export const getPendingInvitations = (): Promise<Invitation[]> =>
   fetchWithAuth('/organizations/invitations').then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
+  });
+
+export const declineInvitation = (orgId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/decline`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const removeOrganizationMember = (orgId: number, memberId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
   });
 
 export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>

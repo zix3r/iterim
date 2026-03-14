@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { getOrganizationById, getProductsByOrganization } from '@/lib/api';
+import { getOrganizationById, getProductsByOrganization, removeOrganizationMember } from '@/lib/api';
 import type { OrganizationDetail } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { LoadingPage } from '@/components/ui/spinner';
-import { AlertCircleIcon } from 'lucide-react';
+import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
 import { AddMemberModal } from '../components/AddMemberModal';
+import { useToast } from '@/components/ui/toast';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
@@ -16,6 +17,8 @@ export function OrganizationPage() {
   const [productCount, setProductCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const loadData = () => {
     if (orgId) {
@@ -37,9 +40,33 @@ export function OrganizationPage() {
     }
   };
 
+  const handleRemoveMember = async (memberId: number) => {
+    if (!confirm('Are you sure you want to remove this member?')) return;
+    
+    setRemovingMemberId(memberId);
+    try {
+      await removeOrganizationMember(Number(orgId), memberId);
+      toast({
+        title: "Success",
+        description: "Organization member removed successfully",
+        variant: "default",
+      });
+      loadData(); // Reload data
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to remove member',
+        variant: "destructive",
+      });
+    } finally {
+      setRemovingMemberId(null);
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, [orgId]);
+
 
   if (isLoading) return <LoadingPage />;
   
@@ -125,6 +152,7 @@ export function OrganizationPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
+                {organization.userRole === 'Admin' && <TableHead className="w-[80px]"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -133,6 +161,21 @@ export function OrganizationPage() {
                   <TableCell className="font-medium">{member.email}</TableCell>
                   <TableCell>{member.role}</TableCell>
                   <TableCell>{member.status}</TableCell>
+                  {organization.userRole === 'Admin' && (
+                    <TableCell>
+                      {member.userId !== organization.currentUserId && ( // Prevent removing self (use Leave Org instead)
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRemoveMember(member.id)}
+                          disabled={removingMemberId === member.id}
+                        >
+                          <Trash2Icon className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
