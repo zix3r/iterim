@@ -371,7 +371,7 @@ export function TeamDetailPage() {
                           {member.role}
                         </span>
                       )}
-                      {canManageTeam && (
+                      {canManageTeam && !isMemberTeamCreator && (
                         <Button 
                           variant="ghost" 
                           size="sm"

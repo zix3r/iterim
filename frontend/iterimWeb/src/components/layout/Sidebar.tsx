@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { 
-  LayoutDashboard, Users, Settings, Briefcase, ChevronLeft, 
-  LogOut, ClipboardList, Users2, Layers, Info 
+  LayoutDashboard, Settings, Briefcase, ChevronLeft, 
+  LogOut, ClipboardList, Users2, Layers, Info, View
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -69,8 +69,8 @@ export function SidebarContent() {
               
               <NavLink 
                 to={`/org/${orgId}`} 
-                icon={Users} 
-                label="Nariai" 
+                icon={View} 
+                label="Apžvalga"
                 active={location.pathname === `/org/${orgId}`} 
               />
               <NavLink 
