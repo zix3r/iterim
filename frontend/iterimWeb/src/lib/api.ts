@@ -16,6 +16,7 @@ export interface OrganizationMember {
 export interface OrganizationDetail extends Organization {
   members: OrganizationMember[];
   userRole: string;
+  currentUserId: number;
 }
 
 export interface Product {
@@ -195,10 +196,32 @@ export const addOrganizationMember = (
     return r.json();
   });
 
-export const getPendingInvitations = (): Promise<Organization[]> =>
+export interface Invitation {
+  organizationId: number;
+  organizationName: string;
+  organizationSlug: string;
+  role: string;
+  invitedAt: string;
+}
+
+export const getPendingInvitations = (): Promise<Invitation[]> =>
   fetchWithAuth('/organizations/invitations').then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
+  });
+
+export const declineInvitation = (orgId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/decline`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const removeOrganizationMember = (orgId: number, memberId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
   });
 
 export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>
@@ -312,3 +335,73 @@ export const deleteTeam = (teamId: number): Promise<void> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+
+// Dashboard API
+// Dashboard Types
+export interface DashboardSprint {
+  id: number;
+  name: string;
+  endDate: string;
+  daysLeft: number;
+  progress: number;
+  totalPoints: number;
+  completedPoints: number;
+}
+
+export interface DashboardTeam {
+  id: number;
+  name: string;
+  activeSprint?: DashboardSprint;
+}
+
+export interface DashboardProduct {
+  id: number;
+  name: string;
+  teams: DashboardTeam[];
+}
+
+export interface DashboardOrganization {
+  id: number;
+  name: string;
+  slug: string;
+  memberCount: number;
+  products: DashboardProduct[];
+}
+
+export interface DashboardWorkItem {
+  id: number;
+  title: string;
+  status: number;
+  statusName: string;
+  priority: number;
+  priorityName: string;
+  points: number | null;
+  organizationId: number;
+  organizationName: string;
+  productId: number;
+  productName: string;
+  teamId: number;
+  teamName: string;
+}
+
+export interface DashboardActivity {
+  id: number;
+  description: string;
+  timestamp: string;
+  actorName: string;
+  type: string;
+}
+
+export interface DashboardData {
+  organizations: DashboardOrganization[];
+  myWork: DashboardWorkItem[];
+  recentActivity: DashboardActivity[];
+}
+
+export const getDashboard = (): Promise<DashboardData> => 
+  fetchWithAuth('/dashboard').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+
