@@ -1,8 +1,5 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
-import { 
-  LayoutDashboard, Settings, Briefcase, ChevronLeft, 
-  LogOut, ClipboardList, Users2, Info
-} from 'lucide-react';
+import { LayoutDashboard, Briefcase, ChevronLeft, LogOut, ClipboardList, Users2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
