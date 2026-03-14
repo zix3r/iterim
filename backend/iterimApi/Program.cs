@@ -78,6 +78,7 @@ builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // CORS
 builder.Services.AddCors(options =>
