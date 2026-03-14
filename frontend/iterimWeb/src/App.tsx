@@ -40,7 +40,8 @@ function App() {
             <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
             <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
-			<Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
+			<Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
           </Route>
         </Route>
 

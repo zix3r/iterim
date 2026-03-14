@@ -61,10 +61,10 @@ export function IterationSection({
   };
 
   const statusColor = iteration?.status === 'Active'
-    ? 'text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400'
+    ? 'text-green-600 font-medium dark:text-green-400'
     : iteration?.status === 'Completed'
-    ? 'text-gray-500 bg-gray-50 dark:bg-gray-800 dark:text-gray-400'
-    : 'text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400';
+    ? 'text-zinc-500 bg-zinc-100/50 dark:bg-zinc-800 dark:text-zinc-400'
+    : 'text-zinc-600 dark:text-zinc-400';
 
   return (
     <div className={`border rounded-lg overflow-hidden transition-colors ${

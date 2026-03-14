@@ -1,6 +1,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Activity, Clock } from 'lucide-react'; 
 import type { DashboardActivity } from '@/lib/api';
+import { WorkItemBadge } from '@/components/shared/WorkItemBadge';
+import { Link } from 'react-router';
 
 export function ActivityFeedWidget({ activities }: { activities: DashboardActivity[] }) {
   return (
@@ -27,18 +29,32 @@ export function ActivityFeedWidget({ activities }: { activities: DashboardActivi
                 {/* Dot */}
                 <div className="absolute left-1 top-2 w-2.5 h-2.5 rounded-full bg-background border-[2px] border-primary/50 group-hover:border-primary group-hover:scale-110 transition-all shadow-sm" />
                 
-                <div className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/40 transition-colors -mt-2 -ml-2">
-                   <p className="text-sm text-foreground/80 leading-snug">
-                     <span className="font-semibold text-foreground block mb-0.5">{item.actorName}</span> 
-                     {item.description.replace(`New ${item.type} created: `, 'created new item ')}
-                   </p>
-                   <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Link 
+                  to={item.organizationId ? `/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}/backlog` : '#'}
+                  className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/40 transition-colors -mt-2 -ml-2 block text-foreground"
+                >
+                   <div className="text-sm text-foreground/80 leading-snug">
+                     <span className="font-semibold text-foreground">{item.actorName}</span>
+                     <span className="text-muted-foreground mx-1">
+                        {item.description || 'created new item'}
+                     </span>
+                     
+                     {/* If we have work item details, show badge and title */}
+                     {item.workItemType && (
+                        <div className="flex items-center gap-2 mt-2 bg-background p-2 rounded border shadow-sm">
+                           <WorkItemBadge type={item.workItemType} />
+                           {/* Add Link if possible, need Organization/Product context in activity DTO to make link */}
+                           <span className="font-medium text-xs truncate">{item.workItemTitle}</span>
+                        </div>
+                     )}
+                   </div>
+                   <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium mt-1">
                       <Clock className="h-3 w-3 opacity-70" />
                       {new Date(item.timestamp).toLocaleString(undefined, {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                    </div>
-                </div>
+                </Link>
               </div>
             ))}
           </div>

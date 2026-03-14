@@ -174,8 +174,8 @@ const authStyles = `
     justify-content: center;
     background: #ffffff;
     background-image:
-      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99,102,241,0.12) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(139,92,246,0.08) 0%, transparent 50%);
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(24,24,27,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 90%, rgba(24,24,27,0.03) 0%, transparent 50%);
     font-family: 'Sora', sans-serif;
     padding: 1.5rem;
   }
@@ -183,12 +183,12 @@ const authStyles = `
   .auth-card {
     width: 100%;
     max-width: 420px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.08);
     border-radius: 20px;
     padding: 2.5rem;
     backdrop-filter: blur(20px);
-    box-shadow: 0 0 0 1px rgba(99,102,241,0.1), 0 32px 64px rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 32px 64px rgba(0,0,0,0.1);
     animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -223,7 +223,7 @@ const authStyles = `
 
   .auth-subheading {
     font-size: 0.875rem;
-    color: #6b6b8a;
+    color: #52525b;
     margin: 0 0 1.75rem;
   }
 
@@ -260,15 +260,15 @@ const authStyles = `
 
   .field-label {
     font-size: 0.8rem;
-    font-weight: 500;
-    color: #9090b0;
+    font-weight: 600;
+    color: #71717a;
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
 
   .field-input {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.03);
+    border: 1px solid rgba(0,0,0,0.1);
     border-radius: 10px;
     padding: 0.7rem 0.9rem;
     color: #000000;
@@ -280,11 +280,11 @@ const authStyles = `
     box-sizing: border-box;
   }
 
-  .field-input::placeholder { color: #3a3a5c; }
+  .field-input::placeholder { color: #71717a; }
 
   .field-input:focus {
-    border-color: rgba(99,102,241,0.5);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    border-color: rgba(24,24,27,1);
+    box-shadow: 0 0 0 3px rgba(24,24,27,0.12);
   }
 
   .field-input-error {
@@ -319,14 +319,14 @@ const authStyles = `
     background: none;
     border: none;
     cursor: pointer;
-    color: #4a4a70;
+    color: #71717a;
     padding: 0;
     display: flex;
     align-items: center;
     transition: color 0.2s;
   }
 
-  .field-eye:hover { color: #8080b0; }
+  .field-eye:hover { color: #18181b; }
 
   .auth-btn {
     margin-top: 0.5rem;
@@ -366,15 +366,15 @@ const authStyles = `
     margin-top: 1.5rem;
     text-align: center;
     font-size: 0.85rem;
-    color: #5a5a80;
+    color: #52525b;
   }
 
   .auth-link {
-    color: #818cf8;
+    color: #18181b;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s;
   }
 
-  .auth-link:hover { color: #a5b4fc; }
+  .auth-link:hover { color: #27272a; text-decoration: underline; }
 `;

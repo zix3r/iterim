@@ -29,7 +29,7 @@ export function OrganizationHierarchyCard({ organization }: OrgCardProps) {
         </div>
       </CardHeader>
       
-      <CardContent className="flex-1 p-0 min-h-[200px] relative bg-slate-50/30 dark:bg-zinc-900/30">
+      <CardContent className="flex-1 p-0 min-h-[200px] relative bg-zinc-50/30 dark:bg-zinc-900/30">
         <div className="absolute inset-0 overflow-y-auto px-4 py-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-muted">
           {organization.products.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm space-y-3">

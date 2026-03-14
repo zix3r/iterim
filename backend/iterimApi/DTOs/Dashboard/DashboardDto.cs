@@ -45,6 +45,8 @@ public class DashboardWorkItemDto
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public int Type { get; set; }
+    public string TypeName { get; set; } = string.Empty;
     public int Status { get; set; } 
     public string StatusName { get; set; } = string.Empty;
     public int Priority { get; set; }
@@ -61,8 +63,14 @@ public class DashboardWorkItemDto
 public class DashboardActivityDto
 {
     public int Id { get; set; }
+    public string WorkItemTitle { get; set; } = string.Empty;
+    public string WorkItemType { get; set; } = string.Empty;
+    public int WorkItemId { get; set; }
     public string Description { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
     public string ActorName { get; set; } = string.Empty;
-    public string Type { get; set; } = "Info"; // Info, Success, Warning
+    public string Type { get; set; } = "Create"; // Create, Update, Comment
+    public int OrganizationId { get; set; }
+    public int ProductId { get; set; }
+    public int TeamId { get; set; }
 }

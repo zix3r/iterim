@@ -85,16 +85,27 @@ public class DashboardService : IDashboardService
         }).ToList();
 
         // 2. My Work (Active items)
+        // First get all TeamMember IDs for the current user
+        var teamMemberIds = await _context.TeamMembers
+            .Where(tm => tm.OrgMember.UserId == userId)
+            .Select(tm => tm.Id)
+            .ToListAsync();
+
         var myWork = await _context.WorkItems
             .AsNoTracking()
             .Include(w => w.Team).ThenInclude(t => t.Product).ThenInclude(p => p.Organization)
-            .Where(w => w.AssignedTo == userId && w.Status != WorkItemStatus.Done)
+            .Include(w => w.Iteration)
+            .Where(w => w.AssignedTo != null && teamMemberIds.Contains(w.AssignedTo.Value) && w.Status != WorkItemStatus.Done)
+            // Only show items in active iterations or valid date range
+            .Where(w => w.Iteration != null && (w.Iteration.Status == IterationStatus.Active || (w.Iteration.StartDate <= today && w.Iteration.EndDate >= today)))
             .OrderByDescending(w => w.UpdatedAt)
-            .Take(5)
+            .Take(10)
             .Select(w => new DashboardWorkItemDto
             {
                 Id = w.Id,
                 Title = w.Title,
+                Type = (int)w.Type,
+                TypeName = w.Type.ToString(),
                 Status = (int)w.Status,
                 StatusName = w.Status.ToString(),
                 Priority = (int)w.Priority,
@@ -125,11 +136,17 @@ public class DashboardService : IDashboardService
             .Take(10)
             .Select(w => new DashboardActivityDto
             {
-                Id = w.Id, // Use WorkItem Id for now as ID of activity is less relevant or use history ID
-                Description = $"New {w.Type} created: {w.Title}",
+                Id = w.Id,
+                WorkItemId = w.Id,
+                WorkItemTitle = w.Title,
+                WorkItemType = w.Type.ToString(),
+                Description = "created a new item",
                 Timestamp = w.CreatedAt,
                 ActorName = w.CreatedByUser.Name ?? "User",
-                Type = "Info"
+                Type = "Create",
+                OrganizationId = w.Team.Product.OrganizationId,
+                ProductId = w.Team.ProductId,
+                TeamId = w.TeamId
             })
             .ToListAsync();
 

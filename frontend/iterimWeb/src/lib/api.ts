@@ -464,6 +464,8 @@ export interface DashboardOrganization {
 export interface DashboardWorkItem {
   id: number;
   title: string;
+  type: number;
+  typeName: string;
   status: number;
   statusName: string;
   priority: number;
@@ -479,10 +481,16 @@ export interface DashboardWorkItem {
 
 export interface DashboardActivity {
   id: number;
+  workItemTitle: string;
+  workItemType: string;
+  workItemId: number;
   description: string;
   timestamp: string;
   actorName: string;
   type: string;
+  organizationId: number;
+  productId: number;
+  teamId: number;
 }
 
 export interface DashboardData {
