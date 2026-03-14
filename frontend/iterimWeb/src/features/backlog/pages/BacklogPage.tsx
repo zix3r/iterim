@@ -98,7 +98,7 @@ export function BacklogPage() {
 
   // ── Organize sections ──────────────────────────────────
 
-  // Active sprints first, then Planning, then Backlog at bottom
+  // Active iterations first, then Planning, then Backlog at bottom
   const activeGroup = groups.find(g => g.iterationStatus === 'Active');
   const planningGroups = groups.filter(g => g.iterationStatus === 'Planning');
   const completedGroups = groups.filter(g => g.iterationStatus === 'Completed');
@@ -181,7 +181,7 @@ export function BacklogPage() {
 
     // API call
     try {
-      // Auto-promote Backlog → Todo when dragging into a sprint
+      // Auto-promote Backlog → Todo when dragging into a iteration, and vice versa
       const newStatus = (draggedItem.status === 'Backlog' && targetIterationId !== null)
         ? STATUS_MAP['Todo']
         : (draggedItem.status === 'Todo' && targetIterationId === null)
@@ -273,7 +273,7 @@ export function BacklogPage() {
         <span>🟦 Story</span>
         <span>🟨 Task</span>
         <span>🟥 Bug</span>
-        <span className="ml-auto">💡 Drag items between sections to plan sprints</span>
+        <span className="ml-auto">💡 Drag items between sections to plan iterations</span>
       </div>
 
       {/* DnD context wrapping all sections */}
@@ -284,13 +284,13 @@ export function BacklogPage() {
         onDragEnd={handleDragEnd}
       >
         <div className="space-y-4">
-          {/* Active sprint */}
+          {/* Active iteration */}
           {activeGroup && renderSection(
             iterations.find(i => i.id === activeGroup.iterationId) ?? null,
             activeGroup.workItems,
           )}
 
-          {/* Planning sprints */}
+          {/* Planning iterations */}
           {planningGroups.map(g => renderSection(
             iterations.find(i => i.id === g.iterationId) ?? null,
             g.workItems,
@@ -309,7 +309,7 @@ export function BacklogPage() {
           {/* Backlog (unassigned) */}
           {renderSection(null, backlogGroup?.workItems ?? [], true)}
 
-          {/* Completed sprints (collapsed by default — rendered but section starts collapsed) */}
+          {/* Completed iterations (collapsed by default — rendered but section starts collapsed) */}
           {completedGroups.map(g => renderSection(
             iterations.find(i => i.id === g.iterationId) ?? null,
             g.workItems,

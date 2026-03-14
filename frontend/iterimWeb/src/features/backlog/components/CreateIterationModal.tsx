@@ -31,12 +31,12 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
       });
-      toast({ variant: 'success', title: 'Sprint created successfully' });
+      toast({ variant: 'success', title: 'Iteration created successfully' });
       setOpen(false);
       resetForm();
       onCreated();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to create sprint' });
+      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to create iteration' });
     } finally {
       setIsLoading(false);
     }
@@ -53,12 +53,12 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-2" /> Create Sprint
+          <Plus className="h-4 w-4 mr-2" /> Create Iteration
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Sprint</DialogTitle>
+          <DialogTitle>Create New Iteration</DialogTitle>
           <DialogDescription>
             Leave dates empty to use the default iteration length from organization settings.
           </DialogDescription>
@@ -66,7 +66,7 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium">Name</label>
-            <Input placeholder="Sprint 5" value={name} onChange={(e) => setName(e.target.value)} disabled={isLoading} />
+            <Input placeholder="Iteration 5" value={name} onChange={(e) => setName(e.target.value)} disabled={isLoading} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -80,11 +80,11 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
           </div>
           <div>
             <label className="text-sm font-medium">Goal (optional)</label>
-            <Textarea placeholder="What should this sprint achieve?" value={goal} onChange={(e) => setGoal(e.target.value)} disabled={isLoading} rows={3} />
+            <Textarea placeholder="What should this iteration achieve?" value={goal} onChange={(e) => setGoal(e.target.value)} disabled={isLoading} rows={3} />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>{isLoading ? 'Creating...' : 'Create Sprint'}</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Creating...' : 'Create Iteration'}</Button>
           </div>
         </form>
       </DialogContent>

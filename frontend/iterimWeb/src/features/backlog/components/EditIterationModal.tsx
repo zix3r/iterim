@@ -42,11 +42,11 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
         endDate,
         goal: goal || undefined,
       });
-      toast({ variant: 'success', title: 'Sprint updated successfully' });
+      toast({ variant: 'success', title: 'Iteration updated successfully' });
       onOpenChange(false);
       onUpdated();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to update sprint' });
+      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to update iteration' });
     } finally {
       setIsLoading(false);
     }
@@ -56,8 +56,8 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Sprint</DialogTitle>
-          <DialogDescription>Update sprint details.</DialogDescription>
+          <DialogTitle>Edit Iteration</DialogTitle>
+          <DialogDescription>Update iteration details.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>

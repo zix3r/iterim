@@ -38,10 +38,10 @@ export function IterationSection({
     if (!iteration) return;
     try {
       await startIteration(iteration.id);
-      toast({ variant: 'success', title: 'Sprint started!' });
+      toast({ variant: 'success', title: 'Iteration started!' });
       onRefresh();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to start sprint' });
+      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to start iteration' });
     }
   };
 
@@ -50,11 +50,11 @@ export function IterationSection({
     setIsDeleting(true);
     try {
       await deleteIteration(iteration.id);
-      toast({ variant: 'success', title: 'Sprint deleted' });
+      toast({ variant: 'success', title: 'Iteration deleted' });
       setConfirmDelete(false);
       onRefresh();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to delete sprint' });
+      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to delete iteration' });
     } finally {
       setIsDeleting(false);
     }
@@ -85,7 +85,7 @@ export function IterationSection({
           </>
         ) : (
           <>
-            <span className="font-semibold text-sm">{iteration?.name ?? `Sprint ${iteration?.id}`}</span>
+            <span className="font-semibold text-sm">{iteration?.name ?? `Iteration ${iteration?.id}`}</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusColor}`}>
               {iteration?.status}
             </span>
@@ -152,7 +152,7 @@ export function IterationSection({
           <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
             {workItems.length === 0 ? (
               <p className="text-xs text-muted-foreground/60 py-4">
-                {isBacklog ? 'No unassigned items' : 'Drag items here to plan this sprint'}
+                {isBacklog ? 'No unassigned items' : 'Drag items here to plan this iteration'}
               </p>
             ) : (
               workItems.map((item) => (
