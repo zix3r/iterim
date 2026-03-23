@@ -20,7 +20,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
-//builder.Services.AddOpenApi();
+builder.Services.AddOpenApi();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
