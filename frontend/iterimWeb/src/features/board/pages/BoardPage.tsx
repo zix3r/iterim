@@ -5,20 +5,25 @@ import { LoadingPage } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { KanbanBoard } from '../components/KanbanBoard';
-import { getActiveBoard, getTeamById, getOrganizationById, type BoardData, type TeamDetail, type OrganizationDetail } from '@/lib/api';
+import { getActiveBoard, getTeamById, getOrganizationById, getWorkItemById, type BoardData, type TeamDetail, type OrganizationDetail, type WorkItem } from '@/lib/api';
+import { EditWorkItemModal } from '@/features/backlog/components/EditWorkItemModal';
+import { useToast } from '@/components/ui/toast';
 
 export function BoardPage() {
   const { orgId, productId, teamId } = useParams();
+  const { toast } = useToast();
   
   const [boardData, setBoardData] = useState<BoardData | null>(null);
   const [team, setTeam] = useState<TeamDetail | null>(null);
   const [org, setOrg] = useState<OrganizationDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Būsena kortelės redagavimo modalui
+  const [editItem, setEditItem] = useState<WorkItem | null>(null);
 
   const tid = Number(teamId);
 
   const loadData = useCallback(async () => {
-    setIsLoading(true);
     try {
       const [board, teamData, orgData] = await Promise.all([
         getActiveBoard(tid),
@@ -39,6 +44,16 @@ export function BoardPage() {
     if (teamId && orgId) loadData();
   }, [teamId, orgId, loadData]);
 
+  const handleCardClick = async (id: number) => {
+    try {
+      const fullItem = await getWorkItemById(id);
+      setEditItem(fullItem);
+    } catch (err) {
+      console.error(err);
+      toast({ variant: 'error', title: 'Error', description: 'Failed to load task details' });
+    }
+  };
+
   if (isLoading) return <LoadingPage />;
   if (!team || !org) return <div className="p-8">Team not found</div>;
 
@@ -56,7 +71,6 @@ export function BoardPage() {
         ]}
       />
 
-      {/* Headeris */}
       <div className="flex-shrink-0">
         <h1 className="text-3xl font-bold">Sprint Board</h1>
         <p className="text-muted-foreground">
@@ -64,7 +78,6 @@ export function BoardPage() {
         </p>
       </div>
 
-      {/* Turinio atvaizdavimas */}
       <div className="flex-1 min-h-0">
         {!boardData ? (
            <EmptyState
@@ -79,9 +92,22 @@ export function BoardPage() {
              }
            />
         ) : (
-          <KanbanBoard boardData={boardData} onBoardUpdate={loadData} />
+          <KanbanBoard 
+            boardData={boardData} 
+            setBoardData={setBoardData}
+            onBoardUpdate={loadData} 
+            onCardClick={handleCardClick} 
+          />
         )}
       </div>
+
+      <EditWorkItemModal
+        item={editItem}
+        members={team.members}
+        open={!!editItem}
+        onOpenChange={(v) => { if (!v) setEditItem(null); }}
+        onUpdated={loadData}
+      />
     </div>
   );
 }

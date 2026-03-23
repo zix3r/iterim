@@ -4,15 +4,15 @@ import type { BoardColumn } from '@/lib/api';
 
 interface KanbanColumnProps {
   column: BoardColumn;
+  onCardClick: (id: number) => void;
 }
 
-export function KanbanColumn({ column }: KanbanColumnProps) {
+export function KanbanColumn({ column, onCardClick }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `col-${column.status}`,
-    data: { status: column.status }, 
+    data: { status: column.status },
   });
 
- 
   const formatStatus = (status: string) => {
     switch(status) {
       case 'Todo': return 'To Do';
@@ -36,7 +36,11 @@ export function KanbanColumn({ column }: KanbanColumnProps) {
         className={`p-3 flex-1 overflow-y-auto transition-colors ${isOver ? 'bg-secondary/60 ring-2 ring-primary/20 inset-0' : ''}`}
       >
         {column.workItems.map(item => (
-          <KanbanCard key={item.id} item={item} />
+          <KanbanCard 
+            key={item.id} 
+            item={item} 
+            onClick={() => onCardClick(item.id)}
+          />
         ))}
       </div>
     </div>
