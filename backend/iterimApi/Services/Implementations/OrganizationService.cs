@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using iterimApi.Data; // Pakeiskite į savo DbContext namespace
-using iterimApi.Models.DTOs.Organizations;
+using iterimApi.DTOs.Organizations;
 using iterimApi.Services.Interfaces;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;

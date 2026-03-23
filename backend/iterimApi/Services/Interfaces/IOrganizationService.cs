@@ -1,4 +1,4 @@
-using iterimApi.Models.DTOs.Organizations;
+using iterimApi.DTOs.Organizations;
 
 namespace iterimApi.Services.Interfaces;
 

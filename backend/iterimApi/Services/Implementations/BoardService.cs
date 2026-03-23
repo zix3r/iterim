@@ -1,8 +1,9 @@
 using iterimApi.Data;
-using iterimApi.Models.DTOs.Boards;
+using iterimApi.DTOs.Boards;
 using iterimApi.DTOs.Iterations;
 using Microsoft.EntityFrameworkCore;
 using iterimApi.Models.Enums;
+using iterimApi.Services.Interfaces;
 
 namespace iterimApi.Services.Implementations 
 {

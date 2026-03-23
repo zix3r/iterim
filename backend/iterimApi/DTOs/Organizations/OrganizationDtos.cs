@@ -1,4 +1,4 @@
-namespace iterimApi.Models.DTOs.Organizations;
+namespace iterimApi.DTOs.Organizations;
 
 public class OrganizationDto
 {

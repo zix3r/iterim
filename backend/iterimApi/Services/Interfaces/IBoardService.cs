@@ -1,6 +1,6 @@
-using iterimApi.Models.DTOs.Boards;
+using iterimApi.DTOs.Boards;
 
-namespace iterimApi.Services;
+namespace iterimApi.Services.Interfaces;
 
 public interface IBoardService
 {

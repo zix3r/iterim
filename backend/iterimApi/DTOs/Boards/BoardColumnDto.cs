@@ -1,9 +1,8 @@
-namespace iterimApi.DTOs
+namespace iterimApi.DTOs.Boards;
+
+public class BoardColumnDto
 {
-    public class BoardColumnDto
-    {
-        public string Status { get; set; } = string.Empty;
-        public int TotalPoints { get; set; }
-        public List<BoardWorkItemDto> WorkItems { get; set; } = new();
-    }
+    public string Status { get; set; } = string.Empty;
+    public int TotalPoints { get; set; }
+    public List<BoardWorkItemDto> WorkItems { get; set; } = new();
 }

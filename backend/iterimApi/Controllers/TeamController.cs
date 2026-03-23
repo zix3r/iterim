@@ -311,6 +311,8 @@ public class TeamsController : ControllerBase
 
         return userId;
     }
+
+    /* kol kas užkomentuoju, neįsivaizduoju kam reikalingas
     [ApiController]
     [Route("api/[controller]")]
     public class TeamsController : ControllerBase
@@ -337,4 +339,5 @@ public class TeamsController : ControllerBase
             return Ok(board);
         }
     }
+    */
 }

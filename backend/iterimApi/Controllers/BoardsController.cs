@@ -1,5 +1,5 @@
-using iterimApi.Models.DTOs.Boards;
-using iterimApi.Services;
+using iterimApi.DTOs.Boards;
+using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace iterimApi.Controllers;

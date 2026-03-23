@@ -1,4 +1,4 @@
-namespace iterimApi.Models.DTOs.Boards;
+namespace iterimApi.DTOs.Boards;
 
 public class BoardWorkItemDto
 {
