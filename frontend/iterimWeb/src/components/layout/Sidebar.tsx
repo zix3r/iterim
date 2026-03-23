@@ -130,6 +130,12 @@ export function SidebarContent() {
                 label="Backlog" 
                 active={location.pathname.includes('/backlog')} 
               />
+              <NavLink 
+                to={`/org/${orgId}/products/${productId}/teams/${teamId}/board`} 
+                icon={ClipboardList} 
+                label="Board" 
+                active={location.pathname.includes('/board')} 
+              />
             </div>
           )}
         </div>

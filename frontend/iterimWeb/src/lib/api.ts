@@ -613,3 +613,37 @@ export const deleteIteration = (id: number): Promise<void> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
 
+// ── Board (Kanban) Types ───────────────────────────────────────────
+
+export interface BoardAssignedMember {
+  id: number;
+  fullName: string;
+}
+
+export interface BoardWorkItem {
+  id: number;
+  title: string;
+  type: string;
+  points: number | null;
+  assignedMember: BoardAssignedMember | null;
+}
+
+export interface BoardColumn {
+  status: string;
+  totalPoints: number;
+  workItems: BoardWorkItem[];
+}
+
+export interface BoardData {
+  iteration: Iteration;
+  columns: BoardColumn[];
+}
+
+// ── Board API ─────────────────────────────────────────────
+
+export const getActiveBoard = (teamId: number): Promise<BoardData | null> =>
+  fetchWithAuth(`/teams/${teamId}/boards/active`).then(async (r) => {
+    if (r.status === 404) return null; // Jei nėra aktyvaus sprinto, grąžiname null
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
