@@ -10,6 +10,7 @@ import { LoadingPage } from '@/components/ui/spinner';
 import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
 import { AddMemberModal } from '../components/AddMemberModal';
 import { useToast } from '@/components/ui/toast';
+import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
@@ -56,7 +57,7 @@ export function OrganizationPage() {
       toast({
         title: "Error",
         description: err.message || 'Failed to remove member',
-        variant: "destructive",
+        variant: "error",
       });
     } finally {
       setRemovingMemberId(null);
@@ -85,6 +86,8 @@ export function OrganizationPage() {
   
   if (!organization) return <div className="p-8">Organization not found</div>;
 
+  const canManageAllAbsences = organization.userRole === 'Admin';
+
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs
@@ -99,9 +102,14 @@ export function OrganizationPage() {
           <h1 className="text-3xl font-bold">{organization.name}</h1>
           <p className="text-muted-foreground">Slug: {organization.slug}</p>
         </div>
-        <Link to={`/org/${orgId}/products`}>
-          <Button>View Products</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link to={`/org/${orgId}/absences`}>
+            <Button variant="outline">Manage Absences</Button>
+          </Link>
+          <Link to={`/org/${orgId}/products`}>
+            <Button>View Products</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -152,6 +160,7 @@ export function OrganizationPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-[150px]">Absence</TableHead>
                 {organization.userRole === 'Admin' && <TableHead className="w-[80px]"></TableHead>}
               </TableRow>
             </TableHeader>
@@ -161,6 +170,22 @@ export function OrganizationPage() {
                   <TableCell className="font-medium">{member.email}</TableCell>
                   <TableCell>{member.role}</TableCell>
                   <TableCell>{member.status}</TableCell>
+                  <TableCell>
+                    {(canManageAllAbsences || member.userId === organization.currentUserId) ? (
+                      <CreateAbsenceModal
+                        orgId={organization.id}
+                        members={organization.members}
+                        initialOrgMemberId={member.id}
+                        triggerLabel="Register"
+                        triggerSize="sm"
+                        triggerVariant="outline"
+                        triggerDisabled={member.status !== 'Active'}
+                        onCreated={loadData}
+                      />
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No access</span>
+                    )}
+                  </TableCell>
                   {organization.userRole === 'Admin' && (
                     <TableCell>
                       {member.userId !== organization.currentUserId && ( // Prevent removing self (use Leave Org instead)

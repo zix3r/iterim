@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
-import { LayoutDashboard, Briefcase, ChevronLeft, LogOut, ClipboardList, Users2, Info } from 'lucide-react';
+import { LayoutDashboard, Briefcase, ChevronLeft, LogOut, ClipboardList, Users2, Info, CalendarX2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
@@ -75,6 +75,12 @@ export function SidebarContent() {
                 icon={Briefcase} 
                 label="Products" 
                 active={location.pathname.includes('/products') && !productId} 
+              />
+              <NavLink
+                to={`/org/${orgId}/absences`}
+                icon={CalendarX2}
+                label="Absences"
+                active={location.pathname === `/org/${orgId}/absences`}
               />
             </div>
           )}

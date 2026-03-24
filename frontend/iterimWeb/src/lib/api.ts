@@ -19,6 +19,34 @@ export interface OrganizationDetail extends Organization {
   currentUserId: number;
 }
 
+export type AbsenceReason = 'Sick' | 'Vacation' | 'Late' | 'Absent' | 'Other';
+
+export interface MemberAbsence {
+  id: number;
+  orgMemberId: number;
+  memberName: string;
+  fromDate: string;
+  toDate: string;
+  reason: string;
+  reasonDetails?: string | null;
+}
+
+export interface CreateMemberAbsenceRequest {
+  orgMemberId: number;
+  fromDate: string;
+  toDate: string;
+  reason: AbsenceReason;
+  otherReason?: string;
+}
+
+export interface UpdateMemberAbsenceRequest {
+  orgMemberId: number;
+  fromDate: string;
+  toDate: string;
+  reason: AbsenceReason;
+  otherReason?: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -312,6 +340,47 @@ export const declineInvitation = (orgId: number): Promise<void> =>
 
 export const removeOrganizationMember = (orgId: number, memberId: number): Promise<void> =>
   fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const getOrganizationAbsences = (
+  orgId: number,
+  fromDate: string,
+  toDate: string
+): Promise<MemberAbsence[]> =>
+  fetchWithAuth(`/organizations/${orgId}/absences?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createOrganizationAbsence = (
+  orgId: number,
+  data: CreateMemberAbsenceRequest
+): Promise<MemberAbsence> =>
+  fetchWithAuth(`/organizations/${orgId}/absences`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateAbsence = (
+  absenceId: number,
+  data: UpdateMemberAbsenceRequest
+): Promise<MemberAbsence> =>
+  fetchWithAuth(`/absences/${absenceId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteAbsence = (absenceId: number): Promise<void> =>
+  fetchWithAuth(`/absences/${absenceId}`, {
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));

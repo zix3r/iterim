@@ -11,6 +11,8 @@ public class MemberAbsenceService : IMemberAbsenceService
 {
     private readonly AppDbContext _db;
 
+    private sealed record OrganizationAccessContext(int OrganizationId, bool CanManageAllAbsences);
+
     public MemberAbsenceService(AppDbContext db)
     {
         _db = db;
@@ -21,11 +23,18 @@ public class MemberAbsenceService : IMemberAbsenceService
         if (to < from)
             throw new InvalidOperationException("To date must be greater than or equal to from date");
 
-        await EnsureOrganizationAccess(orgId, userId);
+        var access = await EnsureOrganizationAccess(orgId, userId);
 
-        var absences = await _db.MemberAbsences
+        var query = _db.MemberAbsences
             .Where(a => a.OrgMember.OrganizationId == orgId)
-            .Where(a => a.FromDate <= to && a.ToDate >= from)
+            .Where(a => a.FromDate <= to && a.ToDate >= from);
+
+        if (!access.CanManageAllAbsences)
+        {
+            query = query.Where(a => a.OrgMember.UserId == userId);
+        }
+
+        var absences = await query
             .Include(a => a.OrgMember)
                 .ThenInclude(om => om.User)
             .OrderBy(a => a.FromDate)
@@ -39,7 +48,7 @@ public class MemberAbsenceService : IMemberAbsenceService
         if (dto.ToDate < dto.FromDate)
             throw new InvalidOperationException("To date must be greater than or equal to from date");
 
-        await EnsureOrganizationAccess(orgId, userId);
+        var access = await EnsureOrganizationAccess(orgId, userId);
 
         var member = await _db.OrganizationMembers
             .Include(m => m.User)
@@ -49,6 +58,9 @@ public class MemberAbsenceService : IMemberAbsenceService
 
         if (member == null)
             throw new KeyNotFoundException("Organization member not found or not active");
+
+        if (!access.CanManageAllAbsences && member.UserId != userId)
+            throw new UnauthorizedAccessException("You can only register absences for yourself");
 
         ValidateReasonDetails(dto.Reason, dto.OtherReason);
 
@@ -86,7 +98,10 @@ public class MemberAbsenceService : IMemberAbsenceService
         if (absence == null)
             return null;
 
-        await EnsureOrganizationAccess(absence.OrgMember.OrganizationId, userId);
+        var access = await EnsureOrganizationAccess(absence.OrgMember.OrganizationId, userId);
+
+        if (!access.CanManageAllAbsences && absence.OrgMember.UserId != userId)
+            throw new UnauthorizedAccessException("You can only manage your own absences");
 
         var member = await _db.OrganizationMembers
             .Include(m => m.User)
@@ -96,6 +111,9 @@ public class MemberAbsenceService : IMemberAbsenceService
 
         if (member == null)
             throw new KeyNotFoundException("Organization member not found or not active");
+
+        if (!access.CanManageAllAbsences && member.UserId != userId)
+            throw new UnauthorizedAccessException("You can only manage your own absences");
 
         ValidateReasonDetails(dto.Reason, dto.OtherReason);
 
@@ -123,7 +141,10 @@ public class MemberAbsenceService : IMemberAbsenceService
         if (absence == null)
             return false;
 
-        await EnsureOrganizationAccess(absence.OrgMember.OrganizationId, userId);
+        var access = await EnsureOrganizationAccess(absence.OrgMember.OrganizationId, userId);
+
+        if (!access.CanManageAllAbsences && absence.OrgMember.UserId != userId)
+            throw new UnauthorizedAccessException("You can only manage your own absences");
 
         _db.MemberAbsences.Remove(absence);
         await _db.SaveChangesAsync();
@@ -131,15 +152,19 @@ public class MemberAbsenceService : IMemberAbsenceService
         return true;
     }
 
-    private async Task EnsureOrganizationAccess(int orgId, int userId)
+    private async Task<OrganizationAccessContext> EnsureOrganizationAccess(int orgId, int userId)
     {
-        var isMember = await _db.OrganizationMembers
-            .AnyAsync(m => m.OrganizationId == orgId &&
-                           m.UserId == userId &&
-                           m.Status == OrgMemberStatus.Active);
+        var member = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == orgId &&
+                                      m.UserId == userId &&
+                                      m.Status == OrgMemberStatus.Active);
 
-        if (!isMember)
+        if (member == null)
             throw new UnauthorizedAccessException("User is not a member of this organization");
+
+        var canManageAllAbsences = member.Role == OrgMemberRole.Admin;
+
+        return new OrganizationAccessContext(orgId, canManageAllAbsences);
     }
 
     private static void ValidateReasonDetails(AbsenceReason reason, string? otherReason)
@@ -150,10 +175,8 @@ public class MemberAbsenceService : IMemberAbsenceService
 
     private static string? NormalizeReasonDetails(AbsenceReason reason, string? otherReason)
     {
-        if (reason != AbsenceReason.Other)
-            return null;
-
-        return otherReason?.Trim();
+        var normalized = otherReason?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
     }
 
     private static MemberAbsenceDto MapToDto(MemberAbsence absence)
@@ -165,9 +188,8 @@ public class MemberAbsenceService : IMemberAbsenceService
             MemberName = absence.OrgMember.User.Name,
             FromDate = absence.FromDate,
             ToDate = absence.ToDate,
-            Reason = absence.Reason == AbsenceReason.Other && !string.IsNullOrWhiteSpace(absence.ReasonDetails)
-                ? absence.ReasonDetails
-                : absence.Reason.ToString()
+            Reason = absence.Reason.ToString(),
+            ReasonDetails = absence.ReasonDetails
         };
     }
 }
