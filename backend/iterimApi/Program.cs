@@ -81,6 +81,7 @@ builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IIterationService, IterationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IMemberAbsenceService, MemberAbsenceService>();
 
 // CORS
 builder.Services.AddCors(options =>

@@ -12,6 +12,7 @@ import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
 import { BoardPage } from '@/features/board/pages/BoardPage';
+import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
 function MainLayout() {
   return (
     <div className="flex h-screen overflow-hidden">
@@ -36,6 +37,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/org/:orgId" element={<OrganizationPage />} />
+            <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
             <Route path="/org/:orgId/products" element={<ProductsListPage />} />
             <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
             <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />

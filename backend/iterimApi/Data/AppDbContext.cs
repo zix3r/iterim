@@ -63,6 +63,10 @@ public class AppDbContext : DbContext
             .Property(ma => ma.Reason)
             .HasConversion<string>();
 
+        modelBuilder.Entity<MemberAbsence>()
+            .Property(ma => ma.ReasonDetails)
+            .HasMaxLength(500);
+
         // ── User ────────────────────────────────────────────
         modelBuilder.Entity<User>(entity =>
         {
