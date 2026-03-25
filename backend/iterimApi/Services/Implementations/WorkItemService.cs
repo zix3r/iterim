@@ -171,8 +171,6 @@ public class WorkItemService : IWorkItemService
         if (workItem == null)
             return null;
 
-        await EnsureTeamMember(workItem.TeamId, userId);
-
         // Validate AssignedTo if provided
         if (dto.AssignedTo.HasValue)
         {
@@ -193,6 +191,19 @@ public class WorkItemService : IWorkItemService
                 throw new InvalidOperationException("IterationId must be a valid iteration for this team");
         }
 
+        // Resolve the OrgMemberId of the requester (needed for WorkItemHistory.ChangedBy)
+        var orgMember = await _db.OrganizationMembers
+            .Include(om => om.TeamMemberships)
+            .FirstOrDefaultAsync(om =>
+                om.UserId == userId &&
+                om.TeamMemberships.Any(tm => tm.TeamId == workItem.TeamId));
+
+        if (orgMember == null)
+            throw new UnauthorizedAccessException("User is not a member of this team");
+
+        // Track changes and build history entries before mutating the entity
+        var historyEntries = BuildHistoryEntries(workItem, dto, orgMember.Id);
+
         // Update fields
         workItem.Title = dto.Title;
         workItem.Description = dto.Description;
@@ -203,6 +214,9 @@ public class WorkItemService : IWorkItemService
         workItem.IterationId = dto.IterationId;
         workItem.UpdatedBy = userId;
         workItem.UpdatedAt = DateTime.UtcNow;
+
+        if (historyEntries.Count > 0)
+            _db.WorkItemHistories.AddRange(historyEntries);
 
         await _db.SaveChangesAsync();
 
@@ -264,6 +278,41 @@ public class WorkItemService : IWorkItemService
 
         if (!isTeamMember)
             throw new UnauthorizedAccessException("User is not a member of this team");
+    }
+
+    /// <summary>
+    /// Compares the current WorkItem state against the incoming DTO and returns
+    /// a history entry for every field that actually changed.
+    /// Only tracked fields: Status, Priority, Points, AssignedTo, IterationId, Title.
+    /// </summary>
+    private static List<WorkItemHistory> BuildHistoryEntries(
+        WorkItem current, UpdateWorkItemDto incoming, int orgMemberId)
+    {
+        var entries = new List<WorkItemHistory>();
+        var now = DateTime.UtcNow;
+
+        void Add(string field, string? oldVal, string? newVal)
+        {
+            if (oldVal == newVal) return;
+            entries.Add(new WorkItemHistory
+            {
+                WorkItemId  = current.Id,
+                FieldName   = field,
+                OldValue    = oldVal,
+                NewValue    = newVal,
+                ChangedAt   = now,
+                ChangedBy   = orgMemberId
+            });
+        }
+
+        Add("Status",      current.Status.ToString(),       incoming.Status.ToString());
+        Add("Priority",    current.Priority.ToString(),     incoming.Priority.ToString());
+        Add("Points",      current.Points?.ToString(),      incoming.Points?.ToString());
+        Add("AssignedTo",  current.AssignedTo?.ToString(),  incoming.AssignedTo?.ToString());
+        Add("IterationId", current.IterationId?.ToString(), incoming.IterationId?.ToString());
+        Add("Title",       current.Title,                   incoming.Title);
+
+        return entries;
     }
 
     private static WorkItemDto MapToDto(WorkItem wi)

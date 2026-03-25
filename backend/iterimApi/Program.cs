@@ -2,7 +2,6 @@ using System.Text;
 using iterimApi.Data;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
-using iterimApi.Services;
 using iterimApi.Services.Implementations;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -82,6 +81,7 @@ builder.Services.AddScoped<IIterationService, IterationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IMemberAbsenceService, MemberAbsenceService>();
+builder.Services.AddScoped<IMetricsService, MetricsService>();
 
 // CORS
 builder.Services.AddCors(options =>

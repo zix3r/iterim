@@ -3,10 +3,11 @@ using System.Security.Claims;
 using System.Text;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
+using iterimApi.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace iterimApi.Services;
+namespace iterimApi.Services.Implementations;
 
 public class JwtService : IJwtService
 {

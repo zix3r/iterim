@@ -1,6 +1,6 @@
 using iterimApi.Models.Entities;
 
-namespace iterimApi.Services;
+namespace iterimApi.Services.Interfaces;
 
 public interface IJwtService
 {

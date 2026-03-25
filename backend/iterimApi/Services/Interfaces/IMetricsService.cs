@@ -1,0 +1,21 @@
+using iterimApi.DTOs.Metrics;
+
+namespace iterimApi.Services.Interfaces;
+
+public interface IMetricsService
+{
+    /// <summary>
+    /// Returns velocity data for the last N completed sprints of a team.
+    /// </summary>
+    Task<VelocityDto> GetVelocityAsync(int teamId, int userId, int sprintCount = 5);
+
+    /// <summary>
+    /// Returns sprint progress stats and burndown data for a given iteration.
+    /// </summary>
+    Task<SprintMetricsDto> GetSprintMetricsAsync(int iterationId, int userId);
+
+    /// <summary>
+    /// Returns team capacity (work days vs absence days) for a given date range.
+    /// </summary>
+    Task<CapacityDto> GetCapacityAsync(int teamId, int userId, DateOnly fromDate, DateOnly toDate);
+}
