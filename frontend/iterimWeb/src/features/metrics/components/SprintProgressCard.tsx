@@ -35,9 +35,9 @@ export function SprintProgressCard({ data, loading }: Props) {
   if (!data) {
     return (
       <Card>
-        <CardHeader><CardTitle className="text-base">Sprint Progress</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Iteration Progress</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No active sprint found.</p>
+          <p className="text-sm text-muted-foreground">No active iteration found.</p>
         </CardContent>
       </Card>
     );
@@ -59,9 +59,9 @@ export function SprintProgressCard({ data, loading }: Props) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <CardTitle className="text-base">Sprint Progress</CardTitle>
+            <CardTitle className="text-base">Iteration Progress</CardTitle>
             <p className="text-sm text-muted-foreground mt-0.5 truncate">
-              {data.name ?? `Sprint #${data.iterationId}`}
+              {data.name ?? `Iteration #${data.iterationId}`}
             </p>
           </div>
           <Badge

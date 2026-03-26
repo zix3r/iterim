@@ -328,7 +328,7 @@ public class TeamsController : ControllerBase
         [HttpGet("{teamId}/board")]
         public async Task<IActionResult> GetTeamBoard(int teamId)
         {
-            var board = await _boardService.GetActiveSprintBoardAsync(teamId);
+            var board = await _boardService.GetActiveIterationBoardAsync(teamId);
 
             // Pagal kriterijus: Jei nėra, grąžina tuščią arba 404
             if (board == null)

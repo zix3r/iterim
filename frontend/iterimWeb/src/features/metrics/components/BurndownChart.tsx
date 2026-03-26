@@ -63,7 +63,7 @@ export function BurndownChart({ data, loading }: Props) {
             <p className="text-sm text-muted-foreground">No burndown data yet.</p>
             <p className="text-xs text-zinc-400 text-center max-w-xs">
               Burndown is built from work item status change history.
-              Move items to <strong>Done</strong> during the sprint to see the chart fill in.
+              Move items to <strong>Done</strong> during the iteration to see the chart fill in.
             </p>
           </div>
         ) : (

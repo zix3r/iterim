@@ -67,22 +67,22 @@ export function BoardPage() {
           { label: team.productName, href: `/org/${orgId}/products/${productId}` },
           { label: 'Teams', href: `/org/${orgId}/products/${productId}/teams` },
           { label: team.name, href: `/org/${orgId}/products/${productId}/teams/${teamId}` },
-          { label: 'Active Sprint Board' },
+          { label: 'Active Iteration board' },
         ]}
       />
 
       <div className="flex-shrink-0">
-        <h1 className="text-3xl font-bold">Sprint Board</h1>
+        <h1 className="text-3xl font-bold">Iteration board</h1>
         <p className="text-muted-foreground">
-          {boardData?.iteration.name ? `Active Sprint: ${boardData.iteration.name}` : team.name}
+          {boardData?.iteration.name ? `Active Iteration: ${boardData.iteration.name}` : team.name}
         </p>
       </div>
 
       <div className="flex-1 min-h-0">
         {!boardData ? (
            <EmptyState
-             title="No Active Sprint"
-             description="There is currently no active sprint for this team. Start a sprint from the backlog to view the board."
+             title="No Active Iteration"
+             description="There is currently no active iteration for this team. Start an iteration from the backlog to view the board."
              action={
                <Button asChild>
                  <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>

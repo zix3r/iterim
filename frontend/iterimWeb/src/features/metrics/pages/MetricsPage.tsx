@@ -126,7 +126,7 @@ export function MetricsPage() {
 
       <PageHeader
         title="Metrics"
-        description="Team analytics and sprint health"
+        description="Team analytics and iteration health"
         actions={
           !iterLoading && iterations.length > 0 ? (
             <SprintSelector
@@ -142,14 +142,14 @@ export function MetricsPage() {
       {!iterLoading && iterations.length === 0 && (
         <EmptyState
           icon={<BarChart2 className="h-7 w-7" />}
-          title="No sprints yet"
-          description="Create and start a sprint to see metrics here."
+          title="No iterations yet"
+          description="Create and start a iteration to see metrics here."
         />
       )}
 
       {(iterLoading || iterations.length > 0) && (
         <div className="space-y-6">
-          {/* Row 1: Sprint progress + Capacity — scoped to selected sprint */}
+          {/* Row 1: Iteration progress + Capacity — scoped to selected sprint */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SprintProgressCard
               data={sprintMetrics}
@@ -192,7 +192,7 @@ function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProp
 
   return (
     <div className="relative">
-      <label className="text-xs text-zinc-500 font-medium block mb-1">Viewing sprint</label>
+      <label className="text-xs text-zinc-500 font-medium block mb-1">Viewing iteration</label>
       <div className="relative">
         <select
           value={selectedId ?? ''}

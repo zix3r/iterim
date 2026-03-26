@@ -42,12 +42,12 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <CardTitle className="text-base">Velocity</CardTitle>
-            <CardDescription className="mt-0.5">Planned vs completed points per sprint</CardDescription>
+            <CardDescription className="mt-0.5">Planned vs completed points per iteration</CardDescription>
           </div>
           {hasData && (
             <div className="text-right shrink-0">
               <p className="text-2xl font-bold text-zinc-900">{avg}</p>
-              <p className="text-xs text-muted-foreground">avg pts / sprint</p>
+              <p className="text-xs text-muted-foreground">avg pts / iteration</p>
             </div>
           )}
         </div>
@@ -56,7 +56,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
       <CardContent>
         {!hasData ? (
           <div className="flex items-center justify-center h-56 text-sm text-muted-foreground">
-            No completed sprints yet.
+            No completed iterations yet.
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>

@@ -18,7 +18,7 @@ public class BoardsController : ControllerBase
     [HttpGet("active")]
     public async Task<ActionResult<BoardDto>> GetActiveBoard(int teamId)
     {
-        var board = await _boardService.GetActiveSprintBoardAsync(teamId);
+        var board = await _boardService.GetActiveIterationBoardAsync(teamId);
 
         if (board == null)
         {
