@@ -50,7 +50,7 @@ export function MetricsPage() {
   const [velocity, setVelocity] = useState<VelocityData | null>(null);
   const [velocityLoading, setVelocityLoading] = useState(true);
   const [velocityError, setVelocityError] = useState<string | null>(null);
-  const [sprintCount, setSprintCount] = useState(5);
+  const [sprintCount] = useState(5);
 
   // Load all iterations once
   useEffect(() => {
@@ -166,8 +166,6 @@ export function MetricsPage() {
             data={velocity}
             loading={velocityLoading}
             highlightIterationId={selectedIter?.status === 'Completed' ? selectedId : null}
-            sprintCount={sprintCount}
-            onSprintCountChange={setSprintCount}
           />
 
           {/* Row 3: Burndown — scoped to selected sprint */}
