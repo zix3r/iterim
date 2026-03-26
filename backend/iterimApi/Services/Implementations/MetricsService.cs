@@ -65,6 +65,7 @@ public class MetricsService : IMetricsService
     {
         var iteration = await _db.Iterations
             .Include(i => i.WorkItems)
+                .ThenInclude(w => w.History)
             .FirstOrDefaultAsync(i => i.Id == iterationId)
             ?? throw new KeyNotFoundException($"Iteration {iterationId} not found.");
 
@@ -134,14 +135,27 @@ public class MetricsService : IMetricsService
             ? 1
             : (end.DayNumber - start.DayNumber);
 
-        // Build a lookup: workItemId → sorted list of (date, pointsDone)
-        // We use WorkItemHistory to detect when items moved to Done.
-        // Key: workItemId  Value: date when status changed to "Done"
+        // For each work item with points, find the date it was LAST moved to Done
+        // (and only count it if its current status is still Done — re-opened items don't count).
+        // This prevents double-counting if an item was Done → re-opened → Done again.
         var doneDates = workItems
-            .Where(w => w.Points.HasValue)
-            .SelectMany(w => w.History
-                .Where(h => h.FieldName == "Status" && h.NewValue == WorkItemStatus.Done.ToString())
-                .Select(h => new { w.Points, Date = DateOnly.FromDateTime(h.ChangedAt) }))
+            .Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done)
+            .Select(w =>
+            {
+                // Find the most recent history entry where status changed TO Done
+                var lastDoneEntry = w.History
+                    .Where(h => h.FieldName == "Status" && h.NewValue == WorkItemStatus.Done.ToString())
+                    .OrderByDescending(h => h.ChangedAt)
+                    .FirstOrDefault();
+
+                // If no history entry exists, fall back to UpdatedAt
+                // (item was set to Done directly without going through history, e.g. created as Done)
+                var doneDate = lastDoneEntry != null
+                    ? DateOnly.FromDateTime(lastDoneEntry.ChangedAt)
+                    : DateOnly.FromDateTime(w.UpdatedAt);
+
+                return new { w.Points, Date = doneDate };
+            })
             .ToList();
 
         // Daily actual remaining: start from totalPoints and subtract
