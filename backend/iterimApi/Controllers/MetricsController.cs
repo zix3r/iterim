@@ -18,19 +18,19 @@ public class MetricsController : ControllerBase
     }
 
     /// <summary>
-    /// Get velocity data for the last N completed sprints.
-    /// GET /api/teams/:teamId/metrics/velocity?sprints=5
+    /// Get velocity data for the last N completed sprints before (and including) the given iteration.
+    /// GET /api/teams/:teamId/metrics/velocity?sprints=5&beforeIterationId=12
     /// </summary>
     [HttpGet("api/teams/{teamId}/metrics/velocity")]
-    public async Task<IActionResult> GetVelocity(int teamId, [FromQuery] int sprints = 5)
+    public async Task<IActionResult> GetVelocity(int teamId, [FromQuery] int sprints = 5, [FromQuery] int? beforeIterationId = null)
     {
-        if (sprints < 1 || sprints > 50)
-            return BadRequest(new { message = "sprints must be between 1 and 50." });
+        if (sprints < 1 || sprints > 100)
+            return BadRequest(new { message = "sprints must be between 1 and 100." });
 
         try
         {
             var userId   = GetUserId();
-            var velocity = await _metricsService.GetVelocityAsync(teamId, userId, sprints);
+            var velocity = await _metricsService.GetVelocityAsync(teamId, userId, sprints, beforeIterationId);
             return Ok(velocity);
         }
         catch (KeyNotFoundException ex)

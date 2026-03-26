@@ -17,16 +17,22 @@ public class MetricsService : IMetricsService
 
     // ── Velocity ────────────────────────────────────────────────────────────
 
-    public async Task<VelocityDto> GetVelocityAsync(int teamId, int userId, int sprintCount = 5)
+    public async Task<VelocityDto> GetVelocityAsync(int teamId, int userId, int sprintCount = 5, int? beforeIterationId = null)
     {
         await EnsureTeamAccessAsync(teamId, userId);
 
-        // Take the 5 most recent completed sprints (highest Id),
-        // then sort ascending so the chart reads oldest → newest left to right.
-        var iterations = await _db.Iterations
-            .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Completed)
+        // Take the N most recent completed sprints before (and including) the given iteration.
+        // Sort priority: Id desc, then CreatedAt desc (as specified).
+        var query = _db.Iterations
+            .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Completed);
+
+        if (beforeIterationId.HasValue)
+            query = query.Where(i => i.Id <= beforeIterationId.Value);
+
+        var iterations = await query
             .Include(i => i.WorkItems)
             .OrderByDescending(i => i.Id)
+            .ThenByDescending(i => i.CreatedAt)
             .Take(sprintCount)
             .ToListAsync();
 

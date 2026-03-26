@@ -5,9 +5,10 @@ namespace iterimApi.Services.Interfaces;
 public interface IMetricsService
 {
     /// <summary>
-    /// Returns velocity data for the last N completed sprints of a team.
+    /// Returns velocity data for the last N completed sprints before (and including) the given iteration.
+    /// If beforeIterationId is null, returns the last N completed sprints overall.
     /// </summary>
-    Task<VelocityDto> GetVelocityAsync(int teamId, int userId, int sprintCount = 5);
+    Task<VelocityDto> GetVelocityAsync(int teamId, int userId, int sprintCount = 5, int? beforeIterationId = null);
 
     /// <summary>
     /// Returns sprint progress stats and burndown data for a given iteration.

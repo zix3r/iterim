@@ -718,7 +718,8 @@ export const getActiveBoard = (teamId: number): Promise<BoardData | null> =>
   });
 
 
-// ── Metrics Types ───────────────────────────────────────────
+// ── Metrics Types ─────────────────────────────────────────────
+
 export interface SprintVelocityItem {
   iterationId: number;
   name: string | null;
@@ -775,11 +776,14 @@ export interface CapacityData {
 
 // ── Metrics API ───────────────────────────────────────────────
 
-export const getVelocity = (teamId: number, sprints = 5): Promise<VelocityData> =>
-  fetchWithAuth(`/teams/${teamId}/metrics/velocity?sprints=${sprints}`).then(async (r) => {
+export const getVelocity = (teamId: number, sprints = 5, beforeIterationId?: number | null): Promise<VelocityData> => {
+  const params = new URLSearchParams({ sprints: String(sprints) });
+  if (beforeIterationId != null) params.set('beforeIterationId', String(beforeIterationId));
+  return fetchWithAuth(`/teams/${teamId}/metrics/velocity?${params}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+};
 
 export const getSprintMetrics = (iterationId: number): Promise<SprintMetrics> =>
   fetchWithAuth(`/iterations/${iterationId}/metrics`).then(async (r) => {

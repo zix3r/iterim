@@ -50,6 +50,7 @@ export function MetricsPage() {
   const [velocity, setVelocity] = useState<VelocityData | null>(null);
   const [velocityLoading, setVelocityLoading] = useState(true);
   const [velocityError, setVelocityError] = useState<string | null>(null);
+  const [sprintCount, setSprintCount] = useState(5);
 
   // Load all iterations once
   useEffect(() => {
@@ -72,15 +73,15 @@ export function MetricsPage() {
       .finally(() => setIterLoading(false));
   }, [tid]);
 
-  // Load velocity (team-level, independent of selected sprint)
+  // Load velocity — last N completed sprints before (and including) the selected sprint
   useEffect(() => {
-    if (!tid) return;
+    if (!tid || !selectedId) return;
     setVelocityLoading(true);
-    getVelocity(tid, 5)
+    getVelocity(tid, sprintCount, selectedId)
       .then(setVelocity)
       .catch((e: Error) => setVelocityError(e.message))
       .finally(() => setVelocityLoading(false));
-  }, [tid]);
+  }, [tid, selectedId, sprintCount]);
 
   // Reload sprint metrics + capacity whenever selected sprint changes
   useEffect(() => {
@@ -160,11 +161,13 @@ export function MetricsPage() {
             />
           </div>
 
-          {/* Row 2: Velocity — last 5 completed sprints, highlights selected if completed */}
+          {/* Row 2: Velocity — last N completed sprints, highlights selected if completed */}
           <VelocityChart
             data={velocity}
             loading={velocityLoading}
             highlightIterationId={selectedIter?.status === 'Completed' ? selectedId : null}
+            sprintCount={sprintCount}
+            onSprintCountChange={setSprintCount}
           />
 
           {/* Row 3: Burndown — scoped to selected sprint */}
