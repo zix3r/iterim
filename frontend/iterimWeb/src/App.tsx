@@ -13,6 +13,8 @@ import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
 import { BoardPage } from '@/features/board/pages/BoardPage';
 import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
+import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
+
 function MainLayout() {
   return (
     <div className="flex h-screen overflow-hidden">
@@ -43,8 +45,9 @@ function App() {
             <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
-			      <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
           </Route>
         </Route>
 

@@ -716,3 +716,85 @@ export const getActiveBoard = (teamId: number): Promise<BoardData | null> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+
+
+// ── Metrics Types ───────────────────────────────────────────
+export interface SprintVelocityItem {
+  iterationId: number;
+  name: string | null;
+  startDate: string;
+  endDate: string;
+  plannedPoints: number;
+  completedPoints: number;
+}
+
+export interface VelocityData {
+  sprints: SprintVelocityItem[];
+  averageVelocity: number;
+}
+
+export interface BurndownPoint {
+  date: string;
+  remainingPoints: number;
+  idealPoints: number;
+}
+
+export interface SprintMetrics {
+  iterationId: number;
+  name: string | null;
+  startDate: string;
+  endDate: string;
+  status: string;
+  totalPoints: number;
+  completedPoints: number;
+  remainingPoints: number;
+  percentComplete: number;
+  byStatus: Record<string, number>;
+  byType: Record<string, number>;
+  burndown: BurndownPoint[];
+}
+
+export interface MemberCapacityItem {
+  memberId: number;
+  userId: number;
+  name: string;
+  email: string;
+  workDays: number;
+  absenceDays: number;
+  availableDays: number;
+}
+
+export interface CapacityData {
+  fromDate: string;
+  toDate: string;
+  totalWorkDays: number;
+  absenceDays: number;
+  availableDays: number;
+  byMember: MemberCapacityItem[];
+}
+
+// ── Metrics API ───────────────────────────────────────────────
+
+export const getVelocity = (teamId: number, sprints = 5): Promise<VelocityData> =>
+  fetchWithAuth(`/teams/${teamId}/metrics/velocity?sprints=${sprints}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getSprintMetrics = (iterationId: number): Promise<SprintMetrics> =>
+  fetchWithAuth(`/iterations/${iterationId}/metrics`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getCapacity = (
+  teamId: number,
+  fromDate: string,
+  toDate: string,
+): Promise<CapacityData> =>
+  fetchWithAuth(
+    `/teams/${teamId}/metrics/capacity?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`,
+  ).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
