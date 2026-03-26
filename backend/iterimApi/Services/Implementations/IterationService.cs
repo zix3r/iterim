@@ -51,7 +51,6 @@ public class IterationService : IIterationService
     {
         await EnsureTeamMember(teamId, userId);
 
-        // Get default iteration length from OrgConfig
         var defaultLengthDays = await GetDefaultIterationLengthDays(teamId);
 
         var startDate = dto.StartDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
@@ -77,7 +76,6 @@ public class IterationService : IIterationService
         _db.Iterations.Add(iteration);
         await _db.SaveChangesAsync();
 
-        // Load nav properties for DTO
         await _db.Entry(iteration).Reference(i => i.CreatedByUser).LoadAsync();
         await _db.Entry(iteration).Reference(i => i.UpdatedByUser).LoadAsync();
         await _db.Entry(iteration).Collection(i => i.WorkItems).LoadAsync();
@@ -133,7 +131,6 @@ public class IterationService : IIterationService
         if (iteration.Status != IterationStatus.Planning)
             throw new InvalidOperationException("Only iterations in Planning status can be started");
 
-        // Check no other Active iteration exists for this team
         var hasActive = await _db.Iterations
             .AnyAsync(i => i.TeamId == iteration.TeamId &&
                            i.Status == IterationStatus.Active &&
@@ -167,6 +164,18 @@ public class IterationService : IIterationService
         if (iteration.Status != IterationStatus.Active)
             throw new InvalidOperationException("Only active iterations can be completed");
 
+        // ── Snapshot BEFORE moving items out ─────────────────────────────────
+        // Capture planned and completed points while all work items are still
+        // assigned to this iteration. This is the source of truth for velocity.
+        iteration.SnapshotPlannedPoints = iteration.WorkItems
+            .Where(wi => wi.Points.HasValue)
+            .Sum(wi => wi.Points!.Value);
+
+        iteration.SnapshotCompletedPoints = iteration.WorkItems
+            .Where(wi => wi.Points.HasValue && wi.Status == WorkItemStatus.Done)
+            .Sum(wi => wi.Points!.Value);
+        // ─────────────────────────────────────────────────────────────────────
+
         iteration.Status = IterationStatus.Completed;
 
         // Move unfinished work items (anything not Done)
@@ -176,7 +185,6 @@ public class IterationService : IIterationService
 
         if (moveUnfinishedToIterationId.HasValue)
         {
-            // Validate target iteration belongs to same team
             var targetExists = await _db.Iterations
                 .AnyAsync(i => i.Id == moveUnfinishedToIterationId.Value &&
                                i.TeamId == iteration.TeamId &&
@@ -188,9 +196,8 @@ public class IterationService : IIterationService
 
         foreach (var wi in unfinishedItems)
         {
-            wi.IterationId = moveUnfinishedToIterationId; // null = back to backlog
-            
-            // Demote to Backlog if moving to backlog, promote to Todo if moving to another sprint
+            wi.IterationId = moveUnfinishedToIterationId;
+
             if (moveUnfinishedToIterationId == null && wi.Status == WorkItemStatus.Todo)
                 wi.Status = WorkItemStatus.Backlog;
             else if (moveUnfinishedToIterationId != null && wi.Status == WorkItemStatus.Backlog)
@@ -222,7 +229,6 @@ public class IterationService : IIterationService
         if (iteration.Status == IterationStatus.Active)
             throw new InvalidOperationException("Cannot delete an active iteration. Complete it first.");
 
-        // Unassign all work items from this iteration (move back to backlog)
         foreach (var wi in iteration.WorkItems)
         {
             wi.IterationId = null;
@@ -238,11 +244,6 @@ public class IterationService : IIterationService
 
     // ── Private helpers ──────────────────────────────────────
 
-    /// <summary>
-    /// Gets the default iteration length from OrganizationConfig.
-    /// Falls back to 14 days if no config exists.
-    /// Path: Team → Product → Organization → Config
-    /// </summary>
     private async Task<int> GetDefaultIterationLengthDays(int teamId)
     {
         var config = await _db.Teams
@@ -253,9 +254,6 @@ public class IterationService : IIterationService
         return config?.IterationLengthDays ?? 14;
     }
 
-    /// <summary>
-    /// Verifies that the user is a member of the team.
-    /// </summary>
     private async Task EnsureTeamMember(int teamId, int userId)
     {
         var team = await _db.Teams

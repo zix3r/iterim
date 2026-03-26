@@ -38,20 +38,19 @@ public class MetricsService : IMetricsService
 
         var sprintItems = iterations
             .OrderBy(i => i.Id)
-            .Select(i =>
+            .Select(i => new SprintVelocityItem
             {
-                var allPoints = i.WorkItems.Where(w => w.Points.HasValue);
-                return new SprintVelocityItem
-                {
-                    IterationId = i.Id,
-                    Name        = i.Name,
-                    StartDate   = i.StartDate,
-                    EndDate     = i.EndDate,
-                    PlannedPoints    = allPoints.Sum(w => w.Points!.Value),
-                    CompletedPoints  = allPoints
-                        .Where(w => w.Status == WorkItemStatus.Done)
-                        .Sum(w => w.Points!.Value)
-                };
+                IterationId     = i.Id,
+                Name            = i.Name,
+                StartDate       = i.StartDate,
+                EndDate         = i.EndDate,
+                // Use snapshot values captured at completion time.
+                // Fall back to live WorkItems sum for iterations completed before
+                // the snapshot feature was introduced (SnapshotPlannedPoints == null).
+                PlannedPoints   = i.SnapshotPlannedPoints
+                    ?? i.WorkItems.Where(w => w.Points.HasValue).Sum(w => w.Points!.Value),
+                CompletedPoints = i.SnapshotCompletedPoints
+                    ?? i.WorkItems.Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done).Sum(w => w.Points!.Value),
             })
             .ToList();
 

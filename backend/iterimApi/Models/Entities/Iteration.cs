@@ -11,6 +11,19 @@ public class Iteration
     public DateOnly EndDate { get; set; }
     public string? Goal { get; set; }
     public IterationStatus Status { get; set; } = IterationStatus.Planning;
+
+    /// <summary>
+    /// Snapshot: total points of all work items at the moment the iteration was completed.
+    /// Null until the iteration is completed.
+    /// </summary>
+    public int? SnapshotPlannedPoints { get; set; }
+
+    /// <summary>
+    /// Snapshot: points of Done work items at the moment the iteration was completed.
+    /// Null until the iteration is completed.
+    /// </summary>
+    public int? SnapshotCompletedPoints { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int CreatedBy { get; set; }
