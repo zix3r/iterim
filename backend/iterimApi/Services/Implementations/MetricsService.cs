@@ -21,16 +21,17 @@ public class MetricsService : IMetricsService
     {
         await EnsureTeamAccessAsync(teamId, userId);
 
-        // Only completed iterations contribute to velocity
+        // Take the 5 most recent completed sprints (highest Id),
+        // then sort ascending so the chart reads oldest → newest left to right.
         var iterations = await _db.Iterations
             .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Completed)
-            .OrderByDescending(i => i.EndDate)
-            .Take(sprintCount)
             .Include(i => i.WorkItems)
+            .OrderByDescending(i => i.Id)
+            .Take(sprintCount)
             .ToListAsync();
 
         var sprintItems = iterations
-            .OrderBy(i => i.EndDate)
+            .OrderBy(i => i.Id)
             .Select(i =>
             {
                 var allPoints = i.WorkItems.Where(w => w.Points.HasValue);
