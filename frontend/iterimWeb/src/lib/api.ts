@@ -16,6 +16,35 @@ export interface OrganizationMember {
 export interface OrganizationDetail extends Organization {
   members: OrganizationMember[];
   userRole: string;
+  currentUserId: number;
+}
+
+export type AbsenceReason = 'Sick' | 'Vacation' | 'Late' | 'Absent' | 'Other';
+
+export interface MemberAbsence {
+  id: number;
+  orgMemberId: number;
+  memberName: string;
+  fromDate: string;
+  toDate: string;
+  reason: string;
+  reasonDetails?: string | null;
+}
+
+export interface CreateMemberAbsenceRequest {
+  orgMemberId: number;
+  fromDate: string;
+  toDate: string;
+  reason: AbsenceReason;
+  otherReason?: string;
+}
+
+export interface UpdateMemberAbsenceRequest {
+  orgMemberId: number;
+  fromDate: string;
+  toDate: string;
+  reason: AbsenceReason;
+  otherReason?: string;
 }
 
 export interface Product {
@@ -97,6 +126,99 @@ export interface UpdateTeamRequest {
 
 export interface UpdateTeamMemberRoleRequest {
   role: number; // TeamMemberRole enum: 0=Admin, 1=Member
+}
+
+// ── WorkItem Types ────────────────────────────────────────────
+
+export interface WorkItem {
+  id: number;
+  teamId: number;
+  iterationId: number | null;
+  assignedTo: number | null;
+  title: string;
+  description: string | null;
+  points: number | null;
+  type: string;       // "Story" | "Task" | "Bug"
+  priority: string;   // "Low" | "Medium" | "High" | "Critical"
+  status: string;     // "Backlog" | "Todo" | "InProgress" | "Review" | "Done"
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+  updatedBy: number;
+  createdByName: string;
+  updatedByName: string;
+  assignedMember: TeamMember | null;
+}
+
+export interface CreateWorkItemRequest {
+  title: string;
+  description?: string;
+  type: number;       // 0=Story, 1=Task, 2=Bug
+  priority?: number;  // 0=Low, 1=Medium, 2=High, 3=Critical
+  points?: number;
+  assignedTo?: number; // TeamMember.Id
+}
+
+export interface UpdateWorkItemRequest {
+  title: string;
+  description?: string;
+  priority: number;
+  points?: number;
+  status: number;
+  assignedTo?: number | null;
+  iterationId?: number | null;
+}
+
+export interface WorkItemFilter {
+  type?: string;
+  status?: string;
+  assignedTo?: number;
+  iterationId?: number;
+}
+
+// ── Iteration Types ───────────────────────────────────────────
+
+export interface Iteration {
+  id: number;
+  teamId: number;
+  name: string | null;
+  startDate: string;
+  endDate: string;
+  goal: string | null;
+  status: string;     // "Planning" | "Active" | "Completed"
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+  updatedBy: number;
+  createdByName: string;
+  updatedByName: string;
+  workItemCount: number;
+  totalPoints: number;
+}
+
+export interface CreateIterationRequest {
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+  goal?: string;
+}
+
+export interface UpdateIterationRequest {
+  name?: string;
+  startDate: string;
+  endDate: string;
+  goal?: string;
+}
+
+export interface CompleteIterationRequest {
+  moveUnfinishedToIterationId?: number | null;
+}
+
+export interface BacklogGroup {
+  iterationId: number | null;
+  iterationName: string | null;
+  iterationStatus: string | null;
+  workItems: WorkItem[];
 }
 
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
@@ -195,10 +317,73 @@ export const addOrganizationMember = (
     return r.json();
   });
 
-export const getPendingInvitations = (): Promise<Organization[]> =>
+export interface Invitation {
+  organizationId: number;
+  organizationName: string;
+  organizationSlug: string;
+  role: string;
+  invitedAt: string;
+}
+
+export const getPendingInvitations = (): Promise<Invitation[]> =>
   fetchWithAuth('/organizations/invitations').then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
+  });
+
+export const declineInvitation = (orgId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/decline`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const removeOrganizationMember = (orgId: number, memberId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/members/${memberId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const getOrganizationAbsences = (
+  orgId: number,
+  fromDate: string,
+  toDate: string
+): Promise<MemberAbsence[]> =>
+  fetchWithAuth(`/organizations/${orgId}/absences?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createOrganizationAbsence = (
+  orgId: number,
+  data: CreateMemberAbsenceRequest
+): Promise<MemberAbsence> =>
+  fetchWithAuth(`/organizations/${orgId}/absences`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateAbsence = (
+  absenceId: number,
+  data: UpdateMemberAbsenceRequest
+): Promise<MemberAbsence> =>
+  fetchWithAuth(`/absences/${absenceId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteAbsence = (absenceId: number): Promise<void> =>
+  fetchWithAuth(`/absences/${absenceId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
   });
 
 export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>
@@ -309,6 +494,311 @@ export const deleteTeam = (teamId: number): Promise<void> =>
   fetchWithAuth(`/teams/${teamId}`, {
     method: 'DELETE',
   }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// Dashboard API
+// Dashboard Types
+export interface DashboardSprint {
+  id: number;
+  name: string;
+  endDate: string;
+  daysLeft: number;
+  progress: number;
+  totalPoints: number;
+  completedPoints: number;
+}
+
+export interface DashboardTeam {
+  id: number;
+  name: string;
+  activeSprint?: DashboardSprint;
+}
+
+export interface DashboardProduct {
+  id: number;
+  name: string;
+  teams: DashboardTeam[];
+}
+
+export interface DashboardOrganization {
+  id: number;
+  name: string;
+  slug: string;
+  memberCount: number;
+  products: DashboardProduct[];
+}
+
+export interface DashboardWorkItem {
+  id: number;
+  title: string;
+  type: number;
+  typeName: string;
+  status: number;
+  statusName: string;
+  priority: number;
+  priorityName: string;
+  points: number | null;
+  organizationId: number;
+  organizationName: string;
+  productId: number;
+  productName: string;
+  teamId: number;
+  teamName: string;
+}
+
+export interface DashboardActivity {
+  id: number;
+  workItemTitle: string;
+  workItemType: string;
+  workItemId: number;
+  description: string;
+  timestamp: string;
+  actorName: string;
+  type: string;
+  organizationId: number;
+  productId: number;
+  teamId: number;
+}
+
+export interface DashboardData {
+  organizations: DashboardOrganization[];
+  myWork: DashboardWorkItem[];
+  recentActivity: DashboardActivity[];
+}
+
+export const getDashboard = (): Promise<DashboardData> => 
+  fetchWithAuth('/dashboard').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// ── WorkItem API ──────────────────────────────────────────────
+
+export const getWorkItemsByTeam = (teamId: number, filters?: WorkItemFilter): Promise<WorkItem[]> => {
+  const params = new URLSearchParams();
+  if (filters?.type) params.set('type', filters.type);
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.assignedTo) params.set('assignedTo', filters.assignedTo.toString());
+  if (filters?.iterationId !== undefined) params.set('iterationId', filters.iterationId.toString());
+  const qs = params.toString();
+  return fetchWithAuth(`/teams/${teamId}/workitems${qs ? `?${qs}` : ''}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+};
+
+export const getWorkItemsGrouped = (teamId: number): Promise<BacklogGroup[]> =>
+  fetchWithAuth(`/teams/${teamId}/workitems/grouped`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getWorkItemById = (id: number): Promise<WorkItem> =>
+  fetchWithAuth(`/workitems/${id}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createWorkItem = (teamId: number, data: CreateWorkItemRequest): Promise<WorkItem> =>
+  fetchWithAuth(`/teams/${teamId}/workitems`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise<WorkItem> =>
+  fetchWithAuth(`/workitems/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteWorkItem = (id: number): Promise<void> =>
+  fetchWithAuth(`/workitems/${id}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Iteration API ─────────────────────────────────────────────
+
+export const getIterationsByTeam = (teamId: number): Promise<Iteration[]> =>
+  fetchWithAuth(`/teams/${teamId}/iterations`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getIterationById = (id: number): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createIteration = (teamId: number, data: CreateIterationRequest): Promise<Iteration> =>
+  fetchWithAuth(`/teams/${teamId}/iterations`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateIteration = (id: number, data: UpdateIterationRequest): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const startIteration = (id: number): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}/start`, {
+    method: 'PATCH',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const completeIteration = (id: number, data?: CompleteIterationRequest): Promise<Iteration> =>
+  fetchWithAuth(`/iterations/${id}/complete`, {
+    method: 'PATCH',
+    body: JSON.stringify(data ?? {}),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteIteration = (id: number): Promise<void> =>
+  fetchWithAuth(`/iterations/${id}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Board (Kanban) Types ───────────────────────────────────────────
+
+export interface BoardAssignedMember {
+  id: number;
+  fullName: string;
+}
+
+export interface BoardWorkItem {
+  id: number;
+  title: string;
+  type: string;
+  points: number | null;
+  assignedMember: BoardAssignedMember | null;
+}
+
+export interface BoardColumn {
+  status: string;
+  totalPoints: number;
+  workItems: BoardWorkItem[];
+}
+
+export interface BoardData {
+  iteration: Iteration;
+  columns: BoardColumn[];
+}
+
+// ── Board API ─────────────────────────────────────────────
+
+export const getActiveBoard = (teamId: number): Promise<BoardData | null> =>
+  fetchWithAuth(`/teams/${teamId}/boards/active`).then(async (r) => {
+    if (r.status === 404) return null; // Jei nėra aktyvaus sprinto, grąžiname null
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+
+// ── Metrics Types ─────────────────────────────────────────────
+
+export interface SprintVelocityItem {
+  iterationId: number;
+  name: string | null;
+  startDate: string;
+  endDate: string;
+  plannedPoints: number;
+  completedPoints: number;
+}
+
+export interface VelocityData {
+  sprints: SprintVelocityItem[];
+  averageVelocity: number;
+}
+
+export interface BurndownPoint {
+  date: string;
+  remainingPoints: number;
+  idealPoints: number;
+}
+
+export interface SprintMetrics {
+  iterationId: number;
+  name: string | null;
+  startDate: string;
+  endDate: string;
+  status: string;
+  totalPoints: number;
+  completedPoints: number;
+  remainingPoints: number;
+  percentComplete: number;
+  byStatus: Record<string, number>;
+  byType: Record<string, number>;
+  burndown: BurndownPoint[];
+}
+
+export interface MemberCapacityItem {
+  memberId: number;
+  userId: number;
+  name: string;
+  email: string;
+  workDays: number;
+  absenceDays: number;
+  availableDays: number;
+}
+
+export interface CapacityData {
+  fromDate: string;
+  toDate: string;
+  totalWorkDays: number;
+  absenceDays: number;
+  availableDays: number;
+  byMember: MemberCapacityItem[];
+}
+
+// ── Metrics API ───────────────────────────────────────────────
+
+export const getVelocity = (teamId: number, sprints = 5, beforeIterationId?: number | null): Promise<VelocityData> => {
+  const params = new URLSearchParams({ sprints: String(sprints) });
+  if (beforeIterationId != null) params.set('beforeIterationId', String(beforeIterationId));
+  return fetchWithAuth(`/teams/${teamId}/metrics/velocity?${params}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+};
+
+export const getSprintMetrics = (iterationId: number): Promise<SprintMetrics> =>
+  fetchWithAuth(`/iterations/${iterationId}/metrics`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getCapacity = (
+  teamId: number,
+  fromDate: string,
+  toDate: string,
+): Promise<CapacityData> =>
+  fetchWithAuth(
+    `/teams/${teamId}/metrics/capacity?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`,
+  ).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });

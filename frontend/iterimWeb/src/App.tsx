@@ -10,6 +10,10 @@ import { ToastProvider } from '@/components/ui/toast';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
+import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
+import { BoardPage } from '@/features/board/pages/BoardPage';
+import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
+import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
 
 function MainLayout() {
   return (
@@ -35,10 +39,15 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/org/:orgId" element={<OrganizationPage />} />
+            <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
             <Route path="/org/:orgId/products" element={<ProductsListPage />} />
             <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
             <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
+            <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
           </Route>
         </Route>
 

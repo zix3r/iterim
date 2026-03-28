@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using iterimApi.Models.DTOs.Organizations;
+using iterimApi.DTOs.Organizations;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity.Data;
 
@@ -74,7 +74,7 @@ public class OrganizationsController : ControllerBase
             var member = await _organizationService.AddMemberToOrganizationAsync(id, dto, GetUserId());
             return Ok(member);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
@@ -92,26 +92,80 @@ public class OrganizationsController : ControllerBase
         }
     }
 
+    // DELETE /api/organizations/:id/members/:memberId
+    [HttpDelete("{id:int}/members/{memberId:int}")]
+    public async Task<ActionResult> RemoveMember(int id, int memberId)
+    {
+        try
+        {
+            await _organizationService.RemoveMemberAsync(id, memberId, GetUserId());
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // GET /api/organizations/invitations
     [HttpGet("invitations")]
-    public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetPendingInvitations()
+    public async Task<ActionResult<IEnumerable<PendingInvitationDto>>> GetPendingInvitations()
     {
-        var invitations = await _organizationService.GetPendingInvitationsAsync(GetUserId());
-        return Ok(invitations);
+        var result = await _organizationService.GetPendingInvitationsAsync(GetUserId());
+        return Ok(result);
     }
 
     // POST /api/organizations/:id/accept
     [HttpPost("{id:int}/accept")]
-    public async Task<ActionResult<OrganizationMemberDto>> AcceptInvitation(int id)
+    public async Task<ActionResult<AcceptInvitationResultDto>> AcceptInvitation(int id)
     {
         try
         {
-            var member = await _organizationService.AcceptInvitationAsync(id, GetUserId());
-            return Ok(member);
+            var result = await _organizationService.AcceptInvitationAsync(id, GetUserId());
+            return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // POST /api/organizations/:id/decline
+    [HttpPost("{id:int}/decline")]
+    public async Task<ActionResult<DeclineInvitationResultDto>> DeclineInvitation(int id)
+    {
+        try
+        {
+            var result = await _organizationService.DeclineInvitationAsync(id, GetUserId());
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+             return BadRequest(new { message = ex.Message });
         }
     }
 }

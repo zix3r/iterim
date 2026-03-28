@@ -311,4 +311,33 @@ public class TeamsController : ControllerBase
 
         return userId;
     }
+
+    /* kol kas užkomentuoju, neįsivaizduoju kam reikalingas
+    [ApiController]
+    [Route("api/[controller]")]
+    public class TeamsController : ControllerBase
+    {
+        private readonly IBoardService _boardService;
+
+        public TeamsController(IBoardService boardService)
+        {
+            _boardService = boardService;
+        }
+
+        // GET /api/teams/{teamId}/board
+        [HttpGet("{teamId}/board")]
+        public async Task<IActionResult> GetTeamBoard(int teamId)
+        {
+            var board = await _boardService.GetActiveIterationBoardAsync(teamId);
+
+            // Pagal kriterijus: Jei nėra, grąžina tuščią arba 404
+            if (board == null)
+            {
+                return NotFound(new { message = "No active iteration found for this team." });
+            }
+
+            return Ok(board);
+        }
+    }
+    */
 }

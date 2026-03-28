@@ -110,32 +110,34 @@ iterim/
 │   └── iterimApi/
 │       ├── Controllers/         # API endpoints
 │       ├── Data/                # AppDbContext & DB config
-│       ├── Extensions/          # Service extension methods
-│       ├── Middleware/           # Custom middleware
-│       ├── Migrations/          # EF Core migrations (auto-generated)
+│       ├── DTOs/                # Data Transfer Objects (Request/Response models)
+│       ├── Helpers/             # Helper classes (e.g., CookieHelper)
+│       ├── Migrations/          # EF Core migrations
 │       ├── Models/
-│       │   ├── DTOs/            # Data Transfer Objects
-│       │   ├── Entities/        # Database entity classes
-│       │   └── Enums/           # Enum definitions
-│       ├── Services/            # Business logic
-│       ├── Program.cs           # App entry point & config
-│       └── appsettings.Development.json
+│       │   ├── Entities/        # Database entities
+│       │   ├── Enums/           # Enum definitions
+│       │   └── Settings/        # Configuration settings models
+│       ├── Services/
+│       │   ├── Interfaces/      # Service abstractions
+│       │   └── Implementations/ # Business logic implementation
+│       ├── Program.cs           # App entry point & DI configuration
+│       └── appsettings.json     # Configuration file
+│
 ├── frontend/
-│   ├── frontend.env.example     # Copy to .env for local config
 │   └── iterimWeb/
 │       ├── src/
-│       │   ├── components/ui/   # shadcn/ui components
-│       │   ├── lib/             # Utility functions
-│       │   ├── App.tsx          # Root component
-│       │   ├── main.tsx         # Entry point
-│       │   └── index.css        # Tailwind CSS imports
-│       ├── package.json
-│       ├── tsconfig.json
-│       ├── tsconfig.app.json
-│       └── vite.config.ts
-├── docker-compose.yml           # MySQL + phpMyAdmin
-├── iterim.sln                   # .NET solution file
-└── README.md
+│       │   ├── assets/          # Static assets (images, fonts)
+│       │   ├── components/      # Shared UI components
+│       │   ├── features/        # Feature-based modules
+│       │   ├── lib/             # Utility libraries & helpers
+│       │   ├── App.tsx          # Main application component
+│       │   └── main.tsx         # Frontend entry point
+│       ├── index.html           # HTML template
+│       ├── package.json         # NPM dependencies & scripts
+│       └── vite.config.ts       # Vite configuration
+│
+├── docker-compose.yml           # Docker services configuration
+└── README.md                    # Project documentation
 ```
 
 ## 🗄️ Database

@@ -17,7 +17,7 @@ namespace iterimApi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.13")
+                .HasAnnotation("ProductVersion", "9.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -44,6 +44,12 @@ namespace iterimApi.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("SnapshotCompletedPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SnapshotPlannedPoints")
+                        .HasColumnType("int");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
@@ -95,6 +101,10 @@ namespace iterimApi.Migrations
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("ReasonDetails")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
 
                     b.Property<DateOnly>("ToDate")
                         .HasColumnType("date");

@@ -2,7 +2,6 @@ using System.Text;
 using iterimApi.Data;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
-using iterimApi.Services;
 using iterimApi.Services.Implementations;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -18,6 +17,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 builder.Services.AddOpenApi();
 
@@ -76,6 +76,12 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+builder.Services.AddScoped<IWorkItemService, WorkItemService>();
+builder.Services.AddScoped<IIterationService, IterationService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IBoardService, BoardService>();
+builder.Services.AddScoped<IMemberAbsenceService, MemberAbsenceService>();
+builder.Services.AddScoped<IMetricsService, MetricsService>();
 
 // CORS
 builder.Services.AddCors(options =>

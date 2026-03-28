@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using iterimApi.Data; // Pakeiskite į savo DbContext namespace
-using iterimApi.Models.DTOs.Organizations;
+using iterimApi.DTOs.Organizations;
 using iterimApi.Services.Interfaces;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
@@ -50,14 +50,17 @@ public class OrganizationService : IOrganizationService
             Name = organization.Name,
             Slug = organization.Slug,
             UserRole = currentUserMember.Role.ToString(),
-            Members = organization.Members.Select(m => new OrganizationMemberDto
-            {
-                Id = m.Id,
-                UserId = m.UserId,
-                Email = m.Email,
-                Role = m.Role.ToString(),
-                Status = m.Status.ToString()
-            }).ToList()
+            CurrentUserId = userId,
+            Members = organization.Members
+                .Where(m => m.Status != OrgMemberStatus.Removed && m.Status != OrgMemberStatus.Declined)
+                .Select(m => new OrganizationMemberDto
+                {
+                    Id = m.Id,
+                    UserId = m.UserId,
+                    Email = m.Email,
+                    Role = m.Role.ToString(),
+                    Status = m.Status.ToString()
+                }).ToList()
         };
     }
 
@@ -125,12 +128,40 @@ public class OrganizationService : IOrganizationService
             throw new KeyNotFoundException($"User with email '{dto.Email}' not found.");
 
         // Check if user is already a member
-        if (organization.Members.Any(m => m.UserId == userToAdd.Id))
+        var existingMember = organization.Members.FirstOrDefault(m => m.UserId == userToAdd.Id);
+        
+        if (existingMember != null && 
+           (existingMember.Status == OrgMemberStatus.Active || existingMember.Status == OrgMemberStatus.Invited))
+        {
             throw new InvalidOperationException($"User '{dto.Email}' is already a member of this organization.");
+        }
 
         // Parse the role from string to enum
         if (!Enum.TryParse<OrgMemberRole>(dto.Role, true, out var role))
             throw new ArgumentException($"Invalid role: {dto.Role}. Valid roles are: Admin, Member, Viewer");
+
+        if (existingMember != null)
+        {
+             // Re-invite existing (removed/declined) member
+             existingMember.Status = OrgMemberStatus.Invited;
+             existingMember.Role = role;
+             existingMember.InvitedAt = DateTime.UtcNow;
+             existingMember.InvitedBy = currentUserId;
+             existingMember.JoinedAt = null; 
+             existingMember.UpdatedAt = DateTime.UtcNow;
+             existingMember.UpdatedByUserId = currentUserId;
+             
+             await _context.SaveChangesAsync();
+
+             return new OrganizationMemberDto
+             {
+                 Id = existingMember.Id,
+                 UserId = existingMember.UserId,
+                 Email = existingMember.Email,
+                 Role = existingMember.Role.ToString(),
+                 Status = existingMember.Status.ToString()
+             };
+        }
 
         // Create new organization member
         var newMember = new OrganizationMember
@@ -157,44 +188,123 @@ public class OrganizationService : IOrganizationService
         };
     }
 
-    public async Task<OrganizationMemberDto> AcceptInvitationAsync(int organizationId, int userId)
+    public async Task<AcceptInvitationResultDto> AcceptInvitationAsync(int organizationId, int userId)
     {
-        // Find the pending invitation
         var invitation = await _context.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && 
                                      m.UserId == userId && 
                                      m.Status == OrgMemberStatus.Invited);
 
         if (invitation == null)
-            throw new KeyNotFoundException("Invitation not found or already accepted.");
+            throw new KeyNotFoundException("Pending invitation not found.");
 
-        // Accept the invitation
         invitation.Status = OrgMemberStatus.Active;
         invitation.JoinedAt = DateTime.UtcNow;
         invitation.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
 
-        return new OrganizationMemberDto
+        return new AcceptInvitationResultDto
         {
-            Id = invitation.Id,
+            MemberId = invitation.Id,
+            OrganizationId = invitation.OrganizationId,
             UserId = invitation.UserId,
             Email = invitation.Email,
-            Role = invitation.Role.ToString(),
-            Status = invitation.Status.ToString()
+            Role = invitation.Role,
+            Status = invitation.Status,
+            JoinedAt = invitation.JoinedAt
         };
     }
 
-    public async Task<IEnumerable<OrganizationDto>> GetPendingInvitationsAsync(int userId)
+    public async Task<DeclineInvitationResultDto> DeclineInvitationAsync(int organizationId, int userId)
+    {
+        var invitation = await _context.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && 
+                                     m.UserId == userId && 
+                                     m.Status == OrgMemberStatus.Invited);
+
+        if (invitation == null)
+            throw new KeyNotFoundException("Pending invitation not found.");
+
+        invitation.Status = OrgMemberStatus.Declined;
+        invitation.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return new DeclineInvitationResultDto
+        {
+            MemberId = invitation.Id,
+            OrganizationId = invitation.OrganizationId,
+            UserId = invitation.UserId,
+            Status = invitation.Status,
+            DeclinedAt = DateTime.UtcNow
+        };
+    }
+
+    public async Task<bool> RemoveMemberAsync(int organizationId, int memberId, int requestingUserId)
+    {
+        var memberToRemove = await _context.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Id == memberId);
+
+        if (memberToRemove == null)
+            throw new KeyNotFoundException("Member not found in this organization.");
+
+        var potentialRequester = await _context.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == requestingUserId);
+
+        // If the requester is not in the organization, they can't remove anyone
+        if (potentialRequester == null)
+            throw new UnauthorizedAccessException("You are not a member of this organization.");
+
+        bool isRemovingSelf = memberToRemove.UserId == requestingUserId;
+        bool isAdmin = potentialRequester.Role == OrgMemberRole.Admin;
+
+        if (!isRemovingSelf && !isAdmin)
+            throw new UnauthorizedAccessException("Only organization admins can remove other members.");
+
+        if (memberToRemove.Role == OrgMemberRole.Admin && memberToRemove.Status == OrgMemberStatus.Active)
+        {
+            var adminCount = await _context.OrganizationMembers
+                .CountAsync(m => m.OrganizationId == organizationId && m.Role == OrgMemberRole.Admin && m.Status == OrgMemberStatus.Active);
+            
+            if (adminCount <= 1)
+            {
+                // This is the last admin
+                 throw new InvalidOperationException("Cannot remove the last administrator of the organization.");
+            }
+        }
+
+        // Soft delete: Change status to Removed
+        memberToRemove.Status = OrgMemberStatus.Removed;
+        memberToRemove.UpdatedAt = DateTime.UtcNow;
+        memberToRemove.UpdatedByUserId = requestingUserId;
+
+        // Remove from all teams (explicitly needed for soft delete)
+        var teamMemberships = await _context.TeamMembers
+            .Where(tm => tm.OrgMemberId == memberId)
+            .ToListAsync();
+        
+        if (teamMemberships.Any())
+        {
+            _context.TeamMembers.RemoveRange(teamMemberships);
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<IEnumerable<PendingInvitationDto>> GetPendingInvitationsAsync(int userId)
     {
         return await _context.OrganizationMembers
             .Where(m => m.UserId == userId && m.Status == OrgMemberStatus.Invited)
             .Include(m => m.Organization)
-            .Select(m => new OrganizationDto
+            .Select(m => new PendingInvitationDto
             {
-                Id = m.Organization.Id,
-                Name = m.Organization.Name,
-                Slug = m.Organization.Slug
+                OrganizationId = m.Organization.Id,
+                OrganizationName = m.Organization.Name,
+                OrganizationSlug = m.Organization.Slug,
+                Role = m.Role,
+                InvitedAt = m.InvitedAt
             })
             .ToListAsync();
     }

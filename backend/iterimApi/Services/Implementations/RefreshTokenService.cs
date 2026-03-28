@@ -2,10 +2,11 @@ using System.Security.Cryptography;
 using iterimApi.Data;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
+using iterimApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace iterimApi.Services;
+namespace iterimApi.Services.Implementations;
 
 public class RefreshTokenService : IRefreshTokenService
 {

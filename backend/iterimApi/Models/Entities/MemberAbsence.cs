@@ -9,6 +9,7 @@ public class MemberAbsence
     public DateOnly FromDate { get; set; }
     public DateOnly ToDate { get; set; }
     public AbsenceReason Reason { get; set; }
+    public string? ReasonDetails { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int CreatedBy { get; set; }

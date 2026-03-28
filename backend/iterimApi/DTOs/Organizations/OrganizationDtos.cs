@@ -1,4 +1,4 @@
-namespace iterimApi.Models.DTOs.Organizations;
+namespace iterimApi.DTOs.Organizations;
 
 public class OrganizationDto
 {
@@ -16,6 +16,7 @@ public class OrganizationDetailDto : OrganizationDto
 {
 	public List<OrganizationMemberDto> Members { get; set; } = [];
 	public string UserRole { get; set; } = string.Empty; // Current user's role in the organization
+	public int CurrentUserId { get; set; }
 }
 
 public class OrganizationMemberDto
