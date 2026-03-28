@@ -7,6 +7,7 @@ public class UpdateWorkItemDto
 {
     [Required]
     [MaxLength(500)]
+    public WorkItemType? Type { get; set; }  
     public string Title { get; set; } = string.Empty;
 
     public string? Description { get; set; }

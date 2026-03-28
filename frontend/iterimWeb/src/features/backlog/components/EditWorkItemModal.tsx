@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,6 +23,14 @@ const PRIORITY_OPTIONS = [
   { value: 3, label: 'Critical' },
 ];
 
+const TYPE_OPTIONS = [
+  { value: 0, label: 'Story' },
+  { value: 1, label: 'Task' },
+  { value: 2, label: 'Bug' },
+];
+
+const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
+
 // Map string enum values from backend to numeric values
 const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
 const PRIORITY_MAP: Record<string, number> = { Low: 0, Medium: 1, High: 2, Critical: 3 };
@@ -43,6 +51,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
   const [points, setPoints] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [iterationId, setIterationId] = useState<string>('');
+  const [type, setType] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { toast } = useToast();
@@ -57,6 +66,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
       setAssignedTo(item.assignedTo?.toString() ?? '');
       setIterationId(item.iterationId?.toString() ?? '');
       setConfirmDelete(false);
+      setType(TYPE_MAP[item.type] ?? 0);
     }
   }, [item]);
 
@@ -70,6 +80,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
         description: description || undefined,
         priority,
         status,
+        type,
         points: points ? Number(points) : undefined,
         assignedTo: assignedTo ? Number(assignedTo) : null,
         iterationId: iterationId ? Number(iterationId) : null,
@@ -105,13 +116,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Edit Work Item</span>
-            <span className="text-xs text-muted-foreground font-mono">#{item?.id}</span>
-          </DialogTitle>
-          <DialogDescription>
-            Type: {item?.type}
-          </DialogDescription>
+          <DialogTitle>Edit Work Item</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
@@ -119,7 +124,15 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
             <Input value={title} onChange={(e) => setTitle(e.target.value)} disabled={isLoading} required />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium">Type</label>
+              <select value={type} onChange={(e) => setType(Number(e.target.value))} className={selectClass} disabled={isLoading}>
+                {TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-sm font-medium">Status</label>
               <select value={status} onChange={(e) => setStatus(Number(e.target.value))} className={selectClass} disabled={isLoading}>

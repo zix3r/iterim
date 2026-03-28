@@ -212,6 +212,8 @@ public class WorkItemService : IWorkItemService
 
         // Update fields
         workItem.Title = dto.Title;
+        if (dto.Type.HasValue)
+            workItem.Type = dto.Type.Value;
         workItem.Description = dto.Description;
         workItem.Priority = dto.Priority;
         workItem.Points = dto.Points;

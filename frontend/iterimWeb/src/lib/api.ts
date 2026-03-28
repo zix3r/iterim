@@ -166,6 +166,7 @@ export interface UpdateWorkItemRequest {
   priority: number;
   points?: number;
   status: number;
+  type: number;
   assignedTo?: number | null;
   iterationId?: number | null;
 }
