@@ -4,6 +4,7 @@ using iterimApi.Helpers;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace iterimApi.Controllers;
 
@@ -18,8 +19,8 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    // POST /api/auth/register
     [HttpPost("register")]
+    [EnableRateLimiting("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto dto)
     {
         if (!ModelState.IsValid)
@@ -29,7 +30,6 @@ public class AuthController : ControllerBase
 
         if (!result.Success)
         {
-            // 409 if email already in use
             if (result.Errors.Any(e => e.Contains("already in use")))
                 return Conflict(new { errors = result.Errors });
 
@@ -39,8 +39,8 @@ public class AuthController : ControllerBase
         return Ok(user);
     }
 
-    // POST /api/auth/login
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
     {
         if (!ModelState.IsValid)
@@ -54,7 +54,7 @@ public class AuthController : ControllerBase
         return Ok(user);
     }
 
-    // POST /api/auth/refresh
+    // rest unchanged...
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh()
     {
@@ -71,7 +71,6 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
-    // POST /api/auth/logout
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
@@ -85,7 +84,6 @@ public class AuthController : ControllerBase
         return Ok();
     }
 
-    // GET /api/auth/me
     [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> Me()

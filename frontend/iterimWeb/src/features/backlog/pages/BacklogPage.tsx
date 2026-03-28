@@ -4,6 +4,7 @@ import {
   DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { LoadingPage } from '@/components/ui/spinner';
@@ -11,7 +12,7 @@ import { useToast } from '@/components/ui/toast';
 import { Plus } from 'lucide-react';
 import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById,
-  updateWorkItem, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup,
+  updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup,
 } from '@/lib/api';
 
 import { IterationSection } from '../components/IterationSection';
@@ -123,83 +124,114 @@ export function BacklogPage() {
     const draggedItem = active.data.current?.item as WorkItem | undefined;
     if (!draggedItem) return;
 
-    // Determine target iteration
     const overId = over.id.toString();
+
+    // Determine target iteration
     let targetIterationId: number | null = null;
+    let targetWorkItemId: number | null = null;
 
     if (overId === 'backlog') {
       targetIterationId = null;
     } else if (overId.startsWith('iteration-')) {
       targetIterationId = Number(overId.replace('iteration-', ''));
     } else if (overId.startsWith('wi-')) {
-      // Dropped on another work item — find which section it belongs to
-      const targetWiId = Number(overId.replace('wi-', ''));
+      targetWorkItemId = Number(overId.replace('wi-', ''));
       for (const group of groups) {
-        if (group.workItems.some(wi => wi.id === targetWiId)) {
+        if (group.workItems.some(wi => wi.id === targetWorkItemId)) {
           targetIterationId = group.iterationId;
           break;
         }
       }
     }
 
-    // Skip if no change
-    if (draggedItem.iterationId === targetIterationId) return;
+    const sameIteration = draggedItem.iterationId === targetIterationId;
 
-    // Optimistic update
-    setGroups(prev => {
-      const updated = prev.map(g => ({
-        ...g,
-        workItems: g.workItems.filter(wi => wi.id !== draggedItem.id),
-      }));
+    // ── WITHIN same iteration: reorder ──
+    if (sameIteration && targetWorkItemId !== null) {
+      const group = groups.find(g => g.iterationId === targetIterationId);
+      if (!group) return;
 
-      const targetGroup = updated.find(g => g.iterationId === targetIterationId);
-      const movedItem = {
-        ...draggedItem,
-        iterationId: targetIterationId,
-        status: (draggedItem.status === 'Backlog' && targetIterationId !== null)
-          ? 'Todo'
-          : (draggedItem.status === 'Todo' && targetIterationId === null)
-          ? 'Backlog'
-          : draggedItem.status,
-      };
+      const oldIndex = group.workItems.findIndex(wi => wi.id === draggedItem.id);
+      const newIndex = group.workItems.findIndex(wi => wi.id === targetWorkItemId);
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return;
 
-      if (targetGroup) {
-        targetGroup.workItems.push(movedItem);
-      } else {
-        // Create a new group for this iteration
-        const iter = iterations.find(i => i.id === targetIterationId);
-        updated.push({
-          iterationId: targetIterationId,
-          iterationName: iter?.name ?? 'Backlog',
-          iterationStatus: iter?.status ?? null,
-          workItems: [movedItem],
-        });
+      // Optimistic reorder
+      const reordered = arrayMove(group.workItems, oldIndex, newIndex);
+      setGroups(prev =>
+        prev.map(g =>
+          g.iterationId === targetIterationId
+            ? { ...g, workItems: reordered }
+            : g
+        )
+      );
+
+      // Persist positions
+      try {
+        const items = reordered.map((wi: WorkItem, i: number) => ({ id: wi.id, position: i }));
+        await reorderWorkItems(tid, items);
+      } catch {
+        toast({ variant: 'error', title: 'Error', description: 'Failed to reorder. Refreshing...' });
+        loadData();
       }
+      return;
+    }
 
-      return updated;
-    });
+    // ── BETWEEN iterations: move item ──
+    if (!sameIteration) {
+      // Optimistic update
+      setGroups(prev => {
+        const updated = prev.map(g => ({
+          ...g,
+          workItems: g.workItems.filter(wi => wi.id !== draggedItem.id),
+        }));
 
-    // API call
-    try {
-      // Auto-promote Backlog → Todo when dragging into a iteration, and vice versa
-      const newStatus = (draggedItem.status === 'Backlog' && targetIterationId !== null)
-        ? STATUS_MAP['Todo']
-        : (draggedItem.status === 'Todo' && targetIterationId === null)
-        ? STATUS_MAP['Backlog']
-        : STATUS_MAP[draggedItem.status] ?? 0;
+        const targetGroup = updated.find(g => g.iterationId === targetIterationId);
+        const movedItem = {
+          ...draggedItem,
+          iterationId: targetIterationId,
+          status: (draggedItem.status === 'Backlog' && targetIterationId !== null)
+            ? 'Todo'
+            : (draggedItem.status === 'Todo' && targetIterationId === null)
+              ? 'Backlog'
+              : draggedItem.status,
+        };
 
-      await updateWorkItem(draggedItem.id, {
-        title: draggedItem.title,
-        description: draggedItem.description ?? undefined,
-        priority: PRIORITY_MAP[draggedItem.priority] ?? 1,
-        status: newStatus,
-        points: draggedItem.points ?? undefined,
-        assignedTo: draggedItem.assignedTo,
-        iterationId: targetIterationId,
+        if (targetGroup) {
+          targetGroup.workItems.push(movedItem);
+        } else {
+          const iter = iterations.find(i => i.id === targetIterationId);
+          updated.push({
+            iterationId: targetIterationId,
+            iterationName: iter?.name ?? 'Backlog',
+            iterationStatus: iter?.status ?? null,
+            workItems: [movedItem],
+          });
+        }
+
+        return updated;
       });
-    } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: 'Failed to move item. Refreshing...' });
-      loadData(); // Revert on failure
+
+      // API call
+      try {
+        const newStatus = (draggedItem.status === 'Backlog' && targetIterationId !== null)
+          ? STATUS_MAP['Todo']
+          : (draggedItem.status === 'Todo' && targetIterationId === null)
+            ? STATUS_MAP['Backlog']
+            : STATUS_MAP[draggedItem.status] ?? 0;
+
+        await updateWorkItem(draggedItem.id, {
+          title: draggedItem.title,
+          description: draggedItem.description ?? undefined,
+          priority: PRIORITY_MAP[draggedItem.priority] ?? 1,
+          status: newStatus,
+          points: draggedItem.points ?? undefined,
+          assignedTo: draggedItem.assignedTo,
+          iterationId: targetIterationId,
+        });
+      } catch {
+        toast({ variant: 'error', title: 'Error', description: 'Failed to move item. Refreshing...' });
+        loadData();
+      }
     }
   };
 
@@ -322,7 +354,7 @@ export function BacklogPage() {
             <div className="flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-card shadow-lg opacity-90">
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded
                   ${activeItem.type === 'Story' ? 'bg-blue-100 text-blue-700' :
-                    activeItem.type === 'Bug' ? 'bg-red-100 text-red-700' :
+                  activeItem.type === 'Bug' ? 'bg-red-100 text-red-700' :
                     'bg-amber-100 text-amber-700'}`}>
                 {activeItem.type.toUpperCase()}
               </span>

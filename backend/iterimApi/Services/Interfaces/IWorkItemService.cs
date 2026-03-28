@@ -10,4 +10,5 @@ public interface IWorkItemService
     Task<WorkItemDto?> CreateWorkItemAsync(int teamId, CreateWorkItemDto dto, int userId);
     Task<WorkItemDto?> UpdateWorkItemAsync(int id, UpdateWorkItemDto dto, int userId);
     Task<bool> DeleteWorkItemAsync(int id, int userId);
+    Task ReorderWorkItemsAsync(int teamId, ReorderWorkItemsDto dto, int userId);
 }

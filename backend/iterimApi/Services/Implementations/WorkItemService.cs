@@ -70,7 +70,8 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
-            .OrderByDescending(wi => wi.CreatedAt)
+            .OrderBy(wi => wi.Position)
+            .ThenByDescending(wi => wi.CreatedAt)
             .ToListAsync();
 
         // Group: null IterationId = "Backlog", rest grouped by iteration
@@ -141,6 +142,11 @@ public class WorkItemService : IWorkItemService
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+
+        var maxPosition = await _db.WorkItems
+            .Where(wi => wi.TeamId == teamId && wi.IterationId == null)
+            .MaxAsync(wi => (int?)wi.Position) ?? -1;
+        workItem.Position = maxPosition + 1;
 
         _db.WorkItems.Add(workItem);
         await _db.SaveChangesAsync();
@@ -256,6 +262,30 @@ public class WorkItemService : IWorkItemService
         return true;
     }
 
+    public async Task ReorderWorkItemsAsync(int teamId, ReorderWorkItemsDto dto, int userId)
+    {
+        await EnsureTeamMember(teamId, userId);
+
+        var itemIds = dto.Items.Select(i => i.Id).ToList();
+
+        var workItems = await _db.WorkItems
+            .Where(wi => wi.TeamId == teamId && itemIds.Contains(wi.Id))
+            .ToListAsync();
+
+        if (workItems.Count != itemIds.Count)
+            throw new InvalidOperationException("Some work items were not found in this team");
+
+        foreach (var wi in workItems)
+        {
+            var update = dto.Items.First(i => i.Id == wi.Id);
+            wi.Position = update.Position;
+            wi.UpdatedAt = DateTime.UtcNow;
+            wi.UpdatedBy = userId;
+        }
+
+        await _db.SaveChangesAsync();
+    }
+
     // ── Private helpers ──────────────────────────────────────
 
     /// <summary>
@@ -296,21 +326,21 @@ public class WorkItemService : IWorkItemService
             if (oldVal == newVal) return;
             entries.Add(new WorkItemHistory
             {
-                WorkItemId  = current.Id,
-                FieldName   = field,
-                OldValue    = oldVal,
-                NewValue    = newVal,
-                ChangedAt   = now,
-                ChangedBy   = orgMemberId
+                WorkItemId = current.Id,
+                FieldName = field,
+                OldValue = oldVal,
+                NewValue = newVal,
+                ChangedAt = now,
+                ChangedBy = orgMemberId
             });
         }
 
-        Add("Status",      current.Status.ToString(),       incoming.Status.ToString());
-        Add("Priority",    current.Priority.ToString(),     incoming.Priority.ToString());
-        Add("Points",      current.Points?.ToString(),      incoming.Points?.ToString());
-        Add("AssignedTo",  current.AssignedTo?.ToString(),  incoming.AssignedTo?.ToString());
+        Add("Status", current.Status.ToString(), incoming.Status.ToString());
+        Add("Priority", current.Priority.ToString(), incoming.Priority.ToString());
+        Add("Points", current.Points?.ToString(), incoming.Points?.ToString());
+        Add("AssignedTo", current.AssignedTo?.ToString(), incoming.AssignedTo?.ToString());
         Add("IterationId", current.IterationId?.ToString(), incoming.IterationId?.ToString());
-        Add("Title",       current.Title,                   incoming.Title);
+        Add("Title", current.Title, incoming.Title);
 
         return entries;
     }
@@ -346,6 +376,7 @@ public class WorkItemService : IWorkItemService
             Type = wi.Type.ToString(),
             Priority = wi.Priority.ToString(),
             Status = wi.Status.ToString(),
+            Position = wi.Position,
             CreatedAt = wi.CreatedAt,
             UpdatedAt = wi.UpdatedAt,
             CreatedBy = wi.CreatedBy,

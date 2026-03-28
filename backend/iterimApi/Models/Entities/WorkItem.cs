@@ -14,6 +14,7 @@ public class WorkItem
     public WorkItemType Type { get; set; }
     public WorkItemPriority Priority { get; set; } = WorkItemPriority.Medium;
     public WorkItemStatus Status { get; set; } = WorkItemStatus.Backlog;
+    public int Position { get; set; } // For ordering within the iteration
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int CreatedBy { get; set; }

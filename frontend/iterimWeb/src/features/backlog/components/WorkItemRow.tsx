@@ -88,7 +88,7 @@ export function WorkItemRow({ item, onClick }: Props) {
         {item.assignedMember ? (
           <>
             <User className="h-3 w-3" />
-            {item.assignedMember.userName}
+            {item.assignedMember.userName.split(' ').map((n, i) => i === 0 ? n : n[0] + '.').join(' ')}
           </>
         ) : (
           <span className="text-muted-foreground/40">—</span>
