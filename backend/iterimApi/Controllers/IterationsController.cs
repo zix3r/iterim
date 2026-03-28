@@ -211,7 +211,7 @@ public class IterationsController : ControllerBase
         try
         {
             var userId = GetUserId();
-            var iteration = await _iterationService.CompleteIterationAsync(id, userId);
+            var iteration = await _iterationService.CompleteIterationAsync(id, userId, dto?.MoveUnfinishedToIterationId);
 
             if (iteration == null)
             {
