@@ -9,9 +9,10 @@ import { WorkItemRow } from './WorkItemRow';
 import type { Iteration, WorkItem } from '@/lib/api';
 
 interface Props {
-  iteration: Iteration | null; // null = backlog section
+  iteration: Iteration | null;
   workItems: WorkItem[];
   isBacklog?: boolean;
+  readOnly?: boolean;
   onEditIteration?: (iteration: Iteration) => void;
   onCompleteIteration?: (iteration: Iteration) => void;
   onWorkItemClick: (item: WorkItem) => void;
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export function IterationSection({
-  iteration, workItems, isBacklog = false,
+  iteration, workItems, isBacklog = false, readOnly = false,
   onEditIteration, onCompleteIteration, onWorkItemClick, onRefresh,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
@@ -63,13 +64,12 @@ export function IterationSection({
   const statusColor = iteration?.status === 'Active'
     ? 'text-green-600 font-medium dark:text-green-400'
     : iteration?.status === 'Completed'
-    ? 'text-zinc-500 bg-zinc-100/50 dark:bg-zinc-800 dark:text-zinc-400'
-    : 'text-zinc-600 dark:text-zinc-400';
+      ? 'text-zinc-500 bg-zinc-100/50 dark:bg-zinc-800 dark:text-zinc-400'
+      : 'text-zinc-600 dark:text-zinc-400';
 
   return (
-    <div className={`border rounded-lg overflow-hidden transition-colors ${
-      isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''
-    }`}>
+    <div className={`border rounded-lg overflow-hidden transition-colors ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''
+      }`}>
       {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 bg-muted/30 cursor-pointer select-none hover:bg-muted/50 transition-colors"
@@ -100,12 +100,28 @@ export function IterationSection({
           {totalPoints} pts
         </span>
 
+        {/* Completed summary */}
+        {readOnly && (
+          <span className="text-[10px] text-muted-foreground shrink-0">
+            {workItems.filter(wi => wi.status === 'Done').length}/{workItems.length} done
+            {' · '}
+            {workItems.filter(wi => wi.status === 'Done').reduce((s, wi) => s + (wi.points ?? 0), 0)}/{totalPoints} SP
+          </span>
+        )}
+
         {/* Actions (stop propagation so clicks don't toggle collapse) */}
-        {!isBacklog && iteration && (
+        {!isBacklog && !readOnly && iteration && (
           <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
             {iteration.status === 'Planning' && (
               <>
-                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={handleStart}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={handleStart}
+                  disabled={workItems.length === 0}
+                  title={workItems.length === 0 ? 'Add items before starting' : ''}
+                >
                   <Play className="h-3 w-3 mr-1" /> Start
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => onEditIteration?.(iteration)}>
@@ -144,10 +160,9 @@ export function IterationSection({
       {/* Work items list */}
       {!collapsed && (
         <div
-          ref={setNodeRef}
-          className={`p-2 space-y-1 min-h-[48px] transition-colors ${
-            isOver ? 'bg-primary/5' : ''
-          } ${workItems.length === 0 ? 'flex items-center justify-center' : ''}`}
+          ref={readOnly ? undefined : setNodeRef}
+          className={`p-2 space-y-1 min-h-[48px] transition-colors ${isOver && !readOnly ? 'bg-primary/5' : ''
+            } ${workItems.length === 0 ? 'flex items-center justify-center' : ''}`}
         >
           <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
             {workItems.length === 0 ? (
@@ -156,7 +171,7 @@ export function IterationSection({
               </p>
             ) : (
               workItems.map((item) => (
-                <WorkItemRow key={item.id} item={item} onClick={onWorkItemClick} />
+                <WorkItemRow key={item.id} item={item} readOnly={readOnly} onClick={onWorkItemClick} />
               ))
             )}
           </SortableContext>

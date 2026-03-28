@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { LoadingPage } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
-import { Plus } from 'lucide-react';
+import { Plus, History } from 'lucide-react';
 import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById,
   updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup,
@@ -43,6 +43,7 @@ export function BacklogPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCompleted, setShowCompleted] = useState(false);
 
   // Modals
   const [createItemOpen, setCreateItemOpen] = useState(false);
@@ -246,12 +247,14 @@ export function BacklogPage() {
     iteration: Iteration | null,
     items: WorkItem[],
     isBacklog: boolean = false,
+    readOnly: boolean = false,
   ) => (
     <IterationSection
       key={isBacklog ? 'backlog' : `iter-${iteration?.id}`}
       iteration={iteration}
       workItems={filterItems(items)}
       isBacklog={isBacklog}
+      readOnly={readOnly}
       onEditIteration={setEditIteration}
       onCompleteIteration={setCompleteIteration}
       onWorkItemClick={setEditItem}
@@ -305,7 +308,20 @@ export function BacklogPage() {
         <span>🟦 Story</span>
         <span>🟨 Task</span>
         <span>🟥 Bug</span>
-        <span className="ml-auto">💡 Drag items between sections to plan iterations</span>
+        <span className="ml-auto flex items-center gap-3">
+          <span>💡 Drag items between sections to plan iterations</span>
+          {completedGroups.length > 0 && (
+            <Button
+              variant={showCompleted ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setShowCompleted(!showCompleted)}
+            >
+              <History className="h-3 w-3 mr-1" />
+              {showCompleted ? 'Hide' : 'Show'} completed ({completedGroups.length})
+            </Button>
+          )}
+        </span>
       </div>
 
       {/* DnD context wrapping all sections */}
@@ -342,9 +358,12 @@ export function BacklogPage() {
           {renderSection(null, backlogGroup?.workItems ?? [], true)}
 
           {/* Completed iterations (collapsed by default — rendered but section starts collapsed) */}
-          {completedGroups.map(g => renderSection(
+          {/* Completed iterations — toggled */}
+          {showCompleted && completedGroups.map(g => renderSection(
             iterations.find(i => i.id === g.iterationId) ?? null,
             g.workItems,
+            false,
+            true,  // <-- readOnly
           ))}
         </div>
 
