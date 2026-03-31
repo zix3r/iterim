@@ -125,7 +125,13 @@ export function AbsencesPage() {
           <h1 className="text-3xl font-bold">Absence Management</h1>
           <p className="text-muted-foreground">Track vacations, sick leaves, and other member absences.</p>
         </div>
-        <CreateAbsenceModal orgId={organization.id} members={creatableMembers} onCreated={() => loadData(true)} />
+        <CreateAbsenceModal
+          orgId={organization.id}
+          members={creatableMembers}
+          canManageAllAbsences={canManageAllAbsences}
+          currentUserId={organization.currentUserId}
+          onCreated={() => loadData(true)}
+        />
       </div>
 
       <Card>

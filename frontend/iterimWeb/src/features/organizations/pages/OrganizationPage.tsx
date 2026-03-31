@@ -175,6 +175,8 @@ export function OrganizationPage() {
                       <CreateAbsenceModal
                         orgId={organization.id}
                         members={organization.members}
+                        canManageAllAbsences={canManageAllAbsences}
+                        currentUserId={organization.currentUserId}
                         initialOrgMemberId={member.id}
                         triggerLabel="Register"
                         triggerSize="sm"
