@@ -26,6 +26,7 @@ import { EditWorkItemModal } from '../components/EditWorkItemModal';
 // Map backend string status to numeric for PUT
 const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
 const PRIORITY_MAP: Record<string, number> = { Low: 0, Medium: 1, High: 2, Critical: 3 };
+const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 
 export function BacklogPage() {
   const { orgId, productId, teamId } = useParams();
@@ -223,6 +224,7 @@ export function BacklogPage() {
         await updateWorkItem(draggedItem.id, {
           title: draggedItem.title,
           description: draggedItem.description ?? undefined,
+          type: TYPE_MAP[draggedItem.type] ?? 0,
           priority: PRIORITY_MAP[draggedItem.priority] ?? 1,
           status: newStatus,
           points: draggedItem.points ?? undefined,

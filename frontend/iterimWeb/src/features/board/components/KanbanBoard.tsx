@@ -39,6 +39,8 @@ export function KanbanBoard({ boardData, setBoardData, onBoardUpdate, onCardClic
   );
 
   const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
+  const PRIORITY_MAP: Record<string, number> = { Low: 0, Medium: 1, High: 2, Critical: 3 };
+  const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -87,9 +89,10 @@ export function KanbanBoard({ boardData, setBoardData, onBoardUpdate, onCardClic
       await updateWorkItem(draggedItem.id, {
         title: fullItem.title,
         description: fullItem.description ?? undefined,
-        priority: STATUS_MAP[fullItem.priority] ?? 1,
+        type: TYPE_MAP[fullItem.type] ?? 0,
+        priority: PRIORITY_MAP[fullItem.priority] ?? 1,
         points: fullItem.points ?? undefined,
-        assignedTo: fullItem.assignedMember?.id ?? null,
+        assignedTo: fullItem.assignedTo,
         iterationId: fullItem.iterationId,
         status: newStatusNum,
       });

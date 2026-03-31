@@ -5,9 +5,10 @@ namespace iterimApi.DTOs.WorkItems;
 
 public class UpdateWorkItemDto
 {
+    public WorkItemType? Type { get; set; }
+
     [Required]
     [MaxLength(500)]
-    public WorkItemType? Type { get; set; }  
     public string Title { get; set; } = string.Empty;
 
     public string? Description { get; set; }
