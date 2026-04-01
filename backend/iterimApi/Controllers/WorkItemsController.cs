@@ -224,6 +224,41 @@ public class WorkItemsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while deleting the work item", error = ex.Message });
         }
     }
+    /// <summary>
+    /// Reorder work items within an iteration or backlog.
+    /// PATCH /api/teams/:teamId/workitems/reorder
+    /// </summary>
+    [HttpPatch("api/teams/{teamId}/workitems/reorder")]
+    public async Task<IActionResult> ReorderWorkItems(int teamId, [FromBody] ReorderWorkItemsDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            await _workItemService.ReorderWorkItemsAsync(teamId, dto, userId);
+            return Ok(new { message = "Reorder successful" });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while reordering", error = ex.Message });
+        }
+    }
 
     /// <summary>
     /// Helper method to extract user ID from JWT claims

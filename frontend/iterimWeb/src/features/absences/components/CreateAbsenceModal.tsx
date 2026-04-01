@@ -21,6 +21,8 @@ interface Props {
   orgId: number;
   members: OrganizationMember[];
   onCreated: () => void;
+  canManageAllAbsences: boolean;
+  currentUserId: number;
   initialOrgMemberId?: number;
   triggerLabel?: string;
   triggerVariant?: React.ComponentProps<typeof Button>['variant'];
@@ -32,14 +34,31 @@ export function CreateAbsenceModal({
   orgId,
   members,
   onCreated,
+  canManageAllAbsences,
+  currentUserId,
   initialOrgMemberId,
   triggerLabel = 'Register Absence',
   triggerVariant = 'default',
   triggerSize = 'default',
   triggerDisabled = false,
 }: Props) {
+  const activeMembers = useMemo(
+    () => members.filter((member) => member.status === 'Active'),
+    [members],
+  );
+
+  const resolvedInitialMemberId = useMemo(() => {
+    if (initialOrgMemberId != null) return initialOrgMemberId.toString();
+    if (canManageAllAbsences) return '';
+
+    const currentUserMember = activeMembers.find((member) => member.userId === currentUserId);
+    return currentUserMember?.id.toString() ?? '';
+  }, [activeMembers, canManageAllAbsences, currentUserId, initialOrgMemberId]);
+
+  const shouldLockMemberSelection = !canManageAllAbsences;
+
   const [open, setOpen] = useState(false);
-  const [orgMemberId, setOrgMemberId] = useState(initialOrgMemberId?.toString() ?? '');
+  const [orgMemberId, setOrgMemberId] = useState(resolvedInitialMemberId);
   const [fromDate, setFromDate] = useState(getToday());
   const [toDate, setToDate] = useState(getToday());
   const [reason, setReason] = useState<AbsenceReason>('Vacation');
@@ -47,13 +66,10 @@ export function CreateAbsenceModal({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const activeMembers = useMemo(
-    () => members.filter((member) => member.status === 'Active'),
-    [members],
-  );
+  const selectedMember = activeMembers.find((member) => member.id.toString() === orgMemberId);
 
   const resetForm = () => {
-    setOrgMemberId(initialOrgMemberId?.toString() ?? '');
+    setOrgMemberId(resolvedInitialMemberId);
     setFromDate(getToday());
     setToDate(getToday());
     setReason('Vacation');
@@ -63,7 +79,9 @@ export function CreateAbsenceModal({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!orgMemberId) {
+    const submitOrgMemberId = shouldLockMemberSelection ? resolvedInitialMemberId : orgMemberId;
+
+    if (!submitOrgMemberId) {
       toast({ variant: 'error', title: 'Select a member first' });
       return;
     }
@@ -81,7 +99,7 @@ export function CreateAbsenceModal({
     setIsLoading(true);
     try {
       await createOrganizationAbsence(orgId, {
-        orgMemberId: Number(orgMemberId),
+        orgMemberId: Number(submitOrgMemberId),
         fromDate,
         toDate,
         reason,
@@ -130,21 +148,30 @@ export function CreateAbsenceModal({
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-member">
               Member
             </label>
-            <select
-              id="create-absence-member"
-              value={orgMemberId}
-              onChange={(e) => setOrgMemberId(e.target.value)}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-              disabled={isLoading || activeMembers.length === 0}
-              required
-            >
-              <option value="">Select a member</option>
-              {activeMembers.map((member) => (
-                <option key={member.id} value={member.id.toString()}>
-                  {member.email}
-                </option>
-              ))}
-            </select>
+            {shouldLockMemberSelection ? (
+              <Input
+                id="create-absence-member"
+                value={selectedMember?.email ?? 'No active membership found'}
+                disabled
+                readOnly
+              />
+            ) : (
+              <select
+                id="create-absence-member"
+                value={orgMemberId}
+                onChange={(e) => setOrgMemberId(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                disabled={isLoading || activeMembers.length === 0}
+                required
+              >
+                <option value="">Select a member</option>
+                {activeMembers.map((member) => (
+                  <option key={member.id} value={member.id.toString()}>
+                    {member.email}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

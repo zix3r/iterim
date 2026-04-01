@@ -141,6 +141,7 @@ export interface WorkItem {
   type: string;       // "Story" | "Task" | "Bug"
   priority: string;   // "Low" | "Medium" | "High" | "Critical"
   status: string;     // "Backlog" | "Todo" | "InProgress" | "Review" | "Done"
+  position: number;
   createdAt: string;
   updatedAt: string;
   createdBy: number;
@@ -165,6 +166,7 @@ export interface UpdateWorkItemRequest {
   priority: number;
   points?: number;
   status: number;
+  type: number;
   assignedTo?: number | null;
   iterationId?: number | null;
 }
@@ -395,19 +397,19 @@ export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>
   });
 
 // Products API
-export const getProductsByOrganization = (orgId: number): Promise<Product[]> => 
+export const getProductsByOrganization = (orgId: number): Promise<Product[]> =>
   fetchWithAuth(`/organizations/${orgId}/products`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
 
-export const getProductById = (productId: number): Promise<ProductDetail> => 
+export const getProductById = (productId: number): Promise<ProductDetail> =>
   fetchWithAuth(`/products/${productId}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
 
-export const createProduct = (orgId: number, data: CreateProductRequest): Promise<Product> => 
+export const createProduct = (orgId: number, data: CreateProductRequest): Promise<Product> =>
   fetchWithAuth(`/organizations/${orgId}/products`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -416,7 +418,7 @@ export const createProduct = (orgId: number, data: CreateProductRequest): Promis
     return r.json();
   });
 
-export const updateProduct = (productId: number, data: UpdateProductRequest): Promise<Product> => 
+export const updateProduct = (productId: number, data: UpdateProductRequest): Promise<Product> =>
   fetchWithAuth(`/products/${productId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -425,7 +427,7 @@ export const updateProduct = (productId: number, data: UpdateProductRequest): Pr
     return r.json();
   });
 
-export const deleteProduct = (productId: number): Promise<void> => 
+export const deleteProduct = (productId: number): Promise<void> =>
   fetchWithAuth(`/products/${productId}`, {
     method: 'DELETE',
   }).then(async (r) => {
@@ -434,19 +436,19 @@ export const deleteProduct = (productId: number): Promise<void> =>
   });
 
 // Teams API
-export const getTeamsByProduct = (productId: number): Promise<Team[]> => 
+export const getTeamsByProduct = (productId: number): Promise<Team[]> =>
   fetchWithAuth(`/products/${productId}/teams`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
 
-export const getTeamById = (teamId: number): Promise<TeamDetail> => 
+export const getTeamById = (teamId: number): Promise<TeamDetail> =>
   fetchWithAuth(`/teams/${teamId}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
 
-export const createTeam = (productId: number, data: CreateTeamRequest): Promise<Team> => 
+export const createTeam = (productId: number, data: CreateTeamRequest): Promise<Team> =>
   fetchWithAuth(`/products/${productId}/teams`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -455,7 +457,7 @@ export const createTeam = (productId: number, data: CreateTeamRequest): Promise<
     return r.json();
   });
 
-export const updateTeam = (teamId: number, data: UpdateTeamRequest): Promise<Team> => 
+export const updateTeam = (teamId: number, data: UpdateTeamRequest): Promise<Team> =>
   fetchWithAuth(`/teams/${teamId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -464,7 +466,7 @@ export const updateTeam = (teamId: number, data: UpdateTeamRequest): Promise<Tea
     return r.json();
   });
 
-export const addTeamMember = (teamId: number, data: AddTeamMemberRequest): Promise<TeamMember> => 
+export const addTeamMember = (teamId: number, data: AddTeamMemberRequest): Promise<TeamMember> =>
   fetchWithAuth(`/teams/${teamId}/members`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -473,7 +475,7 @@ export const addTeamMember = (teamId: number, data: AddTeamMemberRequest): Promi
     return r.json();
   });
 
-export const updateTeamMemberRole = (teamId: number, userId: number, data: UpdateTeamMemberRoleRequest): Promise<TeamMember> => 
+export const updateTeamMemberRole = (teamId: number, userId: number, data: UpdateTeamMemberRoleRequest): Promise<TeamMember> =>
   fetchWithAuth(`/teams/${teamId}/members/${userId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -482,7 +484,7 @@ export const updateTeamMemberRole = (teamId: number, userId: number, data: Updat
     return r.json();
   });
 
-export const removeTeamMember = (teamId: number, userId: number): Promise<void> => 
+export const removeTeamMember = (teamId: number, userId: number): Promise<void> =>
   fetchWithAuth(`/teams/${teamId}/members/${userId}`, {
     method: 'DELETE',
   }).then(async (r) => {
@@ -490,7 +492,7 @@ export const removeTeamMember = (teamId: number, userId: number): Promise<void> 
     return r.json();
   });
 
-export const deleteTeam = (teamId: number): Promise<void> => 
+export const deleteTeam = (teamId: number): Promise<void> =>
   fetchWithAuth(`/teams/${teamId}`, {
     method: 'DELETE',
   }).then(async (r) => {
@@ -568,7 +570,7 @@ export interface DashboardData {
   recentActivity: DashboardActivity[];
 }
 
-export const getDashboard = (): Promise<DashboardData> => 
+export const getDashboard = (): Promise<DashboardData> =>
   fetchWithAuth('/dashboard').then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
@@ -624,6 +626,14 @@ export const deleteWorkItem = (id: number): Promise<void> =>
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const reorderWorkItems = (teamId: number, items: { id: number; position: number }[]): Promise<void> =>
+  fetchWithAuth(`/teams/${teamId}/workitems/reorder`, {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error('Failed to reorder');
   });
 
 // ── Iteration API ─────────────────────────────────────────────

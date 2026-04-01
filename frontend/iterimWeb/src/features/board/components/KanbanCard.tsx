@@ -36,6 +36,14 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
     ? item.assignedMember.fullName.substring(0, 2).toUpperCase()
     : '?';
 
+  const formattedAssigneeName = item.assignedMember?.fullName
+    ? item.assignedMember.fullName
+        .split(' ')
+        .filter(Boolean)
+        .map((namePart, index) => (index === 0 ? namePart : `${namePart[0]}.`))
+        .join(' ')
+    : null;
+
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
       <Card 
@@ -58,7 +66,6 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
             )}
           </div>
 
-          {/* NAUJA: Vartotojo eilutė su pilnu vardu */}
           <div className="flex items-center gap-1.5 mt-1">
             {item.assignedMember ? (
               <>
@@ -66,7 +73,7 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
                   <AvatarFallback className="text-[9px] bg-primary/10">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="text-xs text-muted-foreground font-medium truncate max-w-[180px]" title={item.assignedMember.fullName}>
-                  {item.assignedMember.fullName}
+                  {formattedAssigneeName}
                 </span>
               </>
             ) : (

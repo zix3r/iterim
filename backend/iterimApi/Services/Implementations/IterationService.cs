@@ -145,6 +145,8 @@ public class IterationService : IIterationService
 
         await _db.SaveChangesAsync();
 
+        await _db.Entry(iteration).Reference(i => i.UpdatedByUser).LoadAsync();
+
         return MapToDto(iteration);
     }
 
@@ -211,6 +213,8 @@ public class IterationService : IIterationService
         iteration.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
+
+        await _db.Entry(iteration).Reference(i => i.UpdatedByUser).LoadAsync();
 
         return MapToDto(iteration);
     }

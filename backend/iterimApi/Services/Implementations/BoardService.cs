@@ -21,7 +21,9 @@ namespace iterimApi.Services.Implementations
             // 1. Randame aktyvų sprintą šiai komandai
             var activeIteration = await _context.Iterations
                 .Include(i => i.WorkItems)
-                    .ThenInclude(wi => wi.AssignedMember) 
+                    .ThenInclude(wi => wi.AssignedMember)
+                        .ThenInclude(tm => tm!.OrgMember)
+                            .ThenInclude(om => om.User)
                 .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Active)
                 .FirstOrDefaultAsync();
 
@@ -68,7 +70,7 @@ namespace iterimApi.Services.Implementations
                         AssignedMember = wi.AssignedMember != null ? new AssignedMemberDto 
                         { 
                             Id = wi.AssignedMember.Id, 
-                            FullName = $"Vartotojas #{wi.AssignedMember.Id}" 
+                            FullName = wi.AssignedMember.OrgMember.User.Name
                         } : null
                     }).ToList() ?? new List<BoardWorkItemDto>();
 

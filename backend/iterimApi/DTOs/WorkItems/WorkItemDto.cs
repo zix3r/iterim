@@ -14,6 +14,7 @@ public class WorkItemDto
     public string Type { get; set; } = string.Empty;
     public string Priority { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public int Position { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public int CreatedBy { get; set; }
