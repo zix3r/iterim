@@ -46,7 +46,7 @@ export function OrganizationHierarchyCard({ organization }: OrgCardProps) {
               <div className="flex items-center justify-between pb-2 border-b border-border/40 mb-2">
                  <div className="flex items-center gap-2">
                     <Package className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Products</span>
+                    <Link to={`/org/${organization.id}/products`} className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors">PRODUCTS</Link>
                  </div>
                  <Button variant="ghost" size="icon" className="h-6 w-6" asChild title="Create Product">
                    <Link to={`/org/${organization.id}/products`}>

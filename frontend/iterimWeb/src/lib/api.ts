@@ -227,7 +227,7 @@ export interface BacklogGroup {
 // Uses HttpOnly cookies (credentials: 'include') — no localStorage, no Bearer token.
 // Automatically attempts one token refresh on 401 before giving up.
 
-const API_URL = 'http://localhost:5229/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5229/api';
 
 let isRefreshing = false;
 let refreshQueue: Array<(ok: boolean) => void> = [];
