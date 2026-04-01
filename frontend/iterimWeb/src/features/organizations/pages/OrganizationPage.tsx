@@ -122,14 +122,16 @@ export function OrganizationPage() {
             <div className="text-2xl font-bold">{organization.members.length}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{productCount}</div>
-          </CardContent>
-        </Card>
+        <Link to={`/org/${orgId}/products`} className="block h-full group">
+          <Card className="h-full transition-colors group-hover:border-primary">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Products</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{productCount}</div>
+            </CardContent>
+          </Card>
+        </Link>
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Active Members</CardTitle>
