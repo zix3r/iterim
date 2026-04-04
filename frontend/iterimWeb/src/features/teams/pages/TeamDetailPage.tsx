@@ -14,6 +14,7 @@ import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router';
+import { addRecentPage } from '@/lib/recentPages';
 
 export function TeamDetailPage() {
   const { orgId, productId, teamId } = useParams();
@@ -31,6 +32,16 @@ export function TeamDetailPage() {
   const [editDescription, setEditDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (team && orgId && productId && teamId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams/${teamId}`,
+        label: team.name,
+        iconType: 'Team'
+      });
+    }
+  }, [team, orgId, productId, teamId]);
 
   const loadTeam = () => {
     if (teamId && orgId) {

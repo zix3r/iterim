@@ -19,4 +19,5 @@ public class User
     // Navigation properties
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     public ICollection<OrganizationMember> OrganizationMemberships { get; set; } = [];
+    public ICollection<RecentPage> RecentPages { get; set; } = [];
 }

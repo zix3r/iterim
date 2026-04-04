@@ -21,6 +21,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkItemComment> WorkItemComments => Set<WorkItemComment>();
     public DbSet<WorkItemHistory> WorkItemHistories => Set<WorkItemHistory>();
     public DbSet<MemberAbsence> MemberAbsences => Set<MemberAbsence>();
+    public DbSet<RecentPage> RecentPages => Set<RecentPage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -6,6 +6,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { RecentPages } from './RecentPages';
 import type { LucideIcon } from 'lucide-react';
 
 interface NavLinkProps {
@@ -163,6 +164,8 @@ export function SidebarContent() {
             </div>
           )}
 
+          {/* RECENT PAGES */}
+          <RecentPages />
         </div>
       </div>
 

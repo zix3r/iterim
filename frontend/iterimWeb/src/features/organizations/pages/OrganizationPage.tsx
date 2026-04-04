@@ -11,6 +11,7 @@ import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
 import { AddMemberModal } from '../components/AddMemberModal';
 import { useToast } from '@/components/ui/toast';
 import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
+import { addRecentPage } from '@/lib/recentPages';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
@@ -20,6 +21,16 @@ export function OrganizationPage() {
   const [error, setError] = useState<string | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (organization && orgId) {
+      addRecentPage({
+        path: `/org/${orgId}`,
+        label: organization.name,
+        iconType: 'Org'
+      });
+    }
+  }, [organization, orgId]);
 
   const loadData = () => {
     if (orgId) {

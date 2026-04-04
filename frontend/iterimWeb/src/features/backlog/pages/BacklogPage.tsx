@@ -22,6 +22,7 @@ import { EditIterationModal } from '../components/EditIterationModal';
 import { CompleteIterationModal } from '../components/CompleteIterationModal';
 import { CreateWorkItemModal } from '../components/CreateWorkItemModal';
 import { EditWorkItemModal } from '../components/EditWorkItemModal';
+import { addRecentPage } from '@/lib/recentPages';
 
 // Map backend string status to numeric for PUT
 const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
@@ -85,6 +86,16 @@ export function BacklogPage() {
   useEffect(() => {
     if (teamId && orgId) loadData();
   }, [teamId, orgId, loadData]);
+
+  useEffect(() => {
+    if (team && orgId && productId && teamId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams/${teamId}/backlog`,
+        label: `${team.name} Backlog`,
+        iconType: 'Team'
+      });
+    }
+  }, [team, orgId, productId, teamId]);
 
   // ── Filter logic ───────────────────────────────────────
 

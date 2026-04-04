@@ -7,10 +7,19 @@ import { OrganizationHierarchyCard } from '../components/OrganizationHierarchyCa
 import { MyWorkWidget } from '../components/MyWorkWidget';
 import { ActivityFeedWidget } from '../components/ActivityFeedWidget';
 import { Skeleton } from '@/components/ui/skeleton';
+import { addRecentPage } from '@/lib/recentPages';
 
 export function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    addRecentPage({
+      path: '/dashboard',
+      label: 'Dashboard',
+      iconType: 'Dashboard'
+    });
+  }, []);
 
   const loadData = async () => {
     try {

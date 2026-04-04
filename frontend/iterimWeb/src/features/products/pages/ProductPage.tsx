@@ -11,6 +11,7 @@ import { LoadingPage } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon } from 'lucide-react';
+import { addRecentPage } from '@/lib/recentPages';
 
 export function ProductPage() {
   const { orgId, productId } = useParams();
@@ -22,6 +23,16 @@ export function ProductPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (product && orgId && productId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}`,
+        label: product.name,
+        iconType: 'Product'
+      });
+    }
+  }, [product, orgId, productId]);
 
   const loadProduct = () => {
     if (productId) {
