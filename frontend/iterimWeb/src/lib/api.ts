@@ -812,3 +812,29 @@ export const getCapacity = (
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+
+// ── Pinned Teams API ──────────────────────────────────────────
+
+export interface PinnedTeam {
+  teamId: number;
+  teamName: string;
+  orgId: number;
+  productId: number;
+  path: string;
+}
+
+export const getPinnedTeams = (): Promise<PinnedTeam[]> =>
+  fetchWithAuth('/users/me/pinned-teams').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const pinTeam = (teamId: number): Promise<void> =>
+  fetchWithAuth(`/users/me/pinned-teams/${teamId}`, { method: 'POST' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const unpinTeam = (teamId: number): Promise<void> =>
+  fetchWithAuth(`/users/me/pinned-teams/${teamId}`, { method: 'DELETE' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });

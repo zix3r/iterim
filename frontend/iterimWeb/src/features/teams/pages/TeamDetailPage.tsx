@@ -10,11 +10,12 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { LoadingPage } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
-import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon, XIcon } from 'lucide-react';
+import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon, XIcon, StarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router';
 import { addRecentPage } from '@/lib/recentPages';
+import { usePinnedTeams } from '@/lib/favorites';
 
 export function TeamDetailPage() {
   const { orgId, productId, teamId } = useParams();
@@ -32,6 +33,7 @@ export function TeamDetailPage() {
   const [editDescription, setEditDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { isPinned, togglePin } = usePinnedTeams();
 
   useEffect(() => {
     if (team && orgId && productId && teamId) {
@@ -261,6 +263,31 @@ export function TeamDetailPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold">{team.name}</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    const currentlyPinned = isPinned(team.id);
+                    try {
+                      await togglePin(team.id, currentlyPinned);
+                      toast({
+                        variant: 'success',
+                        title: currentlyPinned ? 'Unpinned' : 'Pinned',
+                        description: currentlyPinned ? 'Team removed from pinned list.' : 'Team successfully pinned.',
+                      });
+                    } catch (err: any) {
+                       toast({
+                         variant: 'error',
+                         title: 'Error',
+                         description: err?.message || 'Failed to toggle pin state.',
+                       });
+                    }
+                  }}
+                  className={isPinned(team.id) ? 'text-yellow-500 hover:text-yellow-600' : 'text-zinc-400 hover:text-zinc-600'}
+                  title={isPinned(team.id) ? 'Unpin team' : 'Pin team'}
+                >
+                  <StarIcon className={`h-5 w-5 ${isPinned(team.id) ? 'fill-current' : ''}`} />
+                </Button>
                 {canManageTeam && (
                   <Button 
                     variant="ghost" 

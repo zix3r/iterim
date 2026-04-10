@@ -4,8 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-	<LangVersion>13</LangVersion>
-	<NoWarn>NU1608</NoWarn>
+    <LangVersion>13</LangVersion>
+    <NoWarn>NU1608</NoWarn>
+    <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { PinnedTeams } from './PinnedTeams';
 import {
   LayoutDashboard, Briefcase, ChevronLeft, LogOut,
   ClipboardList, Users2, Info, CalendarX2, BarChart2,
@@ -54,6 +55,8 @@ export function SidebarContent() {
             label="Dashboard"
             active={location.pathname === '/dashboard'}
           />
+
+          <PinnedTeams />
 
           {/* LEVEL 2: Organization */}
           {orgId && (

@@ -20,4 +20,5 @@ public class User
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     public ICollection<OrganizationMember> OrganizationMemberships { get; set; } = [];
     public ICollection<RecentPage> RecentPages { get; set; } = [];
+    public ICollection<PinnedTeam> PinnedTeams { get; set; } = [];
 }
