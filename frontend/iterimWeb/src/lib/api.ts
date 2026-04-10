@@ -612,13 +612,17 @@ export const createWorkItem = (teamId: number, data: CreateWorkItemRequest): Pro
     return r.json();
   });
 
+export const teamDataEventTarget = new EventTarget();
+
 export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise<WorkItem> =>
   fetchWithAuth(`/workitems/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const deleteWorkItem = (id: number): Promise<void> =>
@@ -673,7 +677,9 @@ export const startIteration = (id: number): Promise<Iteration> =>
     method: 'PATCH',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const completeIteration = (id: number, data?: CompleteIterationRequest): Promise<Iteration> =>
@@ -682,7 +688,9 @@ export const completeIteration = (id: number, data?: CompleteIterationRequest): 
     body: JSON.stringify(data ?? {}),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const deleteIteration = (id: number): Promise<void> =>

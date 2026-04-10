@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { RecentPages } from './RecentPages';
 import type { LucideIcon } from 'lucide-react';
+import { ActiveIterationIndicator } from './ActiveIterationIndicator';
 
 interface NavLinkProps {
   to: string;
@@ -164,6 +165,9 @@ export function SidebarContent() {
                 label="Metrics"
                 active={location.pathname.includes('/metrics')}
               />
+              <div className="mt-3">
+                <ActiveIterationIndicator key={teamId} teamId={Number(teamId)} />
+              </div>
             </div>
           )}
 
