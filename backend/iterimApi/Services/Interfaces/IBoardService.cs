@@ -4,5 +4,5 @@ namespace iterimApi.Services.Interfaces;
 
 public interface IBoardService
 {
-    Task<BoardDto?> GetActiveIterationBoardAsync(int teamId);
+    Task<BoardDto?> GetActiveSprintBoardAsync(int teamId);
 }

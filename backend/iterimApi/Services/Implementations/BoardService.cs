@@ -16,7 +16,7 @@ namespace iterimApi.Services.Implementations
             _context = context;
         }
 
-        public async Task<BoardDto?> GetActiveIterationBoardAsync(int teamId)
+        public async Task<BoardDto?> GetActiveSprintBoardAsync(int teamId)
         {
             // 1. Randame aktyvų sprintą šiai komandai
             var activeIteration = await _context.Iterations

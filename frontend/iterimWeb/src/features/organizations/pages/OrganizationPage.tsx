@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router';
-import { getOrganizationById, getProductsByOrganization, removeOrganizationMember } from '@/lib/api';
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router';
+import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, deleteOrganization } from '@/lib/api';
 import type { OrganizationDetail } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import { addRecentPage } from '@/lib/recentPages';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
+  const navigate = useNavigate();
+  const [isDeletingOrg, setIsDeletingOrg] = useState(false);
   const [organization, setOrganization] = useState<OrganizationDetail | null>(null);
   const [productCount, setProductCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +34,7 @@ export function OrganizationPage() {
     }
   }, [organization, orgId]);
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     if (orgId) {
       setIsLoading(true);
       setError(null);
@@ -50,7 +52,7 @@ export function OrganizationPage() {
         })
         .finally(() => setIsLoading(false));
     }
-  };
+  }, [orgId]);
 
   const handleRemoveMember = async (memberId: number) => {
     if (!confirm('Are you sure you want to remove this member?')) return;
@@ -64,20 +66,38 @@ export function OrganizationPage() {
         variant: "default",
       });
       loadData(); // Reload data
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove member';
       toast({
         title: "Error",
-        description: err.message || 'Failed to remove member',
+        description: errorMessage,
         variant: "error",
       });
     } finally {
       setRemovingMemberId(null);
     }
   };
+  
+  const handleDeleteOrganization = async () => {
+    if (!confirm('DANGER: Are you absolutely sure you want to delete this organization? This will permanently delete ALL products, teams, sprints, and work items. This action cannot be undone!')) {
+      return;
+    }
+
+    setIsDeletingOrg(true);
+    try {
+      await deleteOrganization(Number(orgId));
+      toast({ title: "Success", description: "Organization deleted successfully." });
+      navigate('/dashboard'); // Ištrynus, grąžiname į pagrindinį puslapį
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete organization';
+      toast({ title: "Error", description: errorMessage, variant: "error" });
+      setIsDeletingOrg(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
-  }, [orgId]);
+  }, [loadData]);
 
 
   if (isLoading) return <LoadingPage />;
@@ -114,6 +134,17 @@ export function OrganizationPage() {
           <p className="text-muted-foreground">Slug: {organization.slug}</p>
         </div>
         <div className="flex gap-2">
+          {/* TIK ADMINAMS: Raudonas trynimo mygtukas */}
+          {organization.userRole === 'Admin' && (
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteOrganization}
+              disabled={isDeletingOrg}
+            >
+              {isDeletingOrg ? 'Deleting...' : 'Delete Organization'}
+            </Button>
+          )}
+          
           <Link to={`/org/${orgId}/absences`}>
             <Button variant="outline">Manage Absences</Button>
           </Link>

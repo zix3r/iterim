@@ -29,7 +29,28 @@ public class OrganizationService : IOrganizationService
             })
             .ToListAsync();
     }
+    public async Task DeleteOrganizationAsync(int orgId, int userId)
+{
+    // 1. Patikriname, ar vartotojas priklauso organizacijai ir ar jis yra Adminas
+    var membership = await _context.OrganizationMembers
+        .FirstOrDefaultAsync(om => om.OrganizationId == orgId && om.UserId == userId);
 
+    if (membership == null)
+        throw new KeyNotFoundException("Organization not found.");
+
+    if (membership.Role != iterimApi.Models.Enums.OrgMemberRole.Admin)
+    {
+    throw new UnauthorizedAccessException("Only Administrators can delete the organization.");
+    }
+    // 2. Surandame organizaciją
+    var org = await _context.Organizations.FindAsync(orgId);
+    if (org == null)
+        throw new KeyNotFoundException("Organization not found.");
+
+    // 3. Ištriname (Dėka tavo AppDbContext konfigūracijos, tai automatiškai ištrins ir visus produktus, komandas bei užduotis!)
+    _context.Organizations.Remove(org);
+    await _context.SaveChangesAsync();
+}
     public async Task<OrganizationDetailDto> GetOrganizationByIdAsync(int id, int userId)
     {
         var organization = await _context.Organizations

@@ -305,6 +305,12 @@ export const createOrganization = (name: string): Promise<Organization> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+  export const deleteOrganization = (orgId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
 
 export const addOrganizationMember = (
   orgId: number,
