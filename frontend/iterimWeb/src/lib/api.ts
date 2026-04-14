@@ -229,60 +229,93 @@ export interface BacklogGroup {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5229/api';
 
+
 let isRefreshing = false;
 let refreshQueue: Array<(ok: boolean) => void> = [];
+
+// Patogus žodynas, verčiantis HTTP kodus į žmogui suprantamą anglų kalbą
+const HTTP_ERROR_MESSAGES: Record<number, string> = {
+  400: "Bad request. Please check your input and try again.",
+  403: "You do not have permission to perform this action.",
+  404: "The requested resource was not found.",
+  409: "Conflict detected. This action cannot be completed in the current state.",
+  500: "An unexpected server error occurred. Please try again later.",
+};
 
 export async function fetchWithAuth(
   url: string,
   options: RequestInit = {},
   retry = true,
 ): Promise<Response> {
-  const res = await fetch(`${API_URL}${url}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  try {
+    const res = await fetch(`${API_URL}${url}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
 
-  if (res.status === 401 && retry) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const r = await fetch(`${API_URL}/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-        const ok = r.ok;
-        refreshQueue.forEach((cb) => cb(ok));
-        refreshQueue = [];
-        isRefreshing = false;
-        if (!ok) return res;
-      } catch {
-        refreshQueue.forEach((cb) => cb(false));
-        refreshQueue = [];
-        isRefreshing = false;
-        return res;
+    if (res.status === 401 && retry) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const r = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+          const ok = r.ok;
+          refreshQueue.forEach((cb) => cb(ok));
+          refreshQueue = [];
+          isRefreshing = false;
+          if (!ok) return res;
+        } catch {
+          refreshQueue.forEach((cb) => cb(false));
+          refreshQueue = [];
+          isRefreshing = false;
+          return res;
+        }
+      } else {
+        await new Promise<boolean>((resolve) => refreshQueue.push(resolve));
       }
-    } else {
-      await new Promise<boolean>((resolve) => refreshQueue.push(resolve));
+      return fetchWithAuth(url, options, false);
     }
-    return fetchWithAuth(url, options, false);
-  }
 
-  return res;
+    return res;
+  } catch {
+    // Čia sugauname NETWORK ERRORS (kai serveris nepasiekiamas arba nėra interneto)
+    throw new Error("Failed to connect to the server. Please check your internet connection.");
+  }
 }
+
 // Helper to extract error message from API response
 async function getErrorMessage(response: Response): Promise<string> {
-  const text = await response.text();
+  const status = response.status;
+  let backendMessage = "";
+
   try {
+    const text = await response.text();
     const json = JSON.parse(text);
-    return json.message || text;
+    // .NET dažnai grąžina validacijos klaidas objekte 'errors'
+    if (json.errors) {
+      const firstErrorKey = Object.keys(json.errors)[0];
+      return json.errors[firstErrorKey][0]; 
+    }
+    backendMessage = json.message || json.title || text;
   } catch {
-    return text;
+    // Ignoruojame, jei ne JSON
   }
+
+  // Jei gavome 500 klaidą, slepiame techninį tekstą nuo vartotojo
+  if (status === 500) {
+    return HTTP_ERROR_MESSAGES[500];
+  }
+
+  // Grąžiname backend'o žinutę arba mūsų paruoštą universalų tekstą
+  return backendMessage || HTTP_ERROR_MESSAGES[status] || "An unexpected error occurred.";
 }
+
 // ── API helpers ───────────────────────────────────────────────────────────────
 
 export const getOrganizations = (): Promise<Organization[]> =>

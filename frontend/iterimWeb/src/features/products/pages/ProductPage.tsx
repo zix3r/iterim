@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { getProductById, deleteProduct } from '@/lib/api';
 import type { ProductDetail } from '@/lib/api';
@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { EditProductModal } from '@/features/products/components/EditProductModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { LoadingPage } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function ProductPage() {
   const { orgId, productId } = useParams();
@@ -34,23 +34,26 @@ export function ProductPage() {
     }
   }, [product, orgId, productId]);
 
-  const loadProduct = () => {
-    if (productId) {
+  const loadProduct = useCallback(async () => {
+    if (!productId) return;
+    
+    try {
       setIsLoading(true);
       setError(null);
-      getProductById(Number(productId))
-        .then(setProduct)
-        .catch((err) => {
-          console.error('Failed to load product:', err);
-          setError('Failed to load product. Please try again.');
-        })
-        .finally(() => setIsLoading(false));
+      const data = await getProductById(Number(productId));
+      setProduct(data);
+    } catch (err) {
+      console.error('Failed to load product:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load product data.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     loadProduct();
-  }, [productId]);
+  }, [loadProduct]);
 
   const handleDelete = async () => {
     if (!productId) return;
@@ -64,37 +67,72 @@ export function ProductPage() {
         description: 'Product deleted successfully'
       });
       navigate(`/org/${orgId}/products`);
-    } catch (error) {
-      console.error('Failed to delete product', error);
+    } catch (err) {
+      console.error('Failed to delete product', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete product.';
       toast({
         variant: 'error',
         title: 'Error',
-        description: 'Failed to delete product. Please try again.'
+        description: errorMessage
       });
       setIsDeleting(false);
       setDeleteDialogOpen(false);
     }
   };
 
-  if (isLoading) return <LoadingPage />;
-  
-  if (error) {
+  // 1. SKELETON BŪSENA (Krovimosi metu)
+  if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-md mx-auto text-center space-y-4">
-          <AlertCircleIcon className="h-12 w-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold">Error Loading Product</h2>
-          <p className="text-muted-foreground">{error}</p>
-          <Button onClick={loadProduct}>Try Again</Button>
+      <div className="p-8 space-y-6 max-w-5xl mx-auto">
+        <Skeleton className="h-4 w-48 mb-6" /> {/* Breadcrumbs */}
+        
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" /> {/* Title */}
+            <Skeleton className="h-4 w-96" /> {/* Description */}
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-24 rounded-md" /> {/* Button */}
+            <Skeleton className="h-10 w-24 rounded-md" /> {/* Button */}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+          <Card><CardContent className="p-6"><Skeleton className="h-12 w-32" /></CardContent></Card>
+          <Card><CardContent className="p-6"><Skeleton className="h-12 w-32" /></CardContent></Card>
+        </div>
+
+        <div className="space-y-4 mt-8">
+           <Skeleton className="h-6 w-32" />
+           <Card className="p-6 space-y-4">
+              <Skeleton className="h-4 w-full max-w-md" />
+              <Skeleton className="h-4 w-full max-w-sm" />
+              <Skeleton className="h-4 w-full max-w-lg" />
+           </Card>
+        </div>
+      </div>
+    );
+  }
+  
+  // 2. KLAIDOS BŪSENA
+  if (error || !product) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Product</h3>
+          <p className="text-sm text-red-700">{error || "Product not found."}</p>
+          <Button onClick={loadProduct} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+            Try Again
+          </Button>
         </div>
       </div>
     );
   }
 
-  if (!product) return <div className="p-8">Product not found</div>;
-
   const isAdmin = product.userRole === 'Admin';
 
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs

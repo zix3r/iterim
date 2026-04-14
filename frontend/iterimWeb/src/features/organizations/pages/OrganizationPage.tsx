@@ -6,12 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { LoadingPage } from '@/components/ui/spinner';
 import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
 import { AddMemberModal } from '../components/AddMemberModal';
 import { useToast } from '@/components/ui/toast';
 import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
 import { addRecentPage } from '@/lib/recentPages';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
@@ -48,7 +48,8 @@ export function OrganizationPage() {
         })
         .catch((err) => {
           console.error('Failed to load organization:', err);
-          setError('Failed to load organization. Please try again.');
+          const errorMessage = err instanceof Error ? err.message : 'Failed to load organization. Please try again.';
+          setError(errorMessage);
         })
         .finally(() => setIsLoading(false));
     }
@@ -100,25 +101,72 @@ export function OrganizationPage() {
   }, [loadData]);
 
 
-  if (isLoading) return <LoadingPage />;
-  
-  if (error) {
+  // 1. SKELETON BŪSENA (Krovimosi metu)
+  if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-md mx-auto text-center space-y-4">
-          <AlertCircleIcon className="h-12 w-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold">Error Loading Organization</h2>
-          <p className="text-muted-foreground">{error}</p>
-          <Button onClick={loadData}>Try Again</Button>
+      <div className="p-8 space-y-6 max-w-5xl mx-auto">
+        <Skeleton className="h-4 w-48 mb-6" /> {/* Breadcrumbs */}
+        
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" /> {/* Title */}
+            <Skeleton className="h-4 w-32" /> {/* Subtitle */}
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32 rounded-md" /> {/* Button */}
+            <Skeleton className="h-10 w-32 rounded-md" /> {/* Button */}
+          </div>
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+             <Card key={i}>
+                <CardHeader><Skeleton className="h-4 w-20" /></CardHeader>
+                <CardContent><Skeleton className="h-8 w-12" /></CardContent>
+             </Card>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="space-y-4 mt-8">
+           <div className="flex justify-between items-center">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-10 w-32 rounded-md" />
+           </div>
+           <div className="border rounded-md p-4 space-y-4">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+           </div>
         </div>
       </div>
     );
   }
   
-  if (!organization) return <div className="p-8">Organization not found</div>;
-
+  // 2. KLAIDOS BŪSENA
+  if (error || !organization) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Organization</h3>
+          <p className="text-sm text-red-700">{error || "Organization not found."}</p>
+          <button 
+            onClick={loadData} 
+            className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-md font-medium transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const canManageAllAbsences = organization.userRole === 'Admin';
 
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs

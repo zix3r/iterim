@@ -14,6 +14,7 @@ import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
 import { BoardPage } from '@/features/board/pages/BoardPage';
 import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
 import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function MainLayout() {
   return (
@@ -28,6 +29,7 @@ function MainLayout() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <ToastProvider>
       <Routes>
         {/* Public routes */}
@@ -55,6 +57,7 @@ function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { LoadingPage } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { KanbanBoard } from '../components/KanbanBoard';
 import { getActiveBoard, getTeamById, getOrganizationById, getWorkItemById, type BoardData, type TeamDetail, type OrganizationDetail, type WorkItem } from '@/lib/api';
 import { EditWorkItemModal } from '@/features/backlog/components/EditWorkItemModal';
 import { useToast } from '@/components/ui/toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { AlertCircle, LayoutGrid, LayoutList } from 'lucide-react';
 
 export function BoardPage() {
   const { orgId, productId, teamId } = useParams();
@@ -17,6 +18,7 @@ export function BoardPage() {
   const [team, setTeam] = useState<TeamDetail | null>(null);
   const [org, setOrg] = useState<OrganizationDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Būsena kortelės redagavimo modalui
   const [editItem, setEditItem] = useState<WorkItem | null>(null);
@@ -25,6 +27,8 @@ export function BoardPage() {
 
   const loadData = useCallback(async () => {
     try {
+      setIsLoading(true);
+      setError(null);
       const [board, teamData, orgData] = await Promise.all([
         getActiveBoard(tid),
         getTeamById(tid),
@@ -33,8 +37,10 @@ export function BoardPage() {
       setBoardData(board);
       setTeam(teamData);
       setOrg(orgData);
-    } catch (error) {
-      console.error('Failed to load board:', error);
+    } catch (err) {
+      console.error('Failed to load board:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load board data.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +60,50 @@ export function BoardPage() {
     }
   };
 
-  if (isLoading) return <LoadingPage />;
-  if (!team || !org) return <div className="p-8">Team not found</div>;
+  // Patikriname, ar iteracija aktyvi, bet visiškai tuščia (nėra kortelių jokiam stulpelyje)
+  const isIterationEmpty = boardData && boardData.columns.every(col => col.workItems.length === 0);
 
+  // 1. SKELETON BŪSENA
+  if (isLoading) {
+    return (
+      <div className="flex flex-col h-full p-6 max-w-[1600px] mx-auto space-y-6">
+        <Skeleton className="h-4 w-64 mb-2" /> {/* Breadcrumbs */}
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        
+        {/* Kanban Board Skeleton */}
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="flex flex-col gap-4 bg-muted/10 p-4 rounded-xl border border-dashed">
+              <Skeleton className="h-6 w-24 mb-2" /> {/* Column title */}
+              <Skeleton className="h-28 w-full rounded-lg" /> {/* Card */}
+              {i % 2 === 0 && <Skeleton className="h-24 w-full rounded-lg" />} {/* Random second card */}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 2. KLAIDOS BŪSENA
+  if (error || !team || !org) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Board</h3>
+          <p className="text-sm text-red-700">{error || "Team not found."}</p>
+          <Button onClick={loadData} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="flex flex-col h-full p-6 max-w-[1600px] mx-auto space-y-6 overflow-hidden">
       <Breadcrumbs
@@ -78,15 +125,29 @@ export function BoardPage() {
         </p>
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 pt-4">
         {!boardData ? (
            <EmptyState
              title="No Active Iteration"
              description="There is currently no active iteration for this team. Start an iteration from the backlog to view the board."
+             icon={<LayoutGrid className="h-8 w-8" />}
              action={
                <Button asChild>
                  <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
                    Go to Backlog
+                 </Link>
+               </Button>
+             }
+           />
+        ) : isIterationEmpty ? (
+           <EmptyState
+             title="Active Iteration is Empty"
+             description="There are no work items in this iteration. Please add tasks from the backlog to get started."
+             icon={<LayoutList className="h-8 w-8" />}
+             action={
+               <Button asChild>
+                 <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
+                   Add tasks from backlog
                  </Link>
                </Button>
              }
