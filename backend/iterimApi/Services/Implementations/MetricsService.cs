@@ -67,7 +67,7 @@ public class MetricsService : IMetricsService
 
     // ── Sprint Metrics + Burndown ────────────────────────────────────────────
 
-    public async Task<SprintMetricsDto> GetSprintMetricsAsync(int iterationId, int userId)
+   public async Task<SprintMetricsDto> GetSprintMetricsAsync(int iterationId, int userId)
     {
         var iteration = await _db.Iterations
             .Include(i => i.WorkItems)
@@ -79,23 +79,38 @@ public class MetricsService : IMetricsService
 
         var workItems = iteration.WorkItems.ToList();
 
-        var totalPoints     = workItems.Where(w => w.Points.HasValue).Sum(w => w.Points!.Value);
-        var completedPoints = workItems
-            .Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done)
-            .Sum(w => w.Points!.Value);
+        int totalPoints;
+        int completedPoints;
 
-        // Remaining = not Done (Backlog + Todo + InProgress + Review)
+        // Jei Iteracija baigta, naudojame jos užfiksuotą Snapshot'ą.
+        // Priešingu atveju - skaičiuojame gyvai iš WorkItems sąrašo.
+        if (iteration.Status == IterationStatus.Completed)
+        {
+            // Kadangi Snapshot laukai tikriausiai yra int? (nullable), priskiriame 0 jei null
+            totalPoints = iteration.SnapshotPlannedPoints ?? 0;
+            completedPoints = iteration.SnapshotCompletedPoints ?? 0;
+        }
+        else
+        {
+            totalPoints = workItems.Where(w => w.Points.HasValue).Sum(w => w.Points!.Value);
+            completedPoints = workItems
+                .Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done)
+                .Sum(w => w.Points!.Value);
+        }
+
+        // Remaining taškai apskaičiuojami iš Total ir Completed
         var remainingPoints = totalPoints - completedPoints;
         var percentComplete = totalPoints > 0
             ? Math.Round((decimal)completedPoints / totalPoints * 100, 1)
             : 0m;
 
-        // Group by Status (string keys to avoid enum serialization issues)
+        // ByStatus ir ByType gyviems grafikams.
+        // Čia paliekame skaičiuoti iš dabartinių WorkItems, nes užbaigtame sprinte
+        // norime matyti, kokios užduotys realiai buvo padarytos (likusios buvo išmestos).
         var byStatus = workItems
             .GroupBy(w => w.Status.ToString())
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // Group by Type
         var byType = workItems
             .GroupBy(w => w.Type.ToString())
             .ToDictionary(g => g.Key, g => g.Count());
