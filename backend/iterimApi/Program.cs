@@ -139,7 +139,7 @@ builder.Services.AddRateLimiter(options =>
                 ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 100,
+                PermitLimit = 500,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
