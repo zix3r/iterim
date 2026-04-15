@@ -6,6 +6,7 @@ import { ProductsListPage } from '@/features/products/pages/ProductsListPage';
 import { ProductPage } from '@/features/products/pages/ProductPage';
 import { TeamsListPage } from '@/features/teams/pages/TeamsListPage';
 import { TeamDetailPage } from '@/features/teams/pages/TeamDetailPage';
+import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ToastProvider } from '@/components/ui/toast';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
@@ -40,6 +41,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/org/:orgId" element={<OrganizationPage />} />
             <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
             <Route path="/org/:orgId/products" element={<ProductsListPage />} />

@@ -294,6 +294,6 @@ public class AuthService : IAuthService
         Id = user.Id,
         Email = user.Email,
         Name = user.Name,
-        AvatarUrl = null
+        AvatarUrl = user.AvatarUrl
     };
 }

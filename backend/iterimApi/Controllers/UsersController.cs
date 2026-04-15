@@ -4,6 +4,7 @@ using iterimApi.DTOs.Users;
 using iterimApi.Models.Entities;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -17,11 +18,16 @@ public class UsersController : ControllerBase
 {
     private readonly IRecentPageService _recentPageService;
     private readonly AppDbContext _context;
+    private readonly IPasswordHasher<User> _passwordHasher;
 
-    public UsersController(IRecentPageService recentPageService, AppDbContext context)
+    public UsersController(
+        IRecentPageService recentPageService,
+        AppDbContext context,
+        IPasswordHasher<User> passwordHasher)
     {
         _recentPageService = recentPageService;
         _context = context;
+        _passwordHasher = passwordHasher;
     }
 
     private int GetCurrentUserId()
@@ -32,6 +38,126 @@ public class UsersController : ControllerBase
             return id;
         }
         throw new UnauthorizedAccessException("User not authenticated properly.");
+    }
+
+    private async Task<User?> GetCurrentUserEntityAsync()
+    {
+        var userId = GetCurrentUserId();
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+    }
+
+    [HttpGet("me")]
+    public async Task<ActionResult<CurrentUserProfileDto>> GetCurrentUserProfile()
+    {
+        try
+        {
+            var user = await GetCurrentUserEntityAsync();
+            if (user is null)
+                return NotFound(new { errors = new[] { "User not found." } });
+
+            return Ok(new CurrentUserProfileDto
+            {
+                Name = user.Name,
+                Email = user.Email,
+                AvatarUrl = user.AvatarUrl,
+                CreatedAt = user.CreatedAt
+            });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+    }
+
+    [HttpPut("me")]
+    public async Task<ActionResult<CurrentUserProfileDto>> UpdateCurrentUserProfile([FromBody] UpdateProfileDto dto)
+    {
+        try
+        {
+            var user = await GetCurrentUserEntityAsync();
+            if (user is null)
+                return NotFound(new { errors = new[] { "User not found." } });
+
+            var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+
+            var emailTaken = await _context.Users
+                .AnyAsync(u => u.Id != user.Id && u.Email == normalizedEmail);
+            if (emailTaken)
+                return Conflict(new { errors = new[] { "Email is already in use." } });
+
+            user.Name = dto.Name.Trim();
+            user.Email = normalizedEmail;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new CurrentUserProfileDto
+            {
+                Name = user.Name,
+                Email = user.Email,
+                AvatarUrl = user.AvatarUrl,
+                CreatedAt = user.CreatedAt
+            });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+    }
+
+    [HttpPut("me/password")]
+    public async Task<IActionResult> ChangeCurrentUserPassword([FromBody] ChangePasswordDto dto)
+    {
+        try
+        {
+            var user = await GetCurrentUserEntityAsync();
+            if (user is null)
+                return NotFound(new { errors = new[] { "User not found." } });
+
+            var currentPasswordVerification = _passwordHasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash,
+                dto.OldPassword);
+
+            if (currentPasswordVerification == PasswordVerificationResult.Failed)
+                return BadRequest(new { errors = new[] { "Old password is incorrect." } });
+
+            var isSameAsCurrentPassword = _passwordHasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash,
+                dto.NewPassword) != PasswordVerificationResult.Failed;
+
+            if (isSameAsCurrentPassword)
+                return BadRequest(new { errors = new[] { "New password must be different from old password." } });
+
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+            user.FailedLoginAttempts = 0;
+            user.LockoutEnd = null;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+    }
+
+    [HttpPut("me/avatar")]
+    public async Task<ActionResult<CurrentUserProfileDto>> UpdateCurrentUserAvatar([FromBody] UpdateAvatarDto dto)
+    {
+        try
+        {
+            var user = await GetCurrentUserEntityAsync();
+            if (user is null)
+                return NotFound(new { errors = new[] { "User not found." } });
+
+            user.AvatarUrl = dto.AvatarUrl.Trim();
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new CurrentUserProfileDto
+            {
+                Name = user.Name,
+                Email = user.Email,
+                AvatarUrl = user.AvatarUrl,
+                CreatedAt = user.CreatedAt
+            });
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
 
     [HttpGet("me/recent-pages")]

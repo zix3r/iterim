@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 
 export function PinnedTeams() {
-  const { pinnedTeams, isPinned, togglePin } = usePinnedTeams();
+  const { pinnedTeams, togglePin } = usePinnedTeams();
   const location = useLocation();
   const { toast } = useToast();
 

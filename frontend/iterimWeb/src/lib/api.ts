@@ -223,6 +223,29 @@ export interface BacklogGroup {
   workItems: WorkItem[];
 }
 
+// ── Current User Profile Types ───────────────────────────────
+
+export interface CurrentUserProfile {
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  name: string;
+  email: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UpdateAvatarRequest {
+  avatarUrl: string;
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
 // Uses HttpOnly cookies (credentials: 'include') — no localStorage, no Bearer token.
 // Automatically attempts one token refresh on 401 before giving up.
@@ -297,11 +320,23 @@ async function getErrorMessage(response: Response): Promise<string> {
   try {
     const text = await response.text();
     const json = JSON.parse(text);
-    // .NET dažnai grąžina validacijos klaidas objekte 'errors'
-    if (json.errors) {
-      const firstErrorKey = Object.keys(json.errors)[0];
-      return json.errors[firstErrorKey][0]; 
+
+    // Supports both { errors: ["..."] } and ModelState { errors: { field: ["..."] } }
+    if (Array.isArray(json.errors) && json.errors.length > 0) {
+      return String(json.errors[0]);
     }
+
+    if (json.errors && typeof json.errors === 'object') {
+      const firstErrorKey = Object.keys(json.errors)[0];
+      const firstError = json.errors[firstErrorKey];
+      if (Array.isArray(firstError) && firstError.length > 0) {
+        return String(firstError[0]);
+      }
+      if (typeof firstError === 'string' && firstError.length > 0) {
+        return firstError;
+      }
+    }
+
     backendMessage = json.message || json.title || text;
   } catch {
     // Ignoruojame, jei ne JSON
@@ -744,6 +779,7 @@ export const deleteIteration = (id: number): Promise<void> =>
 export interface BoardAssignedMember {
   id: number;
   fullName: string;
+  avatarUrl?: string | null;
 }
 
 export interface BoardWorkItem {
@@ -817,6 +853,7 @@ export interface MemberCapacityItem {
   userId: number;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   workDays: number;
   absenceDays: number;
   availableDays: number;
@@ -884,4 +921,38 @@ export const pinTeam = (teamId: number): Promise<void> =>
 export const unpinTeam = (teamId: number): Promise<void> =>
   fetchWithAuth(`/users/me/pinned-teams/${teamId}`, { method: 'DELETE' }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Current User Profile API ─────────────────────────────────
+
+export const getMyProfile = (): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateMyProfile = (data: UpdateProfileRequest): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const changeMyPassword = (data: ChangePasswordRequest): Promise<void> =>
+  fetchWithAuth('/users/me/password', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const updateMyAvatar = (data: UpdateAvatarRequest): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me/avatar', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
   });

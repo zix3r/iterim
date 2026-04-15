@@ -256,6 +256,7 @@ public class MetricsService : IMetricsService
                 UserId        = member.UserId,
                 Name          = member.User.Name,
                 Email         = member.Email,
+                AvatarUrl     = member.User.AvatarUrl,
                 WorkDays      = workDays,
                 AbsenceDays   = absenceDays,
                 AvailableDays = availableDays
