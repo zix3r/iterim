@@ -21,4 +21,14 @@ public class User
     public ICollection<OrganizationMember> OrganizationMemberships { get; set; } = [];
     public ICollection<RecentPage> RecentPages { get; set; } = [];
     public ICollection<PinnedTeam> PinnedTeams { get; set; } = [];
+
+    // ── Email confirmation ───────────────────────────────
+    public bool IsEmailConfirmed { get; set; } = false;
+    public string? EmailConfirmationToken { get; set; }
+    public DateTime? EmailConfirmationTokenExpiry { get; set; }
+ 
+    // ── Password reset ───────────────────────────────────
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetTokenExpiry { get; set; }
+    public bool PasswordResetTokenUsed { get; set; } = false;
 }

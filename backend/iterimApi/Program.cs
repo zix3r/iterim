@@ -33,6 +33,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSettings);
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
+ 
+builder.Services.AddHttpClient(); // reikalinga Resend / SendGrid provider'iams
+ 
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // Authentication
 builder.Services.AddAuthentication(options =>
 {

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using iterimApi.Data;
 using iterimApi.DTOs.Auth;
 using iterimApi.Helpers;
@@ -15,17 +16,21 @@ public class AuthService : IAuthService
     private readonly AppDbContext _db;
     private readonly IJwtService _jwtService;
     private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IEmailService _emailService;
     private readonly JwtSettings _jwtSettings;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IPasswordHasher<User> _passwordHasher;
 
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
+    private const int EmailConfirmationExpiryHours = 24;
+    private const int PasswordResetExpiryHours = 1;
 
     public AuthService(
         AppDbContext db,
         IJwtService jwtService,
         IRefreshTokenService refreshTokenService,
+        IEmailService emailService,
         IOptions<JwtSettings> jwtSettings,
         IHttpContextAccessor httpContextAccessor,
         IPasswordHasher<User> passwordHasher)
@@ -33,10 +38,13 @@ public class AuthService : IAuthService
         _db = db;
         _jwtService = jwtService;
         _refreshTokenService = refreshTokenService;
+        _emailService = emailService;
         _jwtSettings = jwtSettings.Value;
         _httpContextAccessor = httpContextAccessor;
         _passwordHasher = passwordHasher;
     }
+
+    // ── Register ─────────────────────────────────────────────
 
     public async Task<(AuthResultDto Result, UserResponseDto? User)> RegisterAsync(RegisterRequestDto dto)
     {
@@ -44,23 +52,30 @@ public class AuthService : IAuthService
         if (emailExists)
             return (AuthResultDto.Fail("Email is already in use."), null);
 
+        var confirmationToken = GenerateSecureToken();
+
         var user = new User
         {
             Email = dto.Email.ToLower(),
             Name = dto.Name.Trim(),
+            IsEmailConfirmed = false,
+            EmailConfirmationToken = confirmationToken,
+            EmailConfirmationTokenExpiry = DateTime.UtcNow.AddHours(EmailConfirmationExpiryHours),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-
         user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
 
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
-        await IssueTokens(user);
+        // Fire-and-forget: el. laiško siuntimo klaida nesustabdo registracijos
+        _ = SendConfirmationEmailSafe(user);
 
         return (AuthResultDto.Ok(), MapToDto(user));
     }
+
+    // ── Login ─────────────────────────────────────────────────
 
     public async Task<(AuthResultDto Result, UserResponseDto? User)> LoginAsync(LoginRequestDto dto)
     {
@@ -78,16 +93,18 @@ public class AuthService : IAuthService
         if (verificationResult == PasswordVerificationResult.Failed)
         {
             user.FailedLoginAttempts++;
-
             if (user.FailedLoginAttempts >= MaxFailedAttempts)
             {
                 user.LockoutEnd = DateTime.UtcNow.AddMinutes(LockoutMinutes);
                 user.FailedLoginAttempts = 0;
             }
-
             await _db.SaveChangesAsync();
             return (AuthResultDto.Fail("Invalid email or password."), null);
         }
+
+        // ── Email confirmation check ──────────────────────
+        if (!user.IsEmailConfirmed)
+            return (AuthResultDto.Fail("Please confirm your email address before logging in."), null);
 
         // Successful login — reset lockout
         user.FailedLoginAttempts = 0;
@@ -96,30 +113,25 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         await IssueTokens(user);
-
         return (AuthResultDto.Ok(), MapToDto(user));
     }
+
+    // ── Refresh / Logout / Me ─────────────────────────────────
 
     public async Task<AuthResultDto> RefreshTokenAsync(string refreshToken)
     {
         var storedToken = await _refreshTokenService.ValidateRefreshToken(refreshToken);
-
         if (storedToken is null)
             return AuthResultDto.Fail("Invalid or expired refresh token.");
 
-        var user = storedToken.User;
-
-        // Rotate: revoke old, issue new
         await _refreshTokenService.RevokeRefreshToken(refreshToken);
-        await IssueTokens(user);
-
+        await IssueTokens(storedToken.User);
         return AuthResultDto.Ok();
     }
 
     public async Task LogoutAsync(string refreshToken)
     {
         await _refreshTokenService.RevokeRefreshToken(refreshToken);
-
         var response = _httpContextAccessor.HttpContext?.Response;
         if (response is not null)
             CookieHelper.ClearAuthCookies(response);
@@ -131,7 +143,108 @@ public class AuthService : IAuthService
         return user is null ? null : MapToDto(user);
     }
 
-    // ── Private helpers ──────────────────────────────────────
+    // ── Email confirmation ────────────────────────────────────
+
+    public async Task<AuthResultDto> ConfirmEmailAsync(string token)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u =>
+            u.EmailConfirmationToken == token);
+
+        if (user is null)
+            return AuthResultDto.Fail("Invalid confirmation token.");
+
+        if (user.IsEmailConfirmed)
+            return AuthResultDto.Ok(); // Idempotent — jau patvirtinta
+
+        if (user.EmailConfirmationTokenExpiry < DateTime.UtcNow)
+            return AuthResultDto.Fail("Confirmation token has expired. Please request a new one.");
+
+        user.IsEmailConfirmed = true;
+        user.EmailConfirmationToken = null;
+        user.EmailConfirmationTokenExpiry = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return AuthResultDto.Ok();
+    }
+
+    public async Task<AuthResultDto> ResendConfirmationAsync(string email)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
+
+        // Visada grąžiname Ok — neskleidžiame, ar vartotojas egzistuoja
+        if (user is null || user.IsEmailConfirmed)
+            return AuthResultDto.Ok();
+
+        user.EmailConfirmationToken = GenerateSecureToken();
+        user.EmailConfirmationTokenExpiry = DateTime.UtcNow.AddHours(EmailConfirmationExpiryHours);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        _ = SendConfirmationEmailSafe(user);
+        return AuthResultDto.Ok();
+    }
+
+    // ── Password reset ────────────────────────────────────────
+
+    public async Task<AuthResultDto> ForgotPasswordAsync(string email)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
+
+        // Visada grąžiname Ok — neskleidžiame, ar el. paštas egzistuoja
+        if (user is null)
+            return AuthResultDto.Ok();
+
+        user.PasswordResetToken = GenerateSecureToken();
+        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(PasswordResetExpiryHours);
+        user.PasswordResetTokenUsed = false;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        _ = SendPasswordResetEmailSafe(user);
+        return AuthResultDto.Ok();
+    }
+
+    public async Task<AuthResultDto> ResetPasswordAsync(ResetPasswordRequestDto dto)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u =>
+            u.PasswordResetToken == dto.Token);
+
+        if (user is null)
+            return AuthResultDto.Fail("Invalid or expired password reset token.");
+
+        if (user.PasswordResetTokenUsed)
+            return AuthResultDto.Fail("This reset link has already been used.");
+
+        if (user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            return AuthResultDto.Fail("Password reset token has expired. Please request a new one.");
+
+        // Atnaujinti slaptažodį
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
+
+        // Invaliduoti token
+        user.PasswordResetToken = null;
+        user.PasswordResetTokenExpiry = null;
+        user.PasswordResetTokenUsed = true;
+
+        // Išvalyti lockout
+        user.FailedLoginAttempts = 0;
+        user.LockoutEnd = null;
+
+        user.UpdatedAt = DateTime.UtcNow;
+
+        // Invaliduoti visus refresh tokens (force logout iš visų device'ų)
+        var refreshTokens = await _db.RefreshTokens
+            .Where(rt => rt.UserId == user.Id && rt.RevokedAt == null)
+            .ToListAsync();
+        foreach (var rt in refreshTokens)
+            rt.RevokedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return AuthResultDto.Ok();
+    }
+
+    // ── Private helpers ───────────────────────────────────────
 
     private async Task IssueTokens(User user)
     {
@@ -144,6 +257,37 @@ public class AuthService : IAuthService
         CookieHelper.SetAccessTokenCookie(response, accessToken, _jwtSettings.AccessTokenExpirationMinutes);
         CookieHelper.SetRefreshTokenCookie(response, refreshToken.Token, _jwtSettings.RefreshTokenExpirationDays);
     }
+
+    private async Task SendConfirmationEmailSafe(User user)
+    {
+        try
+        {
+            await _emailService.SendEmailConfirmationAsync(
+                user.Email, user.Name, user.EmailConfirmationToken!);
+        }
+        catch (Exception ex)
+        {
+            // Loginti, bet neįkrėsti registracijos srauto
+            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {user.Email}: {ex.Message}");
+        }
+    }
+
+    private async Task SendPasswordResetEmailSafe(User user)
+    {
+        try
+        {
+            await _emailService.SendPasswordResetAsync(
+                user.Email, user.Name, user.PasswordResetToken!);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[EmailService] Failed to send password reset email to {user.Email}: {ex.Message}");
+        }
+    }
+
+    private static string GenerateSecureToken() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+            .Replace("+", "-").Replace("/", "_").Replace("=", ""); // URL-safe
 
     private static UserResponseDto MapToDto(User user) => new()
     {
