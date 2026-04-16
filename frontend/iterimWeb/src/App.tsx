@@ -6,10 +6,13 @@ import { ProductsListPage } from '@/features/products/pages/ProductsListPage';
 import { ProductPage } from '@/features/products/pages/ProductPage';
 import { TeamsListPage } from '@/features/teams/pages/TeamsListPage';
 import { TeamDetailPage } from '@/features/teams/pages/TeamDetailPage';
-import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ToastProvider } from '@/components/ui/toast';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { CheckEmailPage } from '@/features/auth/pages/CheckEmailPage';
+import { ConfirmEmailPage } from '@/features/auth/pages/ConfirmEmailPage';
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
 import { BoardPage } from '@/features/board/pages/BoardPage';
@@ -36,12 +39,15 @@ function App() {
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/check-email" element={<CheckEmailPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/org/:orgId" element={<OrganizationPage />} />
             <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
             <Route path="/org/:orgId/products" element={<ProductsListPage />} />

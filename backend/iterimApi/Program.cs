@@ -151,6 +151,13 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// Trust reverse proxy headers (Caddy sends X-Forwarded-For, X-Forwarded-Proto)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                     | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
+
 // Automatically run pending migrations on startup
 if (!app.Environment.IsEnvironment("Testing"))
 {

@@ -23,7 +23,10 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  confirmEmail: (token: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -76,6 +79,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       console.error('[auth] login failed', { status: res.status, data });
+      // 403 = email not confirmed yet
+      if (res.status === 403) {
+        const msg = extractError(data, 'Please confirm your email address before logging in.');
+        throw new Error(msg);
+      }
       const msg = extractError(data, res.status === 401 ? 'Invalid credentials.' : 'Login failed.');
       throw new Error(msg);
     }
@@ -92,7 +100,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const msg = extractError(data, 'Registration failed.');
       throw new Error(msg);
     }
-    setUser(await res.json());
+    // Do NOT set user here — email must be confirmed first
+  }, []);
+
+  const confirmEmail = useCallback(async (token: string) => {
+    const res = await fetchWithAuth(`${AUTH}/confirm-email`, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const msg = extractError(data, 'Email confirmation failed.');
+      throw new Error(msg);
+    }
+  }, []);
+
+  const resendConfirmation = useCallback(async (email: string) => {
+    const res = await fetchWithAuth(`${AUTH}/resend-confirmation`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const msg = extractError(data, 'Failed to resend confirmation.');
+      throw new Error(msg);
+    }
+  }, []);
+
+  const forgotPassword = useCallback(async (email: string) => {
+    const res = await fetchWithAuth(`${AUTH}/forgot-password`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const msg = extractError(data, 'Failed to send reset link.');
+      throw new Error(msg);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (token: string, newPassword: string) => {
+    const res = await fetchWithAuth(`${AUTH}/reset-password`, {
+      method: 'POST',
+      body: JSON.stringify({ token, newPassword }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const msg = extractError(data, 'Password reset failed.');
+      throw new Error(msg);
+    }
   }, []);
 
   const logout = useCallback(async () => {
@@ -102,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isAuthenticated: !!user, login, register, logout, refreshUser: fetchMe }}
+      value={{ user, isLoading, isAuthenticated: !!user, login, register, logout, confirmEmail, resendConfirmation, forgotPassword, resetPassword }}
     >
       {children}
     </AuthContext.Provider>
