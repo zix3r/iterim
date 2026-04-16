@@ -54,7 +54,7 @@ public class MemberAbsencesController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         try
@@ -90,7 +90,7 @@ public class MemberAbsencesController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         try

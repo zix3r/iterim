@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var (result, user) = await _authService.RegisterAsync(dto);
         if (!result.Success)
@@ -40,7 +40,7 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var (result, user) = await _authService.LoginAsync(dto);
         if (!result.Success)
@@ -107,7 +107,7 @@ public class AuthController : ControllerBase
     [HttpPost("confirm-email")]
     public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var result = await _authService.ConfirmEmailAsync(dto.Token);
         if (!result.Success)
@@ -124,7 +124,7 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("register")] // naudoti tą patį rate limit kaip register
     public async Task<IActionResult> ResendConfirmation([FromBody] ResendConfirmationRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         await _authService.ResendConfirmationAsync(dto.Email);
         return Ok(new { message = "If that email exists and is unconfirmed, a new confirmation link has been sent." });
@@ -140,7 +140,7 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("register")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         await _authService.ForgotPasswordAsync(dto.Email);
         return Ok(new { message = "If that email is registered, a password reset link has been sent." });
@@ -152,7 +152,7 @@ public class AuthController : ControllerBase
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto dto)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
         var result = await _authService.ResetPasswordAsync(dto);
         if (!result.Success)

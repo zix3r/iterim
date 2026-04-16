@@ -1,34 +1,34 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { updateProduct } from '@/lib/api';
-import type { UpdateProductRequest, ProductDetail } from '@/lib/api';
+import { updateTeam } from '@/lib/api';
+import type { TeamDetail, UpdateTeamRequest } from '@/lib/api';
 import { maxLength, required } from '@/lib/validation';
 
 interface Props {
-  product: ProductDetail;
+  team: TeamDetail;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: () => void;
 }
 
-export function EditProductModal({ product, open, onOpenChange, onUpdated }: Props) {
+export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
 
-  const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<UpdateProductRequest>(
+  const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<UpdateTeamRequest>(
     {
-      name: product.name,
-      description: product.description || '',
+      name: team.name,
+      description: team.description || '',
     },
     {
-      name: [required('Product name'), maxLength('Product name', 100)],
+      name: [required('Team name'), maxLength('Team name', 100)],
       description: [maxLength('Description', 500)],
     },
   );
@@ -44,18 +44,18 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
   useEffect(() => {
     if (open) {
       resetForm({
-        name: product.name,
-        description: product.description || '',
+        name: team.name,
+        description: team.description || '',
       });
       setHasChanges(false);
     }
-  }, [open, product, resetForm]);
+  }, [open, team, resetForm]);
 
   useEffect(() => {
-    const changed = values.name !== product.name ||
-                   (values.description || '') !== (product.description || '');
+    const changed = values.name !== team.name ||
+      (values.description || '') !== (team.description || '');
     setHasChanges(changed);
-  }, [values, product]);
+  }, [values, team]);
 
   const handleClose = () => {
     if (hasChanges) {
@@ -77,25 +77,25 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
       });
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      await updateProduct(product.id, {
+      await updateTeam(team.id, {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
       });
       toast({
         variant: 'success',
         title: 'Success',
-        description: 'Product updated successfully'
+        description: 'Team updated successfully',
       });
       onOpenChange(false);
-      onUpdated(); // Refresh product data
+      onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
         title: 'Error',
-        description: getMessageFromError(error, 'Failed to update product. Please try again.')
+        description: getMessageFromError(error, 'Failed to update team. Please try again.'),
       });
     } finally {
       setIsLoading(false);
@@ -106,41 +106,41 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>Edit Team</DialogTitle>
           <DialogDescription>
-            Update product information.
+            Update team information.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div>
-            <label htmlFor="name" className="text-sm font-medium">
-              Product Name <span className="text-destructive">*</span>
+            <label htmlFor="team-name" className="text-sm font-medium">
+              Team Name <span className="text-destructive">*</span>
             </label>
-            <Input 
-              id="name"
-              placeholder="My Product" 
+            <Input
+              id="team-name"
+              placeholder="Development Team"
               value={values.name}
               onChange={(e) => setFieldValue('name', e.target.value)}
               disabled={isLoading}
               required
               aria-invalid={!!errors.name}
-              aria-describedby={errors.name ? 'edit-product-name-error' : undefined}
+              aria-describedby={errors.name ? 'edit-team-name-error' : undefined}
             />
-            <FieldError id="edit-product-name-error" message={errors.name} />
+            <FieldError id="edit-team-name-error" message={errors.name} />
           </div>
           <div>
-            <label htmlFor="description" className="text-sm font-medium">Description (optional)</label>
-            <Textarea 
-              id="description"
-              placeholder="Product description" 
+            <label htmlFor="team-description" className="text-sm font-medium">Description (optional)</label>
+            <Textarea
+              id="team-description"
+              placeholder="Team description"
               value={values.description}
               onChange={(e) => setFieldValue('description', e.target.value)}
               disabled={isLoading}
               rows={4}
               aria-invalid={!!errors.description}
-              aria-describedby={errors.description ? 'edit-product-description-error' : undefined}
+              aria-describedby={errors.description ? 'edit-team-description-error' : undefined}
             />
-            <FieldError id="edit-product-description-error" message={errors.description} />
+            <FieldError id="edit-team-description-error" message={errors.description} />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>

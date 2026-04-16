@@ -80,7 +80,7 @@ public class OrganizationsController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(ex.Message);
+            return NotFound(new { message = ex.Message });
         }
         catch (InvalidOperationException ex)
         {
