@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, resendConfirmation } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from;
@@ -11,9 +11,14 @@ export function LoginPage() {
   // If accessed directly, go to root
   const destination = from ? '/dashboard' : '/';
 
+  // Check for password reset success message passed via state
+  const passwordResetSuccess = (location.state as { passwordReset?: boolean })?.passwordReset;
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
+  const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -33,6 +38,8 @@ export function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    setUnconfirmedEmail('');
+    setResendStatus('idle');
     setFieldErrors({});
 
     // Client-side validation
@@ -53,9 +60,25 @@ export function LoginPage() {
       navigate(destination, { replace: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed.';
-      setError(errorMessage);
+      // Check if it's an "unconfirmed email" error (403 from backend)
+      if (errorMessage.toLowerCase().includes('confirm your email') || errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm')) {
+        setUnconfirmedEmail(email);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleResendConfirmation() {
+    if (!unconfirmedEmail) return;
+    setResendStatus('sending');
+    try {
+      await resendConfirmation(unconfirmedEmail);
+      setResendStatus('sent');
+    } catch {
+      setResendStatus('error');
     }
   }
 
@@ -70,6 +93,15 @@ export function LoginPage() {
         <h2 className="auth-heading">Welcome back</h2>
         <p className="auth-subheading">Sign in to continue to your workspace</p>
 
+        {passwordResetSuccess && (
+          <div className="auth-success" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Password changed successfully. You can now sign in.
+          </div>
+        )}
+
         {error && (
           <div className="auth-error" role="alert">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
@@ -78,6 +110,36 @@ export function LoginPage() {
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             {error}
+          </div>
+        )}
+
+        {unconfirmedEmail && (
+          <div className="auth-unconfirmed" role="alert">
+            <div className="unconfirmed-header">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <strong>Email not confirmed</strong>
+            </div>
+            <p>You need to confirm your email address before signing in. Please check your inbox.</p>
+            {resendStatus === 'idle' && (
+              <button className="resend-btn" onClick={handleResendConfirmation}>
+                Resend confirmation email
+              </button>
+            )}
+            {resendStatus === 'sending' && (
+              <span className="resend-status">Sending...</span>
+            )}
+            {resendStatus === 'sent' && (
+              <span className="resend-status resend-ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+                Confirmation link sent
+              </span>
+            )}
+            {resendStatus === 'error' && (
+              <span className="resend-status resend-err">Failed to send. Please try again later.</span>
+            )}
           </div>
         )}
 
@@ -107,6 +169,7 @@ export function LoginPage() {
           <div className="field-group">
             <div className="field-label-row">
               <label className="field-label" htmlFor="password">Password</label>
+              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
             </div>
             <div className="field-password-wrap">
               <input
@@ -240,6 +303,73 @@ const authStyles = `
     margin-bottom: 1.25rem;
   }
 
+  .auth-success {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.25);
+    color: #10b981;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .auth-unconfirmed {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.25);
+    color: #92400e;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .unconfirmed-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #b45309;
+  }
+
+  .auth-unconfirmed p {
+    margin: 0;
+    line-height: 1.5;
+    color: #78350f;
+  }
+
+  .resend-btn {
+    align-self: flex-start;
+    background: rgba(180,83,9,0.1);
+    border: 1px solid rgba(180,83,9,0.25);
+    color: #b45309;
+    border-radius: 8px;
+    padding: 0.4rem 0.85rem;
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 0.25rem;
+  }
+
+  .resend-btn:hover { background: rgba(180,83,9,0.18); }
+
+  .resend-status {
+    font-size: 0.8rem;
+    color: #78350f;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .resend-status.resend-ok { color: #065f46; }
+  .resend-status.resend-err { color: #b91c1c; }
+
   .auth-form {
     display: flex;
     flex-direction: column;
@@ -265,6 +395,16 @@ const authStyles = `
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
+
+  .forgot-link {
+    font-size: 0.78rem;
+    color: #52525b;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .forgot-link:hover { color: #18181b; text-decoration: underline; }
 
   .field-input {
     background: rgba(0,0,0,0.03);
