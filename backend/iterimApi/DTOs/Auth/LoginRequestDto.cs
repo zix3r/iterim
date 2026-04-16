@@ -4,10 +4,10 @@ namespace iterimApi.DTOs.Auth;
 
 public class LoginRequestDto
 {
-    [Required]
-    [EmailAddress]
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Password is required.")]
     public string Password { get; set; } = string.Empty;
 }

@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { email, required } from '@/lib/validation';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function LoginPage() {
@@ -14,55 +16,42 @@ export function LoginPage() {
   // Check for password reset success message passed via state
   const passwordResetSuccess = (location.state as { passwordReset?: boolean })?.passwordReset;
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const validateEmail = (email: string) => {
-    if (!email) return 'Email is required';
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return 'Please enter a valid email address';
-    return null;
-  };
-
-  const validatePassword = (password: string) => {
-    if (!password) return 'Password is required';
-    return null;
-  };
+  const { values, errors, setFieldValue, validateForm } = useFormValidation(
+    {
+      email: '',
+      password: '',
+    },
+    {
+      email: [email('Email')],
+      password: [required('Password')],
+    },
+  );
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
     setUnconfirmedEmail('');
     setResendStatus('idle');
-    setFieldErrors({});
 
-    // Client-side validation
-    const emailError = validateEmail(email);
-    const passwordError = validatePassword(password);
-
-    if (emailError || passwordError) {
-      setFieldErrors({
-        email: emailError || undefined,
-        password: passwordError || undefined,
-      });
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(values.email.trim(), values.password);
       navigate(destination, { replace: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed.';
       // Check if it's an "unconfirmed email" error (403 from backend)
       if (errorMessage.toLowerCase().includes('confirm your email') || errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm')) {
-        setUnconfirmedEmail(email);
+        setUnconfirmedEmail(values.email.trim());
       } else {
         setError(errorMessage);
       }
@@ -149,20 +138,17 @@ export function LoginPage() {
             <input
               id="email"
               type="email"
-              className={`field-input ${fieldErrors.email ? 'field-input-error' : ''}`}
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: undefined });
-              }}
+              className={`field-input ${errors.email ? 'field-input-error' : ''}`}
+              value={values.email}
+              onChange={(e) => setFieldValue('email', e.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
               required
-              aria-invalid={!!fieldErrors.email}
-              aria-describedby={fieldErrors.email ? 'email-error' : undefined}
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'email-error' : undefined}
             />
-            {fieldErrors.email && (
-              <span id="email-error" className="field-error">{fieldErrors.email}</span>
+            {errors.email && (
+              <span id="email-error" className="field-error">{errors.email}</span>
             )}
           </div>
 
@@ -175,17 +161,14 @@ export function LoginPage() {
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                className={`field-input ${fieldErrors.password ? 'field-input-error' : ''}`}
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: undefined });
-                }}
+                className={`field-input ${errors.password ? 'field-input-error' : ''}`}
+                value={values.password}
+                onChange={(e) => setFieldValue('password', e.target.value)}
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
-                aria-invalid={!!fieldErrors.password}
-                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
               />
               <button
                 type="button"
@@ -206,8 +189,8 @@ export function LoginPage() {
                 )}
               </button>
             </div>
-            {fieldErrors.password && (
-              <span id="password-error" className="field-error">{fieldErrors.password}</span>
+            {errors.password && (
+              <span id="password-error" className="field-error">{errors.password}</span>
             )}
           </div>
 

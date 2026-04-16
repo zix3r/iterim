@@ -6,7 +6,7 @@ export type ToastProps = {
   id: string
   title?: string
   description?: string
-  variant?: "default" | "success" | "error"
+  variant?: "default" | "success" | "error" | "warning"
   duration?: number
 }
 
@@ -61,6 +61,7 @@ function Toast({ toast, onDismiss }: { toast: ToastProps; onDismiss: () => void 
     default: "bg-background border",
     success: "bg-green-600 text-white",
     error: "bg-red-600 text-white",
+    warning: "bg-amber-500 text-amber-950",
   }
 
   return (

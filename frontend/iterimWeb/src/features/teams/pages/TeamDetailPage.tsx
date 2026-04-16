@@ -1,17 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { getTeamById, getOrganizationById, removeTeamMember, deleteTeam, updateTeam, updateTeamMemberRole } from '@/lib/api';
+import { getTeamById, getOrganizationById, removeTeamMember, deleteTeam, updateTeamMemberRole } from '@/lib/api';
 import type { TeamDetail, OrganizationDetail } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AddTeamMemberModal } from '@/features/teams/components/AddTeamMemberModal';
+import { EditTeamModal } from '@/features/teams/components/EditTeamModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
-import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon, XIcon, StarIcon } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import { addRecentPage } from '@/lib/recentPages';
 import { usePinnedTeams } from '@/lib/favorites';
@@ -26,12 +25,9 @@ export function TeamDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleteMemberDialogOpen, setDeleteMemberDialogOpen] = useState(false);
   const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false);
+  const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { isPinned, togglePin } = usePinnedTeams();
 
@@ -57,8 +53,6 @@ export function TeamDetailPage() {
       ]);
       setTeam(teamData);
       setOrganization(orgData);
-      setEditName(teamData.name);
-      setEditDescription(teamData.description || '');
     } catch (err) {
       console.error('Failed to load team:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load team data.';
@@ -122,43 +116,6 @@ export function TeamDetailPage() {
       setIsDeleting(false);
       setDeleteTeamDialogOpen(false);
     }
-  };
-
-  const handleSaveTeam = async () => {
-    if (!teamId || !editName.trim()) return;
-    
-    setIsSaving(true);
-    try {
-      await updateTeam(Number(teamId), {
-        name: editName,
-        description: editDescription || undefined
-      });
-      toast({
-        variant: 'success',
-        title: 'Success',
-        description: 'Team updated successfully'
-      });
-      setIsEditing(false);
-      loadTeam(); // Reload team data
-    } catch (err) {
-      console.error('Failed to update team', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update team.';
-      toast({
-        variant: 'error',
-        title: 'Error',
-        description: errorMessage
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    if (team) {
-      setEditName(team.name);
-      setEditDescription(team.description || '');
-    }
-    setIsEditing(false);
   };
 
   const handleRoleChange = async (memberUserId: number, newRole: string) => {
@@ -272,105 +229,61 @@ export function TeamDetailPage() {
 
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
-          {isEditing ? (
-            <div className="space-y-3">
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Team name"
-                className="text-2xl font-bold"
-                disabled={isSaving}
-              />
-              <Textarea
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                placeholder="Team description (optional)"
-                rows={3}
-                disabled={isSaving}
-              />
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  onClick={handleSaveTeam}
-                  disabled={isSaving || !editName.trim()}
-                >
-                  <SaveIcon className="h-4 w-4 mr-2" />
-                  {isSaving ? 'Saving...' : 'Save'}
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                >
-                  <XIcon className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold">{team.name}</h1>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    const currentlyPinned = isPinned(team.id);
-                    try {
-                      await togglePin(team.id, currentlyPinned);
-                      toast({
-                        variant: 'success',
-                        title: currentlyPinned ? 'Unpinned' : 'Pinned',
-                        description: currentlyPinned ? 'Team removed from pinned list.' : 'Team successfully pinned.',
-                      });
-                    } catch (err) {
-                       const errorMessage = err instanceof Error ? err.message : 'Failed to toggle pin state.';
-                       toast({
-                         variant: 'error',
-                         title: 'Error',
-                         description: errorMessage,
-                       });
-                    }
-                  }}
-                  className={isPinned(team.id) ? 'text-yellow-500 hover:text-yellow-600' : 'text-zinc-400 hover:text-zinc-600'}
-                  title={isPinned(team.id) ? 'Unpin team' : 'Pin team'}
-                >
-                  <StarIcon className={`h-5 w-5 ${isPinned(team.id) ? 'fill-current' : ''}`} />
-                </Button>
-                {canManageTeam && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              {team.description && (
-                <p className="text-muted-foreground mt-2">{team.description}</p>
-              )}
-            </div>
-          )}
-        </div>
-        {!isEditing && (
-          <div className="flex items-center gap-2">
-            <Button asChild>
-              <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
-                Open Backlog
-              </Link>
-            </Button>
-            {canManageTeam && (
-              <Button 
-                variant="destructive" 
-                onClick={() => setDeleteTeamDialogOpen(true)}
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">{team.name}</h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  const currentlyPinned = isPinned(team.id);
+                  try {
+                    await togglePin(team.id, currentlyPinned);
+                    toast({
+                      variant: 'success',
+                      title: currentlyPinned ? 'Unpinned' : 'Pinned',
+                      description: currentlyPinned ? 'Team removed from pinned list.' : 'Team successfully pinned.',
+                    });
+                  } catch (err) {
+                    const errorMessage = err instanceof Error ? err.message : 'Failed to toggle pin state.';
+                    toast({
+                      variant: 'error',
+                      title: 'Error',
+                      description: errorMessage,
+                    });
+                  }
+                }}
+                className={isPinned(team.id) ? 'text-yellow-500 hover:text-yellow-600' : 'text-zinc-400 hover:text-zinc-600'}
+                title={isPinned(team.id) ? 'Unpin team' : 'Pin team'}
               >
-                Delete Team
+                <StarIcon className={`h-5 w-5 ${isPinned(team.id) ? 'fill-current' : ''}`} />
               </Button>
+            </div>
+            {team.description && (
+              <p className="text-muted-foreground mt-2">{team.description}</p>
             )}
           </div>
-        )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
+              Open Backlog
+            </Link>
+          </Button>
+          {canManageTeam && (
+            <Button variant="outline" onClick={() => setEditTeamDialogOpen(true)}>
+              Edit
+            </Button>
+          )}
+          {canManageTeam && (
+            <Button 
+              variant="destructive" 
+              onClick={() => setDeleteTeamDialogOpen(true)}
+            >
+              Delete Team
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Team Info Card */}
@@ -480,6 +393,15 @@ export function TeamDetailPage() {
           </div>
         )}
       </div>
+
+      {canManageTeam && (
+        <EditTeamModal
+          team={team}
+          open={editTeamDialogOpen}
+          onOpenChange={setEditTeamDialogOpen}
+          onUpdated={loadTeam}
+        />
+      )}
 
       {/* Delete Member Confirmation Dialog */}
       <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>

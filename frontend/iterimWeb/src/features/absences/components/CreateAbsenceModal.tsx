@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { createOrganizationAbsence } from '@/lib/api';
 import type { AbsenceReason, OrganizationMember } from '@/lib/api';
+import { dateOnOrAfter, required, requiredWhen } from '@/lib/validation';
 import { PlusIcon } from 'lucide-react';
 
 const REASON_OPTIONS: AbsenceReason[] = ['Vacation', 'Sick', 'Late', 'Absent', 'Other'];
@@ -58,41 +61,56 @@ export function CreateAbsenceModal({
   const shouldLockMemberSelection = !canManageAllAbsences;
 
   const [open, setOpen] = useState(false);
-  const [orgMemberId, setOrgMemberId] = useState(resolvedInitialMemberId);
-  const [fromDate, setFromDate] = useState(getToday());
-  const [toDate, setToDate] = useState(getToday());
-  const [reason, setReason] = useState<AbsenceReason>('Vacation');
-  const [otherReason, setOtherReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const selectedMember = activeMembers.find((member) => member.id.toString() === orgMemberId);
+  const { values, errors, setFieldValue, validateForm, resetForm: resetValidationForm } = useFormValidation(
+    {
+      orgMemberId: resolvedInitialMemberId,
+      fromDate: getToday(),
+      toDate: getToday(),
+      reason: 'Vacation' as AbsenceReason,
+      otherReason: '',
+    },
+    {
+      orgMemberId: [required('Member')],
+      fromDate: [required('From date')],
+      toDate: [required('To date'), dateOnOrAfter('fromDate', 'To date must be after or equal to from date.')],
+      reason: [required('Reason')],
+      otherReason: [
+        requiredWhen(
+          'reason',
+          (value) => value === 'Other',
+          'Reason details are required when reason is Other.',
+        ),
+      ],
+    },
+  );
 
-  const resetForm = () => {
-    setOrgMemberId(resolvedInitialMemberId);
-    setFromDate(getToday());
-    setToDate(getToday());
-    setReason('Vacation');
-    setOtherReason('');
+  const selectedMember = activeMembers.find((member) => member.id.toString() === values.orgMemberId);
+
+  const resetAbsenceForm = () => {
+    resetValidationForm({
+      orgMemberId: resolvedInitialMemberId,
+      fromDate: getToday(),
+      toDate: getToday(),
+      reason: 'Vacation',
+      otherReason: '',
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const submitOrgMemberId = shouldLockMemberSelection ? resolvedInitialMemberId : orgMemberId;
+    const submitOrgMemberId = shouldLockMemberSelection ? resolvedInitialMemberId : values.orgMemberId;
 
     if (!submitOrgMemberId) {
-      toast({ variant: 'error', title: 'Select a member first' });
+      toast({ variant: 'warning', title: 'Please select a member' });
       return;
     }
 
-    if (toDate < fromDate) {
-      toast({ variant: 'error', title: 'Date range is invalid', description: 'To date must be after or equal to from date.' });
-      return;
-    }
-
-    if (reason === 'Other' && !otherReason.trim()) {
-      toast({ variant: 'error', title: 'Enter a custom reason' });
+    if (!validateForm()) {
+      toast({ variant: 'warning', title: 'Please fix validation errors' });
       return;
     }
 
@@ -100,15 +118,15 @@ export function CreateAbsenceModal({
     try {
       await createOrganizationAbsence(orgId, {
         orgMemberId: Number(submitOrgMemberId),
-        fromDate,
-        toDate,
-        reason,
-        otherReason: otherReason.trim() || undefined,
+        fromDate: values.fromDate,
+        toDate: values.toDate,
+        reason: values.reason,
+        otherReason: values.otherReason.trim() || undefined,
       });
 
       toast({ variant: 'success', title: 'Absence registered successfully' });
       setOpen(false);
-      resetForm();
+      resetAbsenceForm();
       onCreated();
     } catch (error) {
       toast({
@@ -126,7 +144,7 @@ export function CreateAbsenceModal({
       open={open}
       onOpenChange={(value) => {
         setOpen(value);
-        if (!value) resetForm();
+        if (!value) resetAbsenceForm();
       }}
     >
       <DialogTrigger asChild>
@@ -146,7 +164,7 @@ export function CreateAbsenceModal({
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-member">
-              Member
+              Member <span className="text-destructive">*</span>
             </label>
             {shouldLockMemberSelection ? (
               <Input
@@ -158,11 +176,13 @@ export function CreateAbsenceModal({
             ) : (
               <select
                 id="create-absence-member"
-                value={orgMemberId}
-                onChange={(e) => setOrgMemberId(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                value={values.orgMemberId}
+                onChange={(e) => setFieldValue('orgMemberId', e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 aria-invalid:border-destructive"
                 disabled={isLoading || activeMembers.length === 0}
                 required
+                aria-invalid={!!errors.orgMemberId}
+                aria-describedby={errors.orgMemberId ? 'create-absence-member-error' : undefined}
               >
                 <option value="">Select a member</option>
                 {activeMembers.map((member) => (
@@ -172,48 +192,57 @@ export function CreateAbsenceModal({
                 ))}
               </select>
             )}
+            <FieldError id="create-absence-member-error" message={errors.orgMemberId} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium block mb-2" htmlFor="create-absence-from-date">
-                From date
+                From date <span className="text-destructive">*</span>
               </label>
               <Input
                 id="create-absence-from-date"
                 type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+                value={values.fromDate}
+                onChange={(e) => setFieldValue('fromDate', e.target.value)}
                 disabled={isLoading}
                 required
+                aria-invalid={!!errors.fromDate}
+                aria-describedby={errors.fromDate ? 'create-absence-from-date-error' : undefined}
               />
+              <FieldError id="create-absence-from-date-error" message={errors.fromDate} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-2" htmlFor="create-absence-to-date">
-                To date
+                To date <span className="text-destructive">*</span>
               </label>
               <Input
                 id="create-absence-to-date"
                 type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
+                value={values.toDate}
+                onChange={(e) => setFieldValue('toDate', e.target.value)}
                 disabled={isLoading}
                 required
+                aria-invalid={!!errors.toDate}
+                aria-describedby={errors.toDate ? 'create-absence-to-date-error' : undefined}
               />
+              <FieldError id="create-absence-to-date-error" message={errors.toDate} />
             </div>
           </div>
 
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-reason">
-              Reason
+              Reason <span className="text-destructive">*</span>
             </label>
             <select
               id="create-absence-reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value as AbsenceReason)}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              value={values.reason}
+              onChange={(e) => setFieldValue('reason', e.target.value as AbsenceReason)}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 aria-invalid:border-destructive"
               disabled={isLoading}
               required
+              aria-invalid={!!errors.reason}
+              aria-describedby={errors.reason ? 'create-absence-reason-error' : undefined}
             >
               {REASON_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -221,21 +250,25 @@ export function CreateAbsenceModal({
                 </option>
               ))}
             </select>
+            <FieldError id="create-absence-reason-error" message={errors.reason} />
           </div>
 
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-other-reason">
-              Reason details {reason === 'Other' ? '(required)' : '(optional)'}
+              Reason details {values.reason === 'Other' ? '(required)' : '(optional)'}
             </label>
             <Textarea
               id="create-absence-other-reason"
-              value={otherReason}
-              onChange={(e) => setOtherReason(e.target.value)}
+              value={values.otherReason}
+              onChange={(e) => setFieldValue('otherReason', e.target.value)}
               placeholder="Describe the reason"
               disabled={isLoading}
               rows={3}
-              required={reason === 'Other'}
+              required={values.reason === 'Other'}
+              aria-invalid={!!errors.otherReason}
+              aria-describedby={errors.otherReason ? 'create-absence-other-reason-error' : undefined}
             />
+            <FieldError id="create-absence-other-reason-error" message={errors.otherReason} />
           </div>
 
           <div className="flex justify-end gap-2">

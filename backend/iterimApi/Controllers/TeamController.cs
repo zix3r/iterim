@@ -52,7 +52,7 @@ public class TeamsController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         try
@@ -121,7 +121,7 @@ public class TeamsController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         try
@@ -158,7 +158,7 @@ public class TeamsController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         try
@@ -199,7 +199,7 @@ public class TeamsController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         try

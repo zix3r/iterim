@@ -5,6 +5,7 @@ import type { OrganizationDetail } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
 import { AddMemberModal } from '../components/AddMemberModal';
@@ -17,6 +18,7 @@ export function OrganizationPage() {
   const { orgId } = useParams();
   const navigate = useNavigate();
   const [isDeletingOrg, setIsDeletingOrg] = useState(false);
+  const [deleteOrgDialogOpen, setDeleteOrgDialogOpen] = useState(false);
   const [organization, setOrganization] = useState<OrganizationDetail | null>(null);
   const [productCount, setProductCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,9 +82,7 @@ export function OrganizationPage() {
   };
   
   const handleDeleteOrganization = async () => {
-    if (!confirm('DANGER: Are you absolutely sure you want to delete this organization? This will permanently delete ALL products, teams, sprints, and work items. This action cannot be undone!')) {
-      return;
-    }
+    if (!orgId) return;
 
     setIsDeletingOrg(true);
     try {
@@ -93,6 +93,7 @@ export function OrganizationPage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete organization';
       toast({ title: "Error", description: errorMessage, variant: "error" });
       setIsDeletingOrg(false);
+      setDeleteOrgDialogOpen(false);
     }
   };
 
@@ -186,7 +187,7 @@ export function OrganizationPage() {
           {organization.userRole === 'Admin' && (
             <Button 
               variant="destructive" 
-              onClick={handleDeleteOrganization}
+              onClick={() => setDeleteOrgDialogOpen(true)}
               disabled={isDeletingOrg}
             >
               {isDeletingOrg ? 'Deleting...' : 'Delete Organization'}
@@ -301,6 +302,25 @@ export function OrganizationPage() {
           </Table>
         </div>
       </div>
+
+      <Dialog open={deleteOrgDialogOpen} onOpenChange={setDeleteOrgDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Organization</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{organization.name}"? This will permanently remove all products, teams, sprints, and work items. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOrgDialogOpen(false)} disabled={isDeletingOrg}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteOrganization} disabled={isDeletingOrg}>
+              {isDeletingOrg ? 'Deleting...' : 'Delete Organization'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
