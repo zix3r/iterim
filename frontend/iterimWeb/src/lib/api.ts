@@ -166,7 +166,7 @@ export interface UpdateWorkItemRequest {
   priority: number;
   points?: number;
   status: number;
-  type: number;
+  type?: number;
   assignedTo?: number | null;
   iterationId?: number | null;
 }
@@ -223,66 +223,134 @@ export interface BacklogGroup {
   workItems: WorkItem[];
 }
 
+// ── Current User Profile Types ───────────────────────────────
+
+export interface CurrentUserProfile {
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  name: string;
+  email: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+}
+
+export interface UpdateAvatarRequest {
+  avatarUrl: string;
+}
+
 // ── Core fetch wrapper ────────────────────────────────────────────────────────
 // Uses HttpOnly cookies (credentials: 'include') — no localStorage, no Bearer token.
 // Automatically attempts one token refresh on 401 before giving up.
 
-const API_URL = 'http://localhost:5229/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5229/api';
+
 
 let isRefreshing = false;
 let refreshQueue: Array<(ok: boolean) => void> = [];
+
+// Patogus žodynas, verčiantis HTTP kodus į žmogui suprantamą anglų kalbą
+const HTTP_ERROR_MESSAGES: Record<number, string> = {
+  400: "Bad request. Please check your input and try again.",
+  403: "You do not have permission to perform this action.",
+  404: "The requested resource was not found.",
+  409: "Conflict detected. This action cannot be completed in the current state.",
+  500: "An unexpected server error occurred. Please try again later.",
+};
 
 export async function fetchWithAuth(
   url: string,
   options: RequestInit = {},
   retry = true,
 ): Promise<Response> {
-  const res = await fetch(`${API_URL}${url}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+  try {
+    const res = await fetch(`${API_URL}${url}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
 
-  if (res.status === 401 && retry) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const r = await fetch(`${API_URL}/auth/refresh`, {
-          method: 'POST',
-          credentials: 'include',
-        });
-        const ok = r.ok;
-        refreshQueue.forEach((cb) => cb(ok));
-        refreshQueue = [];
-        isRefreshing = false;
-        if (!ok) return res;
-      } catch {
-        refreshQueue.forEach((cb) => cb(false));
-        refreshQueue = [];
-        isRefreshing = false;
-        return res;
+    if (res.status === 401 && retry) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          const r = await fetch(`${API_URL}/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+          const ok = r.ok;
+          refreshQueue.forEach((cb) => cb(ok));
+          refreshQueue = [];
+          isRefreshing = false;
+          if (!ok) return res;
+        } catch {
+          refreshQueue.forEach((cb) => cb(false));
+          refreshQueue = [];
+          isRefreshing = false;
+          return res;
+        }
+      } else {
+        await new Promise<boolean>((resolve) => refreshQueue.push(resolve));
       }
-    } else {
-      await new Promise<boolean>((resolve) => refreshQueue.push(resolve));
+      return fetchWithAuth(url, options, false);
     }
-    return fetchWithAuth(url, options, false);
-  }
 
-  return res;
+    return res;
+  } catch {
+    // Čia sugauname NETWORK ERRORS (kai serveris nepasiekiamas arba nėra interneto)
+    throw new Error("Failed to connect to the server. Please check your internet connection.");
+  }
 }
+
 // Helper to extract error message from API response
 async function getErrorMessage(response: Response): Promise<string> {
-  const text = await response.text();
+  const status = response.status;
+  let backendMessage = "";
+
   try {
+    const text = await response.text();
     const json = JSON.parse(text);
-    return json.message || text;
+
+    // Supports both { errors: ["..."] } and ModelState { errors: { field: ["..."] } }
+    if (Array.isArray(json.errors) && json.errors.length > 0) {
+      return String(json.errors[0]);
+    }
+
+    if (json.errors && typeof json.errors === 'object') {
+      const firstErrorKey = Object.keys(json.errors)[0];
+      const firstError = json.errors[firstErrorKey];
+      if (Array.isArray(firstError) && firstError.length > 0) {
+        return String(firstError[0]);
+      }
+      if (typeof firstError === 'string' && firstError.length > 0) {
+        return firstError;
+      }
+    }
+
+    backendMessage = json.message || json.title || text;
   } catch {
-    return text;
+    // Ignoruojame, jei ne JSON
   }
+
+  // Jei gavome 500 klaidą, slepiame techninį tekstą nuo vartotojo
+  if (status === 500) {
+    return HTTP_ERROR_MESSAGES[500];
+  }
+
+  // Grąžiname backend'o žinutę arba mūsų paruoštą universalų tekstą
+  return backendMessage || HTTP_ERROR_MESSAGES[status] || "An unexpected error occurred.";
 }
+
 // ── API helpers ───────────────────────────────────────────────────────────────
 
 export const getOrganizations = (): Promise<Organization[]> =>
@@ -304,6 +372,12 @@ export const createOrganization = (name: string): Promise<Organization> =>
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
+  });
+  export const deleteOrganization = (orgId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
   });
 
 export const addOrganizationMember = (
@@ -612,13 +686,17 @@ export const createWorkItem = (teamId: number, data: CreateWorkItemRequest): Pro
     return r.json();
   });
 
+export const teamDataEventTarget = new EventTarget();
+
 export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise<WorkItem> =>
   fetchWithAuth(`/workitems/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const deleteWorkItem = (id: number): Promise<void> =>
@@ -673,7 +751,9 @@ export const startIteration = (id: number): Promise<Iteration> =>
     method: 'PATCH',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const completeIteration = (id: number, data?: CompleteIterationRequest): Promise<Iteration> =>
@@ -682,7 +762,9 @@ export const completeIteration = (id: number, data?: CompleteIterationRequest): 
     body: JSON.stringify(data ?? {}),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const deleteIteration = (id: number): Promise<void> =>
@@ -697,6 +779,7 @@ export const deleteIteration = (id: number): Promise<void> =>
 export interface BoardAssignedMember {
   id: number;
   fullName: string;
+  avatarUrl?: string | null;
 }
 
 export interface BoardWorkItem {
@@ -770,6 +853,7 @@ export interface MemberCapacityItem {
   userId: number;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   workDays: number;
   absenceDays: number;
   availableDays: number;
@@ -809,6 +893,66 @@ export const getCapacity = (
   fetchWithAuth(
     `/teams/${teamId}/metrics/capacity?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`,
   ).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// ── Pinned Teams API ──────────────────────────────────────────
+
+export interface PinnedTeam {
+  teamId: number;
+  teamName: string;
+  orgId: number;
+  productId: number;
+  path: string;
+}
+
+export const getPinnedTeams = (): Promise<PinnedTeam[]> =>
+  fetchWithAuth('/users/me/pinned-teams').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const pinTeam = (teamId: number): Promise<void> =>
+  fetchWithAuth(`/users/me/pinned-teams/${teamId}`, { method: 'POST' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const unpinTeam = (teamId: number): Promise<void> =>
+  fetchWithAuth(`/users/me/pinned-teams/${teamId}`, { method: 'DELETE' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Current User Profile API ─────────────────────────────────
+
+export const getMyProfile = (): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateMyProfile = (data: UpdateProfileRequest): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const changeMyPassword = (data: ChangePasswordRequest): Promise<void> =>
+  fetchWithAuth('/users/me/password', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const updateMyAvatar = (data: UpdateAvatarRequest): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me/avatar', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });

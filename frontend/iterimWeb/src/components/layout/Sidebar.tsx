@@ -1,12 +1,15 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { PinnedTeams } from './PinnedTeams';
 import {
   LayoutDashboard, Briefcase, ChevronLeft, LogOut,
-  ClipboardList, Users2, Info, CalendarX2, BarChart2,
+  ClipboardList, Users2, Info, CalendarX2, BarChart2, Pencil,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { RecentPages } from './RecentPages';
 import type { LucideIcon } from 'lucide-react';
+import { ActiveIterationIndicator } from './ActiveIterationIndicator';
 
 interface NavLinkProps {
   to: string;
@@ -53,6 +56,8 @@ export function SidebarContent() {
             label="Dashboard"
             active={location.pathname === '/dashboard'}
           />
+
+          <PinnedTeams />
 
           {/* LEVEL 2: Organization */}
           {orgId && (
@@ -160,19 +165,32 @@ export function SidebarContent() {
                 label="Metrics"
                 active={location.pathname.includes('/metrics')}
               />
+              <div className="mt-3">
+                <ActiveIterationIndicator key={teamId} teamId={Number(teamId)} />
+              </div>
             </div>
           )}
 
+          {/* RECENT PAGES */}
+          <RecentPages />
         </div>
       </div>
 
       {/* BOTTOM: User & Logout */}
       <div className="p-4 border-t border-zinc-200 bg-zinc-100/50">
         {user && (
-          <div className="px-2 mb-4">
-            <p className="text-sm font-semibold text-zinc-900 truncate">{user.name}</p>
-            <p className="text-xs text-zinc-500 truncate">{user.email}</p>
-          </div>
+          <Link
+            to="/profile"
+            className="mb-2 flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-zinc-200/80"
+          >
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-zinc-900 truncate">{user.name}</p>
+              <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+            </div>
+            <span className="shrink-0 text-zinc-500">
+              <Pencil className="h-4 w-4" />
+            </span>
+          </Link>
         )}
         <Button
           variant="ghost"

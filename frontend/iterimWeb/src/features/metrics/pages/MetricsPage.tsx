@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
-import { BarChart2, ChevronDown } from 'lucide-react';
+import { BarChart2, ChevronDown, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ErrorMessage } from '@/components/ui/error-message';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { SprintProgressCard } from '../components/SprintProgressCard';
 import { VelocityChart } from '../components/VelocityChart';
 import { BurndownChart } from '../components/BurndownChart';
@@ -53,34 +54,54 @@ export function MetricsPage() {
   const [sprintCount] = useState(5);
 
   // Load all iterations once
-  useEffect(() => {
+  const loadIterations = useCallback(async () => {
     if (!tid) return;
-    setIterLoading(true);
-    getIterationsByTeam(tid)
-      .then((list) => {
-        // Sort: Active first, then newest first by startDate
-        const sorted = [...list].sort((a, b) => {
-          if (a.status === 'Active') return -1;
-          if (b.status === 'Active') return 1;
-          return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
-        });
-        setIterations(sorted);
-        // Default: active sprint, or most recent
-        const def = sorted.find((i) => i.status === 'Active') ?? sorted[0] ?? null;
-        if (def) setSelectedId(def.id);
-      })
-      .catch((e: Error) => setIterError(e.message))
-      .finally(() => setIterLoading(false));
+    try {
+      setIterLoading(true);
+      setIterError(null);
+      const list = await getIterationsByTeam(tid);
+      
+      // Sort: Active first, then newest first by startDate
+      const sorted = [...list].sort((a, b) => {
+        if (a.status === 'Active') return -1;
+        if (b.status === 'Active') return 1;
+        return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+      });
+      
+      setIterations(sorted);
+      // Default: active sprint, or most recent
+      const def = sorted.find((i) => i.status === 'Active') ?? sorted[0] ?? null;
+      if (def) setSelectedId(def.id);
+    } catch (err) {
+      console.error('Failed to load iterations:', err);
+      setIterError(err instanceof Error ? err.message : 'Failed to load iterations');
+    } finally {
+      setIterLoading(false);
+    }
   }, [tid]);
+
+  useEffect(() => {
+    loadIterations();
+  }, [loadIterations]);
 
   // Load velocity — last N completed sprints before (and including) the selected sprint
   useEffect(() => {
     if (!tid || !selectedId) return;
-    setVelocityLoading(true);
-    getVelocity(tid, sprintCount, selectedId)
-      .then(setVelocity)
-      .catch((e: Error) => setVelocityError(e.message))
-      .finally(() => setVelocityLoading(false));
+    
+    const fetchVelocity = async () => {
+      setVelocityLoading(true);
+      try {
+        const data = await getVelocity(tid, sprintCount, selectedId);
+        setVelocity(data);
+      } catch (err) {
+        console.error('Failed to load velocity:', err);
+        setVelocityError(err instanceof Error ? err.message : 'Failed to load velocity');
+      } finally {
+        setVelocityLoading(false);
+      }
+    };
+
+    fetchVelocity();
   }, [tid, selectedId, sprintCount]);
 
   // Reload sprint metrics + capacity whenever selected sprint changes
@@ -89,32 +110,80 @@ export function MetricsPage() {
     const iter = iterations.find((i) => i.id === selectedId);
     if (!iter) return;
 
-    setSprintMetrics(null);
-    setSprintLoading(true);
-    getSprintMetrics(selectedId)
-      .then(setSprintMetrics)
-      .catch(() => setSprintMetrics(null))
-      .finally(() => setSprintLoading(false));
+    const fetchSprintData = async () => {
+      setSprintLoading(true);
+      try {
+        const metricsData = await getSprintMetrics(selectedId);
+        setSprintMetrics(metricsData);
+      } catch {
+        setSprintMetrics(null);
+      } finally {
+        setSprintLoading(false);
+      }
 
-    setCapacity(null);
-    setCapacityLoading(true);
-    getCapacity(tid, iter.startDate, iter.endDate)
-      .then(setCapacity)
-      .catch(() => setCapacity(null))
-      .finally(() => setCapacityLoading(false));
+      setCapacityLoading(true);
+      try {
+        const capData = await getCapacity(tid, iter.startDate, iter.endDate);
+        setCapacity(capData);
+      } catch {
+        setCapacity(null);
+      } finally {
+        setCapacityLoading(false);
+      }
+    };
+
+    fetchSprintData();
   }, [selectedId, iterations, tid]);
 
+  // 1. SKELETON BŪSENA (Pirminis puslapio krovimasis)
+  if (iterLoading) {
+    return (
+      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
+        
+        <div className="flex justify-between items-start">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" /> {/* Title */}
+            <Skeleton className="h-4 w-64" /> {/* Description */}
+          </div>
+          <Skeleton className="h-14 w-56 rounded-lg" /> {/* Selector */}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+        </div>
+        
+        <Skeleton className="h-[350px] w-full rounded-xl" />
+        <Skeleton className="h-[350px] w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  // 2. KLAIDOS BŪSENA
   if (iterError || velocityError) {
-    return <ErrorMessage message={iterError ?? velocityError ?? 'Unknown error'} />;
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Metrics</h3>
+          <p className="text-sm text-red-700">{iterError ?? velocityError ?? 'Unknown error occurred.'}</p>
+          <Button onClick={loadIterations} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const selectedIter = iterations.find((i) => i.id === selectedId) ?? null;
 
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Organizations', href: '/dashboard' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Org', href: `/org/${orgId}` },
           { label: 'Products', href: `/org/${orgId}/products` },
           { label: 'Product', href: `/org/${orgId}/products/${productId}` },
@@ -128,7 +197,7 @@ export function MetricsPage() {
         title="Metrics"
         description="Team analytics and iteration health"
         actions={
-          !iterLoading && iterations.length > 0 ? (
+          iterations.length > 0 ? (
             <SprintSelector
               iterations={iterations}
               selectedId={selectedId}
@@ -139,25 +208,23 @@ export function MetricsPage() {
       />
 
       {/* No iterations at all */}
-      {!iterLoading && iterations.length === 0 && (
+      {iterations.length === 0 ? (
         <EmptyState
-          icon={<BarChart2 className="h-7 w-7" />}
+          icon={<BarChart2 className="h-8 w-8" />}
           title="No iterations yet"
-          description="Create and start a iteration to see metrics here."
+          description="Create and start an iteration in the Backlog to see analytics here."
         />
-      )}
-
-      {(iterLoading || iterations.length > 0) && (
+      ) : (
         <div className="space-y-6">
           {/* Row 1: Iteration progress + Capacity — scoped to selected sprint */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SprintProgressCard
               data={sprintMetrics}
-              loading={iterLoading || sprintLoading}
+              loading={sprintLoading}
             />
             <CapacityCard
               data={capacity}
-              loading={iterLoading || capacityLoading}
+              loading={capacityLoading}
             />
           </div>
 
@@ -171,7 +238,7 @@ export function MetricsPage() {
           {/* Row 3: Burndown — scoped to selected sprint */}
           <BurndownChart
             data={sprintMetrics}
-            loading={iterLoading || sprintLoading}
+            loading={sprintLoading}
           />
         </div>
       )}
@@ -197,7 +264,7 @@ function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProp
         <select
           value={selectedId ?? ''}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="appearance-none w-full min-w-[220px] rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-8 text-sm font-medium text-zinc-800 shadow-xs focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 cursor-pointer"
+          className="appearance-none w-full min-w-[220px] rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-8 text-sm font-medium text-zinc-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 cursor-pointer"
         >
           {iterations.map((iter) => (
             <option key={iter.id} value={iter.id}>

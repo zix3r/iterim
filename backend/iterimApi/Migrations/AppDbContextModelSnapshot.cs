@@ -17,7 +17,7 @@ namespace iterimApi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.14")
+                .HasAnnotation("ProductVersion", "9.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -258,6 +258,24 @@ namespace iterimApi.Migrations
                     b.ToTable("OrganizationMembers");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.PinnedTeam", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PinnedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("UserId", "TeamId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("PinnedTeams");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -297,6 +315,39 @@ namespace iterimApi.Migrations
                     b.HasIndex("UpdatedBy");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.RecentPage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AccessedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("IconType")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RecentPages");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.RefreshToken", b =>
@@ -431,6 +482,9 @@ namespace iterimApi.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -438,8 +492,17 @@ namespace iterimApi.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
+                    b.Property<string>("EmailConfirmationToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("EmailConfirmationTokenExpiry")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<int>("FailedLoginAttempts")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsEmailConfirmed")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("datetime(6)");
@@ -451,6 +514,15 @@ namespace iterimApi.Migrations
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("PasswordResetTokenUsed")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -731,6 +803,25 @@ namespace iterimApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.PinnedTeam", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.User", "User")
+                        .WithMany("PinnedTeams")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Product", b =>
                 {
                     b.HasOne("iterimApi.Models.Entities.User", "CreatedByUser")
@@ -756,6 +847,17 @@ namespace iterimApi.Migrations
                     b.Navigation("Organization");
 
                     b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.RecentPage", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.User", "User")
+                        .WithMany("RecentPages")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.RefreshToken", b =>
@@ -964,6 +1066,10 @@ namespace iterimApi.Migrations
             modelBuilder.Entity("iterimApi.Models.Entities.User", b =>
                 {
                     b.Navigation("OrganizationMemberships");
+
+                    b.Navigation("PinnedTeams");
+
+                    b.Navigation("RecentPages");
 
                     b.Navigation("RefreshTokens");
                 });

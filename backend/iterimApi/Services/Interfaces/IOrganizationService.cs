@@ -12,4 +12,5 @@ public interface IOrganizationService
     Task<DeclineInvitationResultDto> DeclineInvitationAsync(int organizationId, int userId);
     Task<bool> RemoveMemberAsync(int organizationId, int memberId, int requestingUserId);
     Task<IEnumerable<PendingInvitationDto>> GetPendingInvitationsAsync(int userId);
+    Task DeleteOrganizationAsync(int orgId, int userId);
 }

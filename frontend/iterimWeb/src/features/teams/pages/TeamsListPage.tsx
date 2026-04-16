@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { getTeamsByProduct, getProductById } from '@/lib/api';
 import type { Team, ProductDetail } from '@/lib/api';
 import { TeamCard } from '@/features/teams/components/TeamCard';
 import { CreateTeamModal } from '@/features/teams/components/CreateTeamModal';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { LoadingPage } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
-import { UsersIcon, AlertCircleIcon } from 'lucide-react';
+import { Users, AlertCircleIcon } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 
 export function TeamsListPage() {
   const { orgId, productId } = useParams();
@@ -16,49 +17,74 @@ export function TeamsListPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTeams = () => {
-    if (productId) {
+  // Išsprendžiame setState useEffect viduje problemą
+  const loadTeams = useCallback(async () => {
+    if (!productId) return;
+    
+    try {
       setIsLoading(true);
       setError(null);
-      Promise.all([
+      const [teamsData, productData] = await Promise.all([
         getTeamsByProduct(Number(productId)),
         getProductById(Number(productId))
-      ])
-        .then(([teamsData, productData]) => {
-          setTeams(teamsData);
-          setProduct(productData);
-        })
-        .catch((err) => {
-          console.error('Failed to load teams:', err);
-          setError('Failed to load teams. Please try again.');
-        })
-        .finally(() => setIsLoading(false));
+      ]);
+      setTeams(teamsData);
+      setProduct(productData);
+    } catch (err) {
+      console.error('Failed to load teams:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load teams. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     loadTeams();
-  }, [productId]);
+  }, [loadTeams]);
 
-  if (isLoading) return <LoadingPage />;
-  
-  if (error) {
+  // 1. SKELETON BŪSENA (Krovimosi metu)
+  if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-md mx-auto text-center space-y-4">
-          <AlertCircleIcon className="h-12 w-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold">Error Loading Teams</h2>
-          <p className="text-muted-foreground">{error}</p>
-          <Button onClick={loadTeams}>Try Again</Button>
+      <div className="p-8 space-y-6 max-w-6xl mx-auto">
+        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
+        
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" /> {/* Title */}
+            <Skeleton className="h-4 w-32" /> {/* Subtitle */}
+          </div>
+          <Skeleton className="h-10 w-32 rounded-md" /> {/* Button */}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
+          ))}
         </div>
       </div>
     );
   }
   
-  if (!product) return <div className="p-8">Product not found</div>;
+  // 2. KLAIDOS BŪSENA
+  if (error || !product) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Teams</h3>
+          <p className="text-sm text-red-700">{error || "Product not found."}</p>
+          <Button onClick={loadTeams} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const isAdmin = product.userRole === 'Admin';
 
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
       <Breadcrumbs
@@ -80,18 +106,14 @@ export function TeamsListPage() {
       </div>
 
       {teams.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-            <UsersIcon className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-semibold mb-2">No teams yet</h3>
-          <p className="text-muted-foreground mb-4">
-            {isAdmin 
-              ? 'Get started by creating your first team.' 
-              : 'No teams have been created in this product yet.'}
-          </p>
-          {isAdmin && <CreateTeamModal productId={Number(productId)} onCreated={loadTeams} />}
-        </div>
+        <EmptyState 
+          title="No teams yet"
+          description={isAdmin 
+            ? 'Get started by creating your first team.' 
+            : 'No teams have been created in this product yet.'}
+          icon={<Users className="h-8 w-8" />}
+          action={isAdmin ? <CreateTeamModal productId={Number(productId)} onCreated={loadTeams} /> : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {teams.map((team) => (

@@ -168,4 +168,22 @@ public class OrganizationsController : ControllerBase
              return BadRequest(new { message = ex.Message });
         }
     }
+    // DELETE /api/organizations/:id
+    [HttpDelete("{id:int}")]
+    public async Task<ActionResult> DeleteOrganization(int id)
+    {
+        try
+        {
+            await _organizationService.DeleteOrganizationAsync(id, GetUserId());
+            return NoContent(); // Sėkmingai ištrinta, grąžiname 204
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+    }
 }

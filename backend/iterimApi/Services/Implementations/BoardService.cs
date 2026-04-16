@@ -16,7 +16,7 @@ namespace iterimApi.Services.Implementations
             _context = context;
         }
 
-        public async Task<BoardDto?> GetActiveIterationBoardAsync(int teamId)
+        public async Task<BoardDto?> GetActiveSprintBoardAsync(int teamId)
         {
             // 1. Randame aktyvų sprintą šiai komandai
             var activeIteration = await _context.Iterations
@@ -70,7 +70,8 @@ namespace iterimApi.Services.Implementations
                         AssignedMember = wi.AssignedMember != null ? new AssignedMemberDto 
                         { 
                             Id = wi.AssignedMember.Id, 
-                            FullName = wi.AssignedMember.OrgMember.User.Name
+                            FullName = wi.AssignedMember.OrgMember.User.Name,
+                            AvatarUrl = wi.AssignedMember.OrgMember.User.AvatarUrl
                         } : null
                     }).ToList() ?? new List<BoardWorkItemDto>();
 

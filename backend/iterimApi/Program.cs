@@ -33,6 +33,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 builder.Services.Configure<JwtSettings>(jwtSettings);
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
+ 
+builder.Services.AddHttpClient(); // reikalinga Resend / SendGrid provider'iams
+ 
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 // Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -84,6 +91,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IMemberAbsenceService, MemberAbsenceService>();
 builder.Services.AddScoped<IMetricsService, MetricsService>();
+builder.Services.AddScoped<IRecentPageService, RecentPageService>();
 
 // CORS — restrict methods and headers
 builder.Services.AddCors(options =>
@@ -131,13 +139,27 @@ builder.Services.AddRateLimiter(options =>
                 ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 100,
+                PermitLimit = 500,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
 });
 
 var app = builder.Build();
+
+// Trust reverse proxy headers (Caddy sends X-Forwarded-For, X-Forwarded-Proto)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                     | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+});
+
+// Automatically run pending migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 if (!app.Environment.IsDevelopment())
 {

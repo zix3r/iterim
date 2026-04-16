@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { getTeamById, getOrganizationById, removeTeamMember, deleteTeam, updateTeam, updateTeamMemberRole } from '@/lib/api';
 import type { TeamDetail, OrganizationDetail } from '@/lib/api';
@@ -7,13 +7,15 @@ import { Button } from '@/components/ui/button';
 import { AddTeamMemberModal } from '@/features/teams/components/AddTeamMemberModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { LoadingPage } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
-import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon, XIcon } from 'lucide-react';
+import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, PencilIcon, SaveIcon, XIcon, StarIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Link } from 'react-router';
+import { addRecentPage } from '@/lib/recentPages';
+import { usePinnedTeams } from '@/lib/favorites';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function TeamDetailPage() {
   const { orgId, productId, teamId } = useParams();
@@ -31,32 +33,44 @@ export function TeamDetailPage() {
   const [editDescription, setEditDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { isPinned, togglePin } = usePinnedTeams();
 
-  const loadTeam = () => {
-    if (teamId && orgId) {
+  useEffect(() => {
+    if (team && orgId && productId && teamId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams/${teamId}`,
+        label: team.name,
+        iconType: 'Team'
+      });
+    }
+  }, [team, orgId, productId, teamId]);
+
+  const loadTeam = useCallback(async () => {
+    if (!teamId || !orgId) return;
+    
+    try {
       setIsLoading(true);
       setError(null);
-      Promise.all([
+      const [teamData, orgData] = await Promise.all([
         getTeamById(Number(teamId)),
         getOrganizationById(Number(orgId))
-      ])
-        .then(([teamData, orgData]) => {
-          setTeam(teamData);
-          setOrganization(orgData);
-          setEditName(teamData.name);
-          setEditDescription(teamData.description || '');
-        })
-        .catch((err) => {
-          console.error('Failed to load team:', err);
-          setError('Failed to load team. Please try again.');
-        })
-        .finally(() => setIsLoading(false));
+      ]);
+      setTeam(teamData);
+      setOrganization(orgData);
+      setEditName(teamData.name);
+      setEditDescription(teamData.description || '');
+    } catch (err) {
+      console.error('Failed to load team:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load team data.';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [teamId, orgId]);
 
   useEffect(() => {
     loadTeam();
-  }, [teamId, orgId]);
+  }, [loadTeam]);
 
   const handleRemoveMember = async () => {
     if (!teamId || !memberToDelete) return;
@@ -72,12 +86,13 @@ export function TeamDetailPage() {
       setDeleteMemberDialogOpen(false);
       setMemberToDelete(null);
       loadTeam(); // Reload team data
-    } catch (error) {
-      console.error('Failed to remove team member', error);
+    } catch (err) {
+      console.error('Failed to remove team member', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove team member.';
       toast({
         variant: 'error',
         title: 'Error',
-        description: 'Failed to remove team member. Please try again.'
+        description: errorMessage
       });
     } finally {
       setIsDeleting(false);
@@ -96,12 +111,13 @@ export function TeamDetailPage() {
         description: 'Team deleted successfully'
       });
       navigate(`/org/${orgId}/products/${productId}/teams`);
-    } catch (error) {
-      console.error('Failed to delete team', error);
+    } catch (err) {
+      console.error('Failed to delete team', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete team.';
       toast({
         variant: 'error',
         title: 'Error',
-        description: 'Failed to delete team. Please try again.'
+        description: errorMessage
       });
       setIsDeleting(false);
       setDeleteTeamDialogOpen(false);
@@ -124,12 +140,13 @@ export function TeamDetailPage() {
       });
       setIsEditing(false);
       loadTeam(); // Reload team data
-    } catch (error) {
-      console.error('Failed to update team', error);
+    } catch (err) {
+      console.error('Failed to update team', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update team.';
       toast({
         variant: 'error',
         title: 'Error',
-        description: 'Failed to update team. Please try again.'
+        description: errorMessage
       });
     } finally {
       setIsSaving(false);
@@ -157,34 +174,78 @@ export function TeamDetailPage() {
         description: 'Member role updated successfully'
       });
       loadTeam(); // Reload team data
-    } catch (error: any) {
-      console.error('Failed to update member role', error);
+    } catch (err) {
+      console.error('Failed to update member role', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update member role.';
       toast({
         variant: 'error',
         title: 'Error',
-        description: error.message || 'Failed to update member role. Please try again.'
+        description: errorMessage
       });
-      // Reload to revert the UI change
       loadTeam();
     }
   };
 
-  if (isLoading) return <LoadingPage />;
-  
-  if (error) {
+  // 1. SKELETON BŪSENA
+  if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-md mx-auto text-center space-y-4">
-          <AlertCircleIcon className="h-12 w-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold">Error Loading Team</h2>
-          <p className="text-muted-foreground">{error}</p>
-          <Button onClick={loadTeam}>Try Again</Button>
+      <div className="p-8 space-y-6 max-w-5xl mx-auto">
+        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
+        
+        <div className="flex justify-between items-start gap-4">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-10 w-64" /> {/* Title */}
+            <Skeleton className="h-4 w-96" /> {/* Description */}
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-32 rounded-md" /> {/* Backlog Button */}
+            <Skeleton className="h-10 w-24 rounded-md" /> {/* Delete Button */}
+          </div>
+        </div>
+
+        <Card className="mt-8 p-6 space-y-4">
+           <Skeleton className="h-6 w-48 mb-4" /> {/* Section Title */}
+           <Skeleton className="h-4 w-full max-w-md" />
+           <Skeleton className="h-4 w-full max-w-sm" />
+           <Skeleton className="h-4 w-full max-w-lg" />
+        </Card>
+
+        <div className="space-y-4 mt-8">
+           <div className="flex justify-between items-center">
+             <Skeleton className="h-8 w-48" /> {/* Members Title */}
+             <Skeleton className="h-10 w-32 rounded-md" /> {/* Add Member Button */}
+           </div>
+           {[1, 2, 3].map(i => (
+             <Card key={i} className="p-4">
+               <div className="flex justify-between items-center">
+                 <div className="space-y-2">
+                   <Skeleton className="h-5 w-48" />
+                   <Skeleton className="h-4 w-32" />
+                 </div>
+                 <Skeleton className="h-8 w-24 rounded-md" />
+               </div>
+             </Card>
+           ))}
         </div>
       </div>
     );
   }
-
-  if (!team || !organization) return <div className="p-8">Team not found</div>;
+  
+  // 2. KLAIDOS BŪSENA
+  if (error || !team || !organization) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Team</h3>
+          <p className="text-sm text-red-700">{error || "Team not found."}</p>
+          <Button onClick={loadTeam} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // User can manage team if they are:
   // 1. The product creator, OR
@@ -195,6 +256,7 @@ export function TeamDetailPage() {
   );
   const canManageTeam = isProductCreator || isTeamAdmin;
 
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs
@@ -250,6 +312,32 @@ export function TeamDetailPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-3xl font-bold">{team.name}</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    const currentlyPinned = isPinned(team.id);
+                    try {
+                      await togglePin(team.id, currentlyPinned);
+                      toast({
+                        variant: 'success',
+                        title: currentlyPinned ? 'Unpinned' : 'Pinned',
+                        description: currentlyPinned ? 'Team removed from pinned list.' : 'Team successfully pinned.',
+                      });
+                    } catch (err) {
+                       const errorMessage = err instanceof Error ? err.message : 'Failed to toggle pin state.';
+                       toast({
+                         variant: 'error',
+                         title: 'Error',
+                         description: errorMessage,
+                       });
+                    }
+                  }}
+                  className={isPinned(team.id) ? 'text-yellow-500 hover:text-yellow-600' : 'text-zinc-400 hover:text-zinc-600'}
+                  title={isPinned(team.id) ? 'Unpin team' : 'Pin team'}
+                >
+                  <StarIcon className={`h-5 w-5 ${isPinned(team.id) ? 'fill-current' : ''}`} />
+                </Button>
                 {canManageTeam && (
                   <Button 
                     variant="ghost" 
@@ -267,7 +355,7 @@ export function TeamDetailPage() {
           )}
         </div>
         {!isEditing && (
-		  <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Button asChild>
               <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
                 Open Backlog
@@ -279,10 +367,10 @@ export function TeamDetailPage() {
                 onClick={() => setDeleteTeamDialogOpen(true)}
               >
                 Delete Team
-            </Button>
-		    )}
-		</div>
-	    )}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Team Info Card */}

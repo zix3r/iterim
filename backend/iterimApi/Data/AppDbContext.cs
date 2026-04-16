@@ -1,4 +1,4 @@
-﻿using iterimApi.Models.Entities;
+using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
     public DbSet<WorkItemComment> WorkItemComments => Set<WorkItemComment>();
     public DbSet<WorkItemHistory> WorkItemHistories => Set<WorkItemHistory>();
     public DbSet<MemberAbsence> MemberAbsences => Set<MemberAbsence>();
+    public DbSet<RecentPage> RecentPages => Set<RecentPage>();
+    public DbSet<PinnedTeam> PinnedTeams => Set<PinnedTeam>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +84,22 @@ public class AppDbContext : DbContext
             entity.HasOne(rt => rt.User)
                 .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── PinnedTeam ──────────────────────────────────────
+        modelBuilder.Entity<PinnedTeam>(entity =>
+        {
+            entity.HasKey(pt => new { pt.UserId, pt.TeamId });
+
+            entity.HasOne(pt => pt.User)
+                .WithMany(u => u.PinnedTeams)
+                .HasForeignKey(pt => pt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(pt => pt.Team)
+                .WithMany()
+                .HasForeignKey(pt => pt.TeamId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

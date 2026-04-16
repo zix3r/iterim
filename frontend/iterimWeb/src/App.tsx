@@ -9,11 +9,16 @@ import { TeamDetailPage } from '@/features/teams/pages/TeamDetailPage';
 import { ToastProvider } from '@/components/ui/toast';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { RegisterPage } from '@/features/auth/pages/RegisterPage';
+import { CheckEmailPage } from '@/features/auth/pages/CheckEmailPage';
+import { ConfirmEmailPage } from '@/features/auth/pages/ConfirmEmailPage';
+import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
 import { BoardPage } from '@/features/board/pages/BoardPage';
 import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
 import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function MainLayout() {
   return (
@@ -28,11 +33,16 @@ function MainLayout() {
 
 function App() {
   return (
+    <ErrorBoundary>
     <ToastProvider>
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/check-email" element={<CheckEmailPage />} />
+        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute />}>
@@ -55,6 +65,7 @@ function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

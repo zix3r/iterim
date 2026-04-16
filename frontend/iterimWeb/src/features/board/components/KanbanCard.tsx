@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { BoardWorkItem } from '@/lib/api';
 
 interface KanbanCardProps {
@@ -33,7 +33,13 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
   };
 
   const initials = item.assignedMember?.fullName
-    ? item.assignedMember.fullName.substring(0, 2).toUpperCase()
+    ? item.assignedMember.fullName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase()
     : '?';
 
   const formattedAssigneeName = item.assignedMember?.fullName
@@ -70,6 +76,7 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
             {item.assignedMember ? (
               <>
                 <Avatar className="h-5 w-5">
+                  <AvatarImage src={item.assignedMember.avatarUrl ?? undefined} alt={item.assignedMember.fullName} />
                   <AvatarFallback className="text-[9px] bg-primary/10">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="text-xs text-muted-foreground font-medium truncate max-w-[180px]" title={item.assignedMember.fullName}>

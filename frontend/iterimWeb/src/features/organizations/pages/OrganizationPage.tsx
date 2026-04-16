@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router';
-import { getOrganizationById, getProductsByOrganization, removeOrganizationMember } from '@/lib/api';
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router';
+import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, deleteOrganization } from '@/lib/api';
 import type { OrganizationDetail } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { LoadingPage } from '@/components/ui/spinner';
 import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
 import { AddMemberModal } from '../components/AddMemberModal';
 import { useToast } from '@/components/ui/toast';
 import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
+import { addRecentPage } from '@/lib/recentPages';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
+  const navigate = useNavigate();
+  const [isDeletingOrg, setIsDeletingOrg] = useState(false);
   const [organization, setOrganization] = useState<OrganizationDetail | null>(null);
   const [productCount, setProductCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +24,17 @@ export function OrganizationPage() {
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const loadData = () => {
+  useEffect(() => {
+    if (organization && orgId) {
+      addRecentPage({
+        path: `/org/${orgId}`,
+        label: organization.name,
+        iconType: 'Org'
+      });
+    }
+  }, [organization, orgId]);
+
+  const loadData = useCallback(() => {
     if (orgId) {
       setIsLoading(true);
       setError(null);
@@ -35,11 +48,12 @@ export function OrganizationPage() {
         })
         .catch((err) => {
           console.error('Failed to load organization:', err);
-          setError('Failed to load organization. Please try again.');
+          const errorMessage = err instanceof Error ? err.message : 'Failed to load organization. Please try again.';
+          setError(errorMessage);
         })
         .finally(() => setIsLoading(false));
     }
-  };
+  }, [orgId]);
 
   const handleRemoveMember = async (memberId: number) => {
     if (!confirm('Are you sure you want to remove this member?')) return;
@@ -53,41 +67,106 @@ export function OrganizationPage() {
         variant: "default",
       });
       loadData(); // Reload data
-    } catch (err: any) {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove member';
       toast({
         title: "Error",
-        description: err.message || 'Failed to remove member',
+        description: errorMessage,
         variant: "error",
       });
     } finally {
       setRemovingMemberId(null);
     }
   };
+  
+  const handleDeleteOrganization = async () => {
+    if (!confirm('DANGER: Are you absolutely sure you want to delete this organization? This will permanently delete ALL products, teams, sprints, and work items. This action cannot be undone!')) {
+      return;
+    }
+
+    setIsDeletingOrg(true);
+    try {
+      await deleteOrganization(Number(orgId));
+      toast({ title: "Success", description: "Organization deleted successfully." });
+      navigate('/dashboard'); // Ištrynus, grąžiname į pagrindinį puslapį
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete organization';
+      toast({ title: "Error", description: errorMessage, variant: "error" });
+      setIsDeletingOrg(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
-  }, [orgId]);
+  }, [loadData]);
 
 
-  if (isLoading) return <LoadingPage />;
-  
-  if (error) {
+  // 1. SKELETON BŪSENA (Krovimosi metu)
+  if (isLoading) {
     return (
-      <div className="p-8">
-        <div className="max-w-md mx-auto text-center space-y-4">
-          <AlertCircleIcon className="h-12 w-12 text-destructive mx-auto" />
-          <h2 className="text-xl font-semibold">Error Loading Organization</h2>
-          <p className="text-muted-foreground">{error}</p>
-          <Button onClick={loadData}>Try Again</Button>
+      <div className="p-8 space-y-6 max-w-5xl mx-auto">
+        <Skeleton className="h-4 w-48 mb-6" /> {/* Breadcrumbs */}
+        
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-64" /> {/* Title */}
+            <Skeleton className="h-4 w-32" /> {/* Subtitle */}
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-32 rounded-md" /> {/* Button */}
+            <Skeleton className="h-10 w-32 rounded-md" /> {/* Button */}
+          </div>
+        </div>
+
+        {/* Stats Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => (
+             <Card key={i}>
+                <CardHeader><Skeleton className="h-4 w-20" /></CardHeader>
+                <CardContent><Skeleton className="h-8 w-12" /></CardContent>
+             </Card>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="space-y-4 mt-8">
+           <div className="flex justify-between items-center">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-10 w-32 rounded-md" />
+           </div>
+           <div className="border rounded-md p-4 space-y-4">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+           </div>
         </div>
       </div>
     );
   }
   
-  if (!organization) return <div className="p-8">Organization not found</div>;
-
+  // 2. KLAIDOS BŪSENA
+  if (error || !organization) {
+    return (
+      <div className="p-8 max-w-2xl mx-auto mt-12">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800">Error Loading Organization</h3>
+          <p className="text-sm text-red-700">{error || "Organization not found."}</p>
+          <button 
+            onClick={loadData} 
+            className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-md font-medium transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const canManageAllAbsences = organization.userRole === 'Admin';
 
+  // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs
@@ -103,6 +182,17 @@ export function OrganizationPage() {
           <p className="text-muted-foreground">Slug: {organization.slug}</p>
         </div>
         <div className="flex gap-2">
+          {/* TIK ADMINAMS: Raudonas trynimo mygtukas */}
+          {organization.userRole === 'Admin' && (
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteOrganization}
+              disabled={isDeletingOrg}
+            >
+              {isDeletingOrg ? 'Deleting...' : 'Delete Organization'}
+            </Button>
+          )}
+          
           <Link to={`/org/${orgId}/absences`}>
             <Button variant="outline">Manage Absences</Button>
           </Link>
@@ -122,14 +212,16 @@ export function OrganizationPage() {
             <div className="text-2xl font-bold">{organization.members.length}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{productCount}</div>
-          </CardContent>
-        </Card>
+        <Link to={`/org/${orgId}/products`} className="block h-full group">
+          <Card className="h-full transition-colors group-hover:border-primary">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Products</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{productCount}</div>
+            </CardContent>
+          </Card>
+        </Link>
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Active Members</CardTitle>
