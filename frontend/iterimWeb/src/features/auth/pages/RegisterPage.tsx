@@ -74,8 +74,9 @@ export function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      await register(values.name.trim(), values.email.trim(), values.password);
-      navigate('/dashboard', { replace: true });
+      const trimmedEmail = values.email.trim();
+      await register(values.name.trim(), trimmedEmail, values.password);
+      navigate('/check-email', { replace: true, state: { email: trimmedEmail } });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed.';
       setError(errorMessage);

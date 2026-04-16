@@ -49,7 +49,7 @@ public static class EmailTemplates
       <p>Ačiū, kad užsiregistravote. Norėdami aktyvuoti paskyrą, patvirtinkite savo el. pašto adresą:</p>
       <a href='{{CONFIRMATION_URL}}' class='btn'>Patvirtinti el. paštą</a>
       <div class='note'>
-        <p>Jei mygtuko nepavyksta paspausti, kopijuokite šią nuoroda į naršyklę:<br/>
+        <p>Jei mygtuko nepavyksta paspausti, kopijuokite šią nuorodą į naršyklę:<br/>
         <a href='{{CONFIRMATION_URL}}'>{{CONFIRMATION_URL}}</a></p>
         <p>Nuoroda galioja <strong>24 valandas</strong>. Jei neprašėte registracijos - ignoruokite šį laišką.</p>
       </div>
@@ -88,18 +88,18 @@ public static class EmailTemplates
     </div>
     <div class='body'>
       <p>Sveiki, <strong>{{RECIPIENT_NAME}}</strong>!</p>
-      <p>Gavome prasymą atkurti jusu paskyros slaptazodi. Paspauskite zemiau esanti mygtuka:</p>
-      <a href='{{RESET_URL}}' class='btn'>Atkurti slaptazodi</a>
+      <p>Gavome prašymą atkurti jūsų paskyros slaptažodį. Paspauskite žemiau esantį mygtuką:</p>
+      <a href='{{RESET_URL}}' class='btn'>Atkurti slaptažodį</a>
       <div class='warning'>
-        Nuoroda galioja tik <strong>1 valanda</strong> ir gali buti panaudota tik viena karta.
+        Nuoroda galioja tik <strong>1 valandą</strong> ir gali būti panaudota tik vieną kartą.
       </div>
       <div class='note'>
-        <p>Jei mygtuku nepavyksta paspausti:<br/>
+        <p>Jei mygtuko nepavyksta paspausti, kopijuokite šią nuorodą į naršyklę:<br/>
         <a href='{{RESET_URL}}'>{{RESET_URL}}</a></p>
-        <p>Jei neprasete slaptazodzio atkurimo - ignoruokite si laiska. Jusu paskyra lieka saugi.</p>
+        <p>Jei neprašėte slaptaždžio atkūrimo - ignoruokite šį laišką.</p>
       </div>
     </div>
-    <div class='footer'>© {{YEAR}} Iterim. Visi teises saugomos.</div>
+    <div class='footer'>© {{YEAR}} Iterim. Visos teisės saugomos.</div>
   </div>
 </body>
 </html>";
