@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { createWorkItem } from '@/lib/api';
 import type { TeamMember } from '@/lib/api';
+import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 
 const TYPE_OPTIONS = [
   { value: 0, label: 'Story', emoji: '🟦' },
@@ -29,53 +32,98 @@ interface Props {
   onCreated: () => void;
 }
 
+interface CreateWorkItemFormValues {
+  title: string;
+  description: string;
+  type: number;
+  priority: number;
+  points: string;
+  assignedTo: string;
+}
+
 export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defaultType = 0, onCreated }: Props) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState(defaultType);
-  const [priority, setPriority] = useState(1); // Medium
-  const [points, setPoints] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const emptyState: CreateWorkItemFormValues = {
+    title: '',
+    description: '',
+    type: defaultType,
+    priority: 1,
+    points: '',
+    assignedTo: '',
+  };
+
+  const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<CreateWorkItemFormValues>(
+    emptyState,
+    {
+      title: [required('Title'), maxLength('Title', 500)],
+      points: [nonNegativeNumber('Points')],
+    },
+  );
+
+  useEffect(() => {
+    if (!open) {
+      resetForm({ ...emptyState });
+    }
+  }, [defaultType, open, resetForm]);
+
+  const getMessageFromError = (error: unknown, fallback: string) => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return fallback;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+
+    if (!validateForm()) {
+      toast({
+        variant: 'warning',
+        title: 'Please fix validation errors',
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       await createWorkItem(teamId, {
-        title: title.trim(),
-        description: description || undefined,
-        type,
-        priority,
-        points: points ? Number(points) : undefined,
-        assignedTo: assignedTo ? Number(assignedTo) : undefined,
+        title: values.title.trim(),
+        description: values.description.trim() || undefined,
+        type: values.type,
+        priority: values.priority,
+        points: values.points ? Number(values.points) : undefined,
+        assignedTo: values.assignedTo ? Number(values.assignedTo) : undefined,
       });
       toast({ variant: 'success', title: 'Work item created' });
       onOpenChange(false);
       resetForm();
       onCreated();
-    } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to create work item' });
+    } catch (error) {
+      toast({
+        variant: 'error',
+        title: 'Error',
+        description: getMessageFromError(error, 'Failed to create work item'),
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setType(defaultType);
-    setPriority(1);
-    setPoints('');
-    setAssignedTo('');
-  };
-
   const selectClass = "w-full px-3 py-2 border border-input rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) resetForm(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        onOpenChange(v);
+        if (!v) {
+          resetForm({ ...emptyState });
+        }
+      }}
+    >
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Work Item</DialogTitle>
@@ -83,14 +131,30 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm font-medium">Title *</label>
-            <Input placeholder="As a user, I want to..." value={title} onChange={(e) => setTitle(e.target.value)} disabled={isLoading} required />
+            <label className="text-sm font-medium">
+              Title <span className="text-destructive">*</span>
+            </label>
+            <Input
+              placeholder="As a user, I want to..."
+              value={values.title}
+              onChange={(e) => setFieldValue('title', e.target.value)}
+              disabled={isLoading}
+              required
+              aria-invalid={!!errors.title}
+              aria-describedby={errors.title ? 'create-work-item-title-error' : undefined}
+            />
+            <FieldError id="create-work-item-title-error" message={errors.title} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Type</label>
-              <select value={type} onChange={(e) => setType(Number(e.target.value))} className={selectClass} disabled={isLoading}>
+              <select
+                value={values.type}
+                onChange={(e) => setFieldValue('type', Number(e.target.value))}
+                className={selectClass}
+                disabled={isLoading}
+              >
                 {TYPE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.emoji} {o.label}</option>
                 ))}
@@ -98,7 +162,12 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
             </div>
             <div>
               <label className="text-sm font-medium">Priority</label>
-              <select value={priority} onChange={(e) => setPriority(Number(e.target.value))} className={selectClass} disabled={isLoading}>
+              <select
+                value={values.priority}
+                onChange={(e) => setFieldValue('priority', Number(e.target.value))}
+                className={selectClass}
+                disabled={isLoading}
+              >
                 {PRIORITY_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
@@ -109,11 +178,26 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Points</label>
-              <Input type="number" min={0} placeholder="—" value={points} onChange={(e) => setPoints(e.target.value)} disabled={isLoading} />
+              <Input
+                type="number"
+                min={0}
+                placeholder="—"
+                value={values.points}
+                onChange={(e) => setFieldValue('points', e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.points}
+                aria-describedby={errors.points ? 'create-work-item-points-error' : undefined}
+              />
+              <FieldError id="create-work-item-points-error" message={errors.points} />
             </div>
             <div>
               <label className="text-sm font-medium">Assignee</label>
-              <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className={selectClass} disabled={isLoading}>
+              <select
+                value={values.assignedTo}
+                onChange={(e) => setFieldValue('assignedTo', e.target.value)}
+                className={selectClass}
+                disabled={isLoading}
+              >
                 <option value="">Unassigned</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id.toString()}>{m.userName}</option>
@@ -124,12 +208,18 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
 
           <div>
             <label className="text-sm font-medium">Description (optional)</label>
-            <Textarea placeholder="Details..." value={description} onChange={(e) => setDescription(e.target.value)} disabled={isLoading} rows={3} />
+            <Textarea
+              placeholder="Details..."
+              value={values.description}
+              onChange={(e) => setFieldValue('description', e.target.value)}
+              disabled={isLoading}
+              rows={3}
+            />
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading || !title.trim()}>{isLoading ? 'Creating...' : 'Create'}</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? 'Creating...' : 'Create'}</Button>
           </div>
         </form>
       </DialogContent>

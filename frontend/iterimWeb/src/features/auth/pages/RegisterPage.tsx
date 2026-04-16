@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { email, minLength, required } from '@/lib/validation';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
 function PasswordReq({ met, label }: { met: boolean; label: string }) {
@@ -19,70 +21,62 @@ export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{ name?: string; email?: string; password?: string; confirm?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [pwdFocused, setPwdFocused] = useState(false);
 
+  const { values, errors, setFieldValue, setErrors, validateForm } = useFormValidation(
+    {
+      name: '',
+      email: '',
+      password: '',
+      confirm: '',
+    },
+    {
+      name: [required('Name'), minLength('Name', 2)],
+      email: [email('Email')],
+      password: [required('Password')],
+      confirm: [required('Confirm password')],
+    },
+  );
+
   const reqs = {
-    length: password.length >= 8,
-    upper: /[A-Z]/.test(password),
-    lower: /[a-z]/.test(password),
-    number: /\d/.test(password),
+    length: values.password.length >= 8,
+    upper: /[A-Z]/.test(values.password),
+    lower: /[a-z]/.test(values.password),
+    number: /\d/.test(values.password),
   };
 
   const pwdValid = Object.values(reqs).every(Boolean);
 
-  const validateEmail = (email: string) => {
-    if (!email) return 'Email is required';
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return 'Please enter a valid email address';
-    return null;
-  };
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    setFieldErrors({});
+    const hasBasicErrors = !validateForm();
 
-    // Client-side validation
-    const errors: typeof fieldErrors = {};
-    
-    if (name.trim().length < 2) {
-      errors.name = 'Name must be at least 2 characters';
-    }
-    
-    const emailError = validateEmail(email);
-    if (emailError) {
-      errors.email = emailError;
-    }
-    
-    if (!password) {
-      errors.password = 'Password is required';
-    } else if (!pwdValid) {
-      errors.password = 'Password does not meet requirements';
-    }
-    
-    if (!confirm) {
-      errors.confirm = 'Please confirm your password';
-    } else if (password !== confirm) {
-      errors.confirm = 'Passwords do not match';
+    const customErrors: Partial<Record<'name' | 'email' | 'password' | 'confirm', string>> = {};
+
+    if (values.password && !pwdValid) {
+      customErrors.password = 'Password does not meet requirements';
     }
 
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
+    if (values.confirm && values.password !== values.confirm) {
+      customErrors.confirm = 'Passwords do not match';
+    }
+
+    if (hasBasicErrors || Object.keys(customErrors).length > 0) {
+      if (Object.keys(customErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...customErrors }));
+      }
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await register(name.trim(), email, password);
-      navigate('/check-email', { replace: true, state: { email } });
+      const trimmedEmail = values.email.trim();
+      await register(values.name.trim(), trimmedEmail, values.password);
+      navigate('/check-email', { replace: true, state: { email: trimmedEmail } });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed.';
       setError(errorMessage);
@@ -113,46 +107,38 @@ export function RegisterPage() {
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="field-group">
             <label className="field-label" htmlFor="name">Full name</label>
-            <input id="name" type="text" className={`field-input ${fieldErrors.name ? 'field-input-error' : ''}`} value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: undefined });
-              }} placeholder="John Smith"
+            <input id="name" type="text" className={`field-input ${errors.name ? 'field-input-error' : ''}`} value={values.name}
+              onChange={(e) => setFieldValue('name', e.target.value)} placeholder="John Smith"
               autoComplete="name" required 
-              aria-invalid={!!fieldErrors.name}
-              aria-describedby={fieldErrors.name ? 'name-error' : undefined} />
-            {fieldErrors.name && (
-              <span id="name-error" className="field-error">{fieldErrors.name}</span>
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'name-error' : undefined} />
+            {errors.name && (
+              <span id="name-error" className="field-error">{errors.name}</span>
             )}
           </div>
 
           <div className="field-group">
             <label className="field-label" htmlFor="email">Email address</label>
-            <input id="email" type="email" className={`field-input ${fieldErrors.email ? 'field-input-error' : ''}`} value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (fieldErrors.email) setFieldErrors({ ...fieldErrors, email: undefined });
-              }} placeholder="you@example.com"
+            <input id="email" type="email" className={`field-input ${errors.email ? 'field-input-error' : ''}`} value={values.email}
+              onChange={(e) => setFieldValue('email', e.target.value)} placeholder="you@example.com"
               autoComplete="email" required 
-              aria-invalid={!!fieldErrors.email}
-              aria-describedby={fieldErrors.email ? 'email-error' : undefined} />
-            {fieldErrors.email && (
-              <span id="email-error" className="field-error">{fieldErrors.email}</span>
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'email-error' : undefined} />
+            {errors.email && (
+              <span id="email-error" className="field-error">{errors.email}</span>
             )}
           </div>
 
           <div className="field-group">
             <label className="field-label" htmlFor="password">Password</label>
             <div className="field-password-wrap">
-              <input id="password" type={showPassword ? 'text' : 'password'} className={`field-input ${fieldErrors.password ? 'field-input-error' : ''}`}
-                value={password} onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: undefined });
-                }}
+              <input id="password" type={showPassword ? 'text' : 'password'} className={`field-input ${errors.password ? 'field-input-error' : ''}`}
+                value={values.password}
+                onChange={(e) => setFieldValue('password', e.target.value)}
                 placeholder="••••••••" autoComplete="new-password"
                 onFocus={() => setPwdFocused(true)} required 
-                aria-invalid={!!fieldErrors.password}
-                aria-describedby={fieldErrors.password ? 'password-error' : undefined} />
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined} />
               <button type="button" className="field-eye" onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Hide' : 'Show'}>
                 {showPassword
@@ -161,11 +147,11 @@ export function RegisterPage() {
                 }
               </button>
             </div>
-            {fieldErrors.password && (
-              <span id="password-error" className="field-error">{fieldErrors.password}</span>
+            {errors.password && (
+              <span id="password-error" className="field-error">{errors.password}</span>
             )}
 
-            {(pwdFocused || password.length > 0) && (
+            {(pwdFocused || values.password.length > 0) && (
               <div className="pwd-reqs">
                 <PasswordReq met={reqs.length} label="8+ characters" />
                 <PasswordReq met={reqs.upper}  label="Uppercase letter" />
@@ -178,25 +164,23 @@ export function RegisterPage() {
           <div className="field-group">
             <label className="field-label" htmlFor="confirm">Confirm password</label>
             <div className="field-password-wrap">
-              <input id="confirm" type={showPassword ? 'text' : 'password'} className={`field-input ${fieldErrors.confirm ? 'field-input-error' : ''}`}
-                value={confirm} onChange={(e) => {
-                  setConfirm(e.target.value);
-                  if (fieldErrors.confirm) setFieldErrors({ ...fieldErrors, confirm: undefined });
-                }}
+              <input id="confirm" type={showPassword ? 'text' : 'password'} className={`field-input ${errors.confirm ? 'field-input-error' : ''}`}
+                value={values.confirm}
+                onChange={(e) => setFieldValue('confirm', e.target.value)}
                 placeholder="••••••••" autoComplete="new-password" required 
-                aria-invalid={!!fieldErrors.confirm}
-                aria-describedby={fieldErrors.confirm ? 'confirm-error' : undefined} />
-              {confirm.length > 0 && !fieldErrors.confirm && (
-                <span className={`field-match-icon ${confirm === password ? 'ok' : 'bad'}`}>
-                  {confirm === password
+                aria-invalid={!!errors.confirm}
+                aria-describedby={errors.confirm ? 'confirm-error' : undefined} />
+              {values.confirm.length > 0 && !errors.confirm && (
+                <span className={`field-match-icon ${values.confirm === values.password ? 'ok' : 'bad'}`}>
+                  {values.confirm === values.password
                     ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg>
                     : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                   }
                 </span>
               )}
             </div>
-            {fieldErrors.confirm && (
-              <span id="confirm-error" className="field-error">{fieldErrors.confirm}</span>
+            {errors.confirm && (
+              <span id="confirm-error" className="field-error">{errors.confirm}</span>
             )}
           </div>
 

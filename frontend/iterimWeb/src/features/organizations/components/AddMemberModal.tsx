@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FieldError } from '@/components/ui/field-error';
+import { useToast } from '@/components/ui/toast';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { addOrganizationMember } from '@/lib/api';
+import { email, required } from '@/lib/validation';
 import { UserPlus } from 'lucide-react';
 
 interface Props {
@@ -12,40 +16,82 @@ interface Props {
 
 export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('Member');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation(
+    {
+      email: '',
+      role: 'Member',
+    },
+    {
+      email: [email('Email')],
+      role: [required('Role')],
+    },
+  );
+
+  const resetState = () => {
+    resetForm({ email: '', role: 'Member' });
+    setSubmitError(null);
+  };
+
+  const getMessageFromError = (error: unknown, fallback: string) => {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return fallback;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+
+    if (!validateForm()) {
+      toast({
+        variant: 'warning',
+        title: 'Please fix validation errors',
+      });
+      return;
+    }
     
     setIsLoading(true);
-    setError(null);
+    setSubmitError(null);
+
     try {
-      await addOrganizationMember(organizationId, email, role);
+      await addOrganizationMember(organizationId, values.email.trim(), values.role);
+
+      toast({
+        variant: 'success',
+        title: 'Member invited successfully',
+      });
+
       setOpen(false);
-      setEmail('');
-      setRole('Member');
+      resetState();
       onMemberAdded();
     } catch (error) {
-      console.error('Failed to add member', error);
-      setError(error instanceof Error ? error.message : 'Failed to add member');
+      const errorMessage = getMessageFromError(error, 'Failed to add member');
+      setSubmitError(errorMessage);
+      toast({
+        variant: 'error',
+        title: 'Failed to add member',
+        description: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) {
-        setEmail('');
-        setRole('Member');
-        setError(null);
-      }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) {
+          resetState();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="h-4 w-4 mr-2" />
@@ -61,37 +107,47 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div>
-            <label htmlFor="email" className="text-sm font-medium block mb-2">Email</label>
+            <label htmlFor="email" className="text-sm font-medium block mb-2">
+              Email <span className="text-destructive">*</span>
+            </label>
             <Input 
               id="email"
               type="email"
               placeholder="user@example.com" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
+              value={values.email}
+              onChange={(e) => setFieldValue('email', e.target.value)}
               disabled={isLoading}
               required
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'add-member-email-error' : undefined}
             />
+            <FieldError id="add-member-email-error" message={errors.email} />
           </div>
           
           <div>
-            <label htmlFor="role" className="text-sm font-medium block mb-2">Role</label>
+            <label htmlFor="role" className="text-sm font-medium block mb-2">
+              Role <span className="text-destructive">*</span>
+            </label>
             <select
               id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
+              value={values.role}
+              onChange={(e) => setFieldValue('role', e.target.value)}
               disabled={isLoading}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 aria-invalid:border-destructive"
               required
+              aria-invalid={!!errors.role}
+              aria-describedby={errors.role ? 'add-member-role-error' : undefined}
             >
               <option value="Admin">Admin</option>
               <option value="Member">Member</option>
               <option value="Viewer">Viewer</option>
             </select>
+            <FieldError id="add-member-role-error" message={errors.role} />
           </div>
 
-          {error && (
+          {submitError && (
             <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-              {error}
+              {submitError}
             </div>
           )}
 
@@ -99,7 +155,7 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !email.trim()}>
+            <Button type="submit" disabled={isLoading}>
               {isLoading ? 'Adding...' : 'Add Member'}
             </Button>
           </div>

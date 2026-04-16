@@ -5,7 +5,7 @@ namespace iterimApi.DTOs.Teams;
 
 public class AddTeamMemberDto
 {
-    [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "A valid organization member must be selected.")]
     public int OrgMemberId { get; set; }
     
     public TeamMemberRole Role { get; set; } = TeamMemberRole.Member;

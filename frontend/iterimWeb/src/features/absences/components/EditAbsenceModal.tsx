@@ -2,10 +2,13 @@ import { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
+import { useFormValidation } from '@/hooks/useFormValidation';
 import { updateAbsence } from '@/lib/api';
 import type { AbsenceReason, MemberAbsence, OrganizationMember } from '@/lib/api';
+import { dateOnOrAfter, required, requiredWhen } from '@/lib/validation';
 import { PencilIcon } from 'lucide-react';
 
 const REASON_OPTIONS: AbsenceReason[] = ['Vacation', 'Sick', 'Late', 'Absent', 'Other'];
@@ -31,54 +34,64 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
   const parsedReason = parseReason(absence.reason);
 
   const [open, setOpen] = useState(false);
-  const [orgMemberId, setOrgMemberId] = useState(absence.orgMemberId.toString());
-  const [fromDate, setFromDate] = useState(absence.fromDate.slice(0, 10));
-  const [toDate, setToDate] = useState(absence.toDate.slice(0, 10));
-  const [reason, setReason] = useState<AbsenceReason>(parsedReason);
-  const [otherReason, setOtherReason] = useState(absence.reasonDetails ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const { values, errors, setFieldValue, validateForm, resetForm: resetValidationForm } = useFormValidation(
+    {
+      orgMemberId: absence.orgMemberId.toString(),
+      fromDate: absence.fromDate.slice(0, 10),
+      toDate: absence.toDate.slice(0, 10),
+      reason: parsedReason,
+      otherReason: absence.reasonDetails ?? '',
+    },
+    {
+      orgMemberId: [required('Member')],
+      fromDate: [required('From date')],
+      toDate: [required('To date'), dateOnOrAfter('fromDate', 'To date must be after or equal to from date.')],
+      reason: [required('Reason')],
+      otherReason: [
+        requiredWhen(
+          'reason',
+          (value) => value === 'Other',
+          'Reason details are required when reason is Other.',
+        ),
+      ],
+    },
+  );
 
   const activeMembers = useMemo(
     () => members.filter((member) => member.status === 'Active'),
     [members],
   );
 
-  const resetForm = () => {
+  const resetAbsenceForm = () => {
     const currentReason = parseReason(absence.reason);
-    setOrgMemberId(absence.orgMemberId.toString());
-    setFromDate(absence.fromDate.slice(0, 10));
-    setToDate(absence.toDate.slice(0, 10));
-    setReason(currentReason);
-    setOtherReason(absence.reasonDetails ?? '');
+    resetValidationForm({
+      orgMemberId: absence.orgMemberId.toString(),
+      fromDate: absence.fromDate.slice(0, 10),
+      toDate: absence.toDate.slice(0, 10),
+      reason: currentReason,
+      otherReason: absence.reasonDetails ?? '',
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!orgMemberId) {
-      toast({ variant: 'error', title: 'Select a member first' });
-      return;
-    }
-
-    if (toDate < fromDate) {
-      toast({ variant: 'error', title: 'Date range is invalid', description: 'To date must be after or equal to from date.' });
-      return;
-    }
-
-    if (reason === 'Other' && !otherReason.trim()) {
-      toast({ variant: 'error', title: 'Enter a custom reason' });
+    if (!validateForm()) {
+      toast({ variant: 'warning', title: 'Please fix validation errors' });
       return;
     }
 
     setIsLoading(true);
     try {
       await updateAbsence(absence.id, {
-        orgMemberId: Number(orgMemberId),
-        fromDate,
-        toDate,
-        reason,
-        otherReason: otherReason.trim() || undefined,
+        orgMemberId: Number(values.orgMemberId),
+        fromDate: values.fromDate,
+        toDate: values.toDate,
+        reason: values.reason,
+        otherReason: values.otherReason.trim() || undefined,
       });
 
       toast({ variant: 'success', title: 'Absence updated successfully' });
@@ -100,7 +113,7 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
       open={open}
       onOpenChange={(value) => {
         setOpen(value);
-        if (value) resetForm();
+        if (value) resetAbsenceForm();
       }}
     >
       <DialogTrigger asChild>
@@ -120,15 +133,17 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-member-${absence.id}`}>
-              Member
+              Member <span className="text-destructive">*</span>
             </label>
             <select
               id={`edit-absence-member-${absence.id}`}
-              value={orgMemberId}
-              onChange={(e) => setOrgMemberId(e.target.value)}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              value={values.orgMemberId}
+              onChange={(e) => setFieldValue('orgMemberId', e.target.value)}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 aria-invalid:border-destructive"
               disabled={isLoading || activeMembers.length === 0}
               required
+              aria-invalid={!!errors.orgMemberId}
+              aria-describedby={errors.orgMemberId ? `edit-absence-member-error-${absence.id}` : undefined}
             >
               <option value="">Select a member</option>
               {activeMembers.map((member) => (
@@ -137,48 +152,57 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
                 </option>
               ))}
             </select>
+            <FieldError id={`edit-absence-member-error-${absence.id}`} message={errors.orgMemberId} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-from-date-${absence.id}`}>
-                From date
+                From date <span className="text-destructive">*</span>
               </label>
               <Input
                 id={`edit-absence-from-date-${absence.id}`}
                 type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+                value={values.fromDate}
+                onChange={(e) => setFieldValue('fromDate', e.target.value)}
                 disabled={isLoading}
                 required
+                aria-invalid={!!errors.fromDate}
+                aria-describedby={errors.fromDate ? `edit-absence-from-date-error-${absence.id}` : undefined}
               />
+              <FieldError id={`edit-absence-from-date-error-${absence.id}`} message={errors.fromDate} />
             </div>
             <div>
               <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-to-date-${absence.id}`}>
-                To date
+                To date <span className="text-destructive">*</span>
               </label>
               <Input
                 id={`edit-absence-to-date-${absence.id}`}
                 type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
+                value={values.toDate}
+                onChange={(e) => setFieldValue('toDate', e.target.value)}
                 disabled={isLoading}
                 required
+                aria-invalid={!!errors.toDate}
+                aria-describedby={errors.toDate ? `edit-absence-to-date-error-${absence.id}` : undefined}
               />
+              <FieldError id={`edit-absence-to-date-error-${absence.id}`} message={errors.toDate} />
             </div>
           </div>
 
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-reason-${absence.id}`}>
-              Reason
+              Reason <span className="text-destructive">*</span>
             </label>
             <select
               id={`edit-absence-reason-${absence.id}`}
-              value={reason}
-              onChange={(e) => setReason(e.target.value as AbsenceReason)}
-              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+              value={values.reason}
+              onChange={(e) => setFieldValue('reason', e.target.value as AbsenceReason)}
+              className="w-full px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 aria-invalid:border-destructive"
               disabled={isLoading}
               required
+              aria-invalid={!!errors.reason}
+              aria-describedby={errors.reason ? `edit-absence-reason-error-${absence.id}` : undefined}
             >
               {REASON_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -186,21 +210,25 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
                 </option>
               ))}
             </select>
+            <FieldError id={`edit-absence-reason-error-${absence.id}`} message={errors.reason} />
           </div>
 
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-other-reason-${absence.id}`}>
-              Reason details {reason === 'Other' ? '(required)' : '(optional)'}
+              Reason details {values.reason === 'Other' ? '(required)' : '(optional)'}
             </label>
             <Textarea
               id={`edit-absence-other-reason-${absence.id}`}
-              value={otherReason}
-              onChange={(e) => setOtherReason(e.target.value)}
+              value={values.otherReason}
+              onChange={(e) => setFieldValue('otherReason', e.target.value)}
               placeholder="Describe the reason"
               disabled={isLoading}
               rows={3}
-              required={reason === 'Other'}
+              required={values.reason === 'Other'}
+              aria-invalid={!!errors.otherReason}
+              aria-describedby={errors.otherReason ? `edit-absence-other-reason-error-${absence.id}` : undefined}
             />
+            <FieldError id={`edit-absence-other-reason-error-${absence.id}`} message={errors.otherReason} />
           </div>
 
           <div className="flex justify-end gap-2">

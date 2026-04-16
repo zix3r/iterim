@@ -4,10 +4,10 @@ namespace iterimApi.DTOs.Teams;
 
 public class CreateTeamDto
 {
-    [Required]
-    [StringLength(100, MinimumLength = 1)]
+    [Required(ErrorMessage = "Team name is required.")]
+    [StringLength(100, MinimumLength = 1, ErrorMessage = "Team name must be between 1 and 100 characters.")]
     public string Name { get; set; } = string.Empty;
     
-    [StringLength(500)]
+    [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters.")]
     public string? Description { get; set; }
 }
