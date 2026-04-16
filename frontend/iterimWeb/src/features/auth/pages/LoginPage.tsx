@@ -50,10 +50,7 @@ export function LoginPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed.';
       // Check if it's an "unconfirmed email" error (403 from backend)
-      if (
-        errorMessage.toLowerCase().includes('confirm your email') ||
-        (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm'))
-      ) {
+      if (errorMessage.toLowerCase().includes('confirm your email') || errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm')) {
         setUnconfirmedEmail(values.email.trim());
       } else {
         setError(errorMessage);
