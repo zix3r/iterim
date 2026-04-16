@@ -18,6 +18,7 @@ import { BacklogPage } from '@/features/backlog/pages/BacklogPage';
 import { BoardPage } from '@/features/board/pages/BoardPage';
 import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
 import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
+import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 function MainLayout() {
@@ -58,6 +59,7 @@ function App() {
             <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
             <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
