@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CapacityData } from '@/lib/api';
@@ -98,6 +98,7 @@ export function CapacityCard({ data, loading }: Props) {
                   >
                     {/* Avatar */}
                     <Avatar size="sm">
+                      <AvatarImage src={m.avatarUrl ?? undefined} alt={m.name} />
                       <AvatarFallback className="text-[10px] font-semibold bg-zinc-200 text-zinc-700">
                         {initials(m.name)}
                       </AvatarFallback>

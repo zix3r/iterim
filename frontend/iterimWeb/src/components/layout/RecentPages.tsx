@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router';
 import { Building2, Package, Users, Compass, LayoutDashboard } from 'lucide-react';
 import { getRecentPages, clearRecentPages, type RecentPage } from '../../lib/recentPages';

@@ -70,7 +70,8 @@ namespace iterimApi.Services.Implementations
                         AssignedMember = wi.AssignedMember != null ? new AssignedMemberDto 
                         { 
                             Id = wi.AssignedMember.Id, 
-                            FullName = wi.AssignedMember.OrgMember.User.Name
+                            FullName = wi.AssignedMember.OrgMember.User.Name,
+                            AvatarUrl = wi.AssignedMember.OrgMember.User.AvatarUrl
                         } : null
                     }).ToList() ?? new List<BoardWorkItemDto>();
 
