@@ -1,6 +1,7 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.WorkItems;
+using iterimApi.Helpers;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,7 +43,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving work items", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -70,7 +72,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving grouped work items", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -99,7 +102,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving the work item", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -145,7 +149,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while creating the work item", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -188,7 +193,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while updating the work item", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -221,7 +227,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while deleting the work item", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
     /// <summary>
@@ -256,7 +263,8 @@ public class WorkItemsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while reordering", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -276,3 +284,4 @@ public class WorkItemsController : ControllerBase
         return userId;
     }
 }
+

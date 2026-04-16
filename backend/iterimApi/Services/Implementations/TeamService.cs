@@ -1,5 +1,6 @@
 using iterimApi.Data;
 using iterimApi.DTOs.Teams;
+using iterimApi.Exceptions;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
@@ -528,6 +529,13 @@ public class TeamService : ITeamService
         if (!isProductCreator && !isTeamAdmin)
         {
             throw new UnauthorizedAccessException("Only the product creator or team admin can delete teams");
+        }
+
+        var hasActiveIteration = await _db.Iterations
+            .AnyAsync(i => i.TeamId == teamId && i.Status == IterationStatus.Active);
+        if (hasActiveIteration)
+        {
+            throw new ConflictException("Cannot delete team while it has an active iteration. Complete it first.");
         }
 
         _db.Teams.Remove(team);

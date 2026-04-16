@@ -19,11 +19,11 @@ public static class EmailTemplates
     }
 
     private const string EmailConfirmationHtml = @"<!DOCTYPE html>
-<html lang='lt'>
+<html lang='en'>
 <head>
   <meta charset='UTF-8' />
   <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-  <title>Patvirtinkite el. pastą</title>
+  <title>Confirm your email</title>
   <style>
     body { margin: 0; padding: 0; background: #f4f4f5; font-family: 'Segoe UI', Arial, sans-serif; }
     .wrapper { max-width: 560px; margin: 40px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
@@ -42,29 +42,29 @@ public static class EmailTemplates
   <div class='wrapper'>
     <div class='header'>
       <h1>iterim</h1>
-      <span>Projektu valdymo sistema</span>
+      <span>Project management platform</span>
     </div>
     <div class='body'>
-      <p>Sveiki, <strong>{{RECIPIENT_NAME}}</strong>!</p>
-      <p>Ačiū, kad užsiregistravote. Norėdami aktyvuoti paskyrą, patvirtinkite savo el. pašto adresą:</p>
-      <a href='{{CONFIRMATION_URL}}' class='btn'>Patvirtinti el. paštą</a>
+      <p>Hello, <strong>{{RECIPIENT_NAME}}</strong>!</p>
+      <p>Thanks for signing up. To activate your account, please confirm your email address:</p>
+      <a href='{{CONFIRMATION_URL}}' class='btn'>Confirm email</a>
       <div class='note'>
-        <p>Jei mygtuko nepavyksta paspausti, kopijuokite šią nuoroda į naršyklę:<br/>
+        <p>If the button does not work, copy this link into your browser:<br/>
         <a href='{{CONFIRMATION_URL}}'>{{CONFIRMATION_URL}}</a></p>
-        <p>Nuoroda galioja <strong>24 valandas</strong>. Jei neprašėte registracijos - ignoruokite šį laišką.</p>
+        <p>This link is valid for <strong>24 hours</strong>. If you did not request this, you can ignore this email.</p>
       </div>
     </div>
-    <div class='footer'>© {{YEAR}} Iterim. Visos teisė saugomos.</div>
+    <div class='footer'>© {{YEAR}} Iterim. All rights reserved.</div>
   </div>
 </body>
 </html>";
 
     private const string PasswordResetHtml = @"<!DOCTYPE html>
-<html lang='lt'>
+<html lang='en'>
 <head>
   <meta charset='UTF-8' />
   <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-  <title>Slaptazodzio atkurimas</title>
+  <title>Password reset</title>
   <style>
     body { margin: 0; padding: 0; background: #f4f4f5; font-family: 'Segoe UI', Arial, sans-serif; }
     .wrapper { max-width: 560px; margin: 40px auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
@@ -84,22 +84,22 @@ public static class EmailTemplates
   <div class='wrapper'>
     <div class='header'>
       <h1>iterim</h1>
-      <span>Projektu valdymo sistema</span>
+      <span>Project management platform</span>
     </div>
     <div class='body'>
-      <p>Sveiki, <strong>{{RECIPIENT_NAME}}</strong>!</p>
-      <p>Gavome prasymą atkurti jusu paskyros slaptazodi. Paspauskite zemiau esanti mygtuka:</p>
-      <a href='{{RESET_URL}}' class='btn'>Atkurti slaptazodi</a>
+      <p>Hello, <strong>{{RECIPIENT_NAME}}</strong>!</p>
+      <p>We received a request to reset your account password. Click the button below:</p>
+      <a href='{{RESET_URL}}' class='btn'>Reset password</a>
       <div class='warning'>
-        Nuoroda galioja tik <strong>1 valanda</strong> ir gali buti panaudota tik viena karta.
+        This link is valid for <strong>1 hour</strong> and can be used only once.
       </div>
       <div class='note'>
-        <p>Jei mygtuku nepavyksta paspausti:<br/>
+        <p>If the button does not work:<br/>
         <a href='{{RESET_URL}}'>{{RESET_URL}}</a></p>
-        <p>Jei neprasete slaptazodzio atkurimo - ignoruokite si laiska. Jusu paskyra lieka saugi.</p>
+        <p>If you did not request a password reset, ignore this email. Your account remains secure.</p>
       </div>
     </div>
-    <div class='footer'>© {{YEAR}} Iterim. Visi teises saugomos.</div>
+    <div class='footer'>© {{YEAR}} Iterim. All rights reserved.</div>
   </div>
 </body>
 </html>";

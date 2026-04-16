@@ -1,5 +1,6 @@
 using iterimApi.Data;
 using iterimApi.DTOs.Iterations;
+using iterimApi.Exceptions;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
@@ -137,7 +138,7 @@ public class IterationService : IIterationService
                            i.Id != id);
 
         if (hasActive)
-            throw new InvalidOperationException("Another iteration is already active for this team. Complete it before starting a new one.");
+            throw new ConflictException("Another iteration is already active for this team. Complete it before starting a new one.");
 
         iteration.Status = IterationStatus.Active;
         iteration.UpdatedBy = userId;

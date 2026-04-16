@@ -1,6 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using iterimApi.Data;
+using iterimApi.Middleware;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
 using iterimApi.Services.Implementations;
@@ -24,10 +25,13 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 
 // Database
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+}
 
 // JWT Settings
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -148,11 +152,14 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 // Automatically run pending migrations on startup
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
 }
+
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -183,3 +190,7 @@ if (app.Environment.IsDevelopment())
 app.MapControllers().RequireRateLimiting("api");
 
 app.Run();
+
+public partial class Program
+{
+}

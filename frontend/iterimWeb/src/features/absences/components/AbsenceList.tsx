@@ -41,17 +41,17 @@ interface Props {
 
 export function AbsenceList({ absences, members, currentUserId, canManageAllAbsences, onChanged }: Props) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
 
   const orgMemberUserById = new Map(members.map((member) => [member.id, member.userId]));
 
   const handleDelete = async (absenceId: number) => {
-    if (!confirm('Are you sure you want to delete this absence?')) return;
-
     setDeletingId(absenceId);
     try {
       await deleteAbsence(absenceId);
       toast({ variant: 'success', title: 'Absence deleted successfully' });
+      setConfirmDeleteId(null);
       onChanged();
     } catch (error) {
       toast({
@@ -62,6 +62,16 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const startDeleteConfirmation = (absenceId: number) => {
+    if (deletingId !== null) return;
+    setConfirmDeleteId(absenceId);
+  };
+
+  const cancelDeleteConfirmation = () => {
+    if (deletingId !== null) return;
+    setConfirmDeleteId(null);
   };
 
   if (absences.length === 0) {
@@ -115,16 +125,40 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
                   return (
                 <div className="flex items-center gap-2">
                   <EditAbsenceModal absence={absence} members={members} onUpdated={onChanged} />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDelete(absence.id)}
-                    disabled={deletingId === absence.id}
-                  >
-                    <Trash2Icon className="h-4 w-4" />
-                    Delete
-                  </Button>
+                  {confirmDeleteId === absence.id ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-destructive font-medium">Are you sure?</span>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={() => handleDelete(absence.id)}
+                        disabled={deletingId === absence.id}
+                      >
+                        {deletingId === absence.id ? 'Deleting...' : 'Yes'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-2"
+                        onClick={cancelDeleteConfirmation}
+                        disabled={deletingId === absence.id}
+                      >
+                        No
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10"
+                      onClick={() => startDeleteConfirmation(absence.id)}
+                      disabled={deletingId !== null}
+                    >
+                      <Trash2Icon className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  )}
                 </div>
                   );
                 })()}

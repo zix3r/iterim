@@ -1,6 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.Iterations;
+using iterimApi.Exceptions;
+using iterimApi.Helpers;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,9 +41,14 @@ public class IterationsController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving iterations", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -68,9 +75,14 @@ public class IterationsController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving the iteration", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -115,9 +127,14 @@ public class IterationsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while creating the iteration", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -157,14 +174,19 @@ public class IterationsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while updating the iteration", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
     /// <summary>
-    /// Start an iteration (Planning → Active).
+    /// Start an iteration (Planning â†’ Active).
     /// Only one iteration can be Active per team at a time.
     /// PATCH /api/iterations/:id/start
     /// </summary>
@@ -195,14 +217,19 @@ public class IterationsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while starting the iteration", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
     /// <summary>
-    /// Complete an iteration (Active → Completed).
+    /// Complete an iteration (Active â†’ Completed).
     /// PATCH /api/iterations/:id/complete
     /// </summary>
     [HttpPatch("api/iterations/{id}/complete")]
@@ -232,9 +259,14 @@ public class IterationsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while completing the iteration", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -270,9 +302,14 @@ public class IterationsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while deleting the iteration", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -292,3 +329,4 @@ public class IterationsController : ControllerBase
         return userId;
     }
 }
+

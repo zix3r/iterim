@@ -30,27 +30,40 @@ public class OrganizationService : IOrganizationService
             .ToListAsync();
     }
     public async Task DeleteOrganizationAsync(int orgId, int userId)
-{
-    // 1. Patikriname, ar vartotojas priklauso organizacijai ir ar jis yra Adminas
-    var membership = await _context.OrganizationMembers
-        .FirstOrDefaultAsync(om => om.OrganizationId == orgId && om.UserId == userId);
-
-    if (membership == null)
-        throw new KeyNotFoundException("Organization not found.");
-
-    if (membership.Role != iterimApi.Models.Enums.OrgMemberRole.Admin)
     {
-    throw new UnauthorizedAccessException("Only Administrators can delete the organization.");
-    }
-    // 2. Surandame organizaciją
-    var org = await _context.Organizations.FindAsync(orgId);
-    if (org == null)
-        throw new KeyNotFoundException("Organization not found.");
+        var membership = await _context.OrganizationMembers
+            .FirstOrDefaultAsync(om => om.OrganizationId == orgId && om.UserId == userId);
 
-    // 3. Ištriname (Dėka tavo AppDbContext konfigūracijos, tai automatiškai ištrins ir visus produktus, komandas bei užduotis!)
-    _context.Organizations.Remove(org);
-    await _context.SaveChangesAsync();
-}
+        if (membership == null)
+            throw new KeyNotFoundException("Organization not found.");
+
+        if (membership.Role != OrgMemberRole.Admin)
+            throw new UnauthorizedAccessException("Only Administrators can delete the organization.");
+
+        var org = await _context.Organizations.FindAsync(orgId);
+        if (org == null)
+            throw new KeyNotFoundException("Organization not found.");
+
+        if (_context.Database.IsRelational())
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                await DeleteOrganizationHierarchyAsync(orgId, org);
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        else
+        {
+            await DeleteOrganizationHierarchyAsync(orgId, org);
+        }
+    }
     public async Task<OrganizationDetailDto> GetOrganizationByIdAsync(int id, int userId)
     {
         var organization = await _context.Organizations
@@ -328,6 +341,130 @@ public class OrganizationService : IOrganizationService
                 InvitedAt = m.InvitedAt
             })
             .ToListAsync();
+    }
+
+    private async Task DeleteProductHierarchyAsync(int productId)
+    {
+        var teamIds = await _context.Teams
+            .Where(t => t.ProductId == productId)
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        if (teamIds.Count == 0)
+        {
+            return;
+        }
+
+        var workItemIds = await _context.WorkItems
+            .Where(wi => teamIds.Contains(wi.TeamId))
+            .Select(wi => wi.Id)
+            .ToListAsync();
+
+        if (workItemIds.Count > 0)
+        {
+            var workItemComments = await _context.WorkItemComments
+                .Where(c => workItemIds.Contains(c.WorkItemId))
+                .ToListAsync();
+            if (workItemComments.Count > 0)
+            {
+                _context.WorkItemComments.RemoveRange(workItemComments);
+            }
+
+            var workItemHistory = await _context.WorkItemHistories
+                .Where(h => workItemIds.Contains(h.WorkItemId))
+                .ToListAsync();
+            if (workItemHistory.Count > 0)
+            {
+                _context.WorkItemHistories.RemoveRange(workItemHistory);
+            }
+
+            var workItems = await _context.WorkItems
+                .Where(wi => workItemIds.Contains(wi.Id))
+                .ToListAsync();
+            _context.WorkItems.RemoveRange(workItems);
+        }
+
+        var pinnedTeams = await _context.PinnedTeams
+            .Where(pt => teamIds.Contains(pt.TeamId))
+            .ToListAsync();
+        if (pinnedTeams.Count > 0)
+        {
+            _context.PinnedTeams.RemoveRange(pinnedTeams);
+        }
+
+        var teamMembers = await _context.TeamMembers
+            .Where(tm => teamIds.Contains(tm.TeamId))
+            .ToListAsync();
+        if (teamMembers.Count > 0)
+        {
+            _context.TeamMembers.RemoveRange(teamMembers);
+        }
+
+        var iterations = await _context.Iterations
+            .Where(i => teamIds.Contains(i.TeamId))
+            .ToListAsync();
+        if (iterations.Count > 0)
+        {
+            _context.Iterations.RemoveRange(iterations);
+        }
+
+        var teams = await _context.Teams
+            .Where(t => teamIds.Contains(t.Id))
+            .ToListAsync();
+        _context.Teams.RemoveRange(teams);
+    }
+
+    private async Task DeleteOrganizationHierarchyAsync(int orgId, Organization org)
+    {
+        var productIds = await _context.Products
+            .Where(p => p.OrganizationId == orgId)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        foreach (var productId in productIds)
+        {
+            await DeleteProductHierarchyAsync(productId);
+        }
+
+        if (productIds.Count > 0)
+        {
+            var products = await _context.Products
+                .Where(p => productIds.Contains(p.Id))
+                .ToListAsync();
+            _context.Products.RemoveRange(products);
+        }
+
+        var orgMemberIds = await _context.OrganizationMembers
+            .Where(om => om.OrganizationId == orgId)
+            .Select(om => om.Id)
+            .ToListAsync();
+
+        if (orgMemberIds.Count > 0)
+        {
+            var absences = await _context.MemberAbsences
+                .Where(a => orgMemberIds.Contains(a.OrgMemberId))
+                .ToListAsync();
+
+            if (absences.Count > 0)
+            {
+                _context.MemberAbsences.RemoveRange(absences);
+            }
+
+            var members = await _context.OrganizationMembers
+                .Where(om => orgMemberIds.Contains(om.Id))
+                .ToListAsync();
+            _context.OrganizationMembers.RemoveRange(members);
+        }
+
+        var config = await _context.OrganizationConfigs
+            .FirstOrDefaultAsync(c => c.OrganizationId == orgId);
+        if (config != null)
+        {
+            _context.OrganizationConfigs.Remove(config);
+        }
+
+        _context.Organizations.Remove(org);
+        await _context.SaveChangesAsync();
     }
 
     private string GenerateSlug(string phrase)

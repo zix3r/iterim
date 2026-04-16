@@ -1,6 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.Products;
+using iterimApi.Exceptions;
+using iterimApi.Helpers;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,7 +38,8 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving products", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -73,7 +76,8 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while creating the product", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -101,7 +105,8 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving the product", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -134,7 +139,8 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while updating the product", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -160,9 +166,14 @@ public class ProductsController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while deleting the product", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -182,3 +193,4 @@ public class ProductsController : ControllerBase
         return userId;
     }
 }
+

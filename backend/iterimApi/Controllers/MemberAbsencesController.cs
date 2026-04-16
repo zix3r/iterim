@@ -1,6 +1,7 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.MemberAbsences;
+using iterimApi.Helpers;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -41,7 +42,8 @@ public class MemberAbsencesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving absences", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -77,7 +79,8 @@ public class MemberAbsencesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while creating absence", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -117,7 +120,8 @@ public class MemberAbsencesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while updating absence", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -144,7 +148,8 @@ public class MemberAbsencesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while deleting absence", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -161,3 +166,4 @@ public class MemberAbsencesController : ControllerBase
         return userId;
     }
 }
+

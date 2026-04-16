@@ -190,11 +190,14 @@ public class WorkItemService : IWorkItemService
         // Validate IterationId if provided
         if (dto.IterationId.HasValue)
         {
-            var iterationExists = await _db.Iterations
-                .AnyAsync(i => i.Id == dto.IterationId.Value && i.TeamId == workItem.TeamId);
+            var iteration = await _db.Iterations
+                .FirstOrDefaultAsync(i => i.Id == dto.IterationId.Value && i.TeamId == workItem.TeamId);
 
-            if (!iterationExists)
+            if (iteration == null)
                 throw new InvalidOperationException("IterationId must be a valid iteration for this team");
+
+            if (iteration.Status == IterationStatus.Completed)
+                throw new InvalidOperationException("Cannot assign work items to a completed iteration");
         }
 
         // Resolve the OrgMemberId of the requester (needed for WorkItemHistory.ChangedBy)

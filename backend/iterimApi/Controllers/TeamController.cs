@@ -1,6 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.Teams;
+using iterimApi.Exceptions;
+using iterimApi.Helpers;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +42,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving teams", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -81,7 +84,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while creating the team", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -109,7 +113,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while retrieving the team", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -146,7 +151,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while updating the team", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -187,7 +193,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while adding the team member", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -228,7 +235,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while updating the team member role", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -260,7 +268,8 @@ public class TeamsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while removing the team member", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -290,9 +299,14 @@ public class TeamsController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "An error occurred while deleting the team", error = ex.Message });
+            Console.Error.WriteLine(ex);
+            return StatusCode(500, new { message = FriendlyErrorMessageHelper.ForRequest(Request), traceId = HttpContext.TraceIdentifier });
         }
     }
 
@@ -312,7 +326,7 @@ public class TeamsController : ControllerBase
         return userId;
     }
 
-    /* kol kas užkomentuoju, neįsivaizduoju kam reikalingas
+    /* kol kas uÅ¾komentuoju, neÄ¯sivaizduoju kam reikalingas
     [ApiController]
     [Route("api/[controller]")]
     public class TeamsController : ControllerBase
@@ -330,7 +344,7 @@ public class TeamsController : ControllerBase
         {
             var board = await _boardService.GetActiveIterationBoardAsync(teamId);
 
-            // Pagal kriterijus: Jei nėra, grąžina tuščią arba 404
+            // Pagal kriterijus: Jei nÄ—ra, grÄ…Å¾ina tuÅ¡ÄiÄ… arba 404
             if (board == null)
             {
                 return NotFound(new { message = "No active iteration found for this team." });
@@ -341,3 +355,4 @@ public class TeamsController : ControllerBase
     }
     */
 }
+

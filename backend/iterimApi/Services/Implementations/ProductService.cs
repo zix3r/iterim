@@ -232,9 +232,103 @@ public class ProductService : IProductService
             throw new UnauthorizedAccessException("User does not have permission to delete products");
         }
 
-        _db.Products.Remove(product);
-        await _db.SaveChangesAsync();
+        if (_db.Database.IsRelational())
+        {
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+
+            try
+            {
+                await DeleteProductHierarchyAsync(productId);
+
+                _db.Products.Remove(product);
+                await _db.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        else
+        {
+            await DeleteProductHierarchyAsync(productId);
+            _db.Products.Remove(product);
+            await _db.SaveChangesAsync();
+        }
 
         return true;
+    }
+
+    private async Task DeleteProductHierarchyAsync(int productId)
+    {
+        var teamIds = await _db.Teams
+            .Where(t => t.ProductId == productId)
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        if (teamIds.Count == 0)
+        {
+            return;
+        }
+
+        var workItemIds = await _db.WorkItems
+            .Where(wi => teamIds.Contains(wi.TeamId))
+            .Select(wi => wi.Id)
+            .ToListAsync();
+
+        if (workItemIds.Count > 0)
+        {
+            var workItemComments = await _db.WorkItemComments
+                .Where(c => workItemIds.Contains(c.WorkItemId))
+                .ToListAsync();
+            if (workItemComments.Count > 0)
+            {
+                _db.WorkItemComments.RemoveRange(workItemComments);
+            }
+
+            var workItemHistory = await _db.WorkItemHistories
+                .Where(h => workItemIds.Contains(h.WorkItemId))
+                .ToListAsync();
+            if (workItemHistory.Count > 0)
+            {
+                _db.WorkItemHistories.RemoveRange(workItemHistory);
+            }
+
+            var workItems = await _db.WorkItems
+                .Where(wi => workItemIds.Contains(wi.Id))
+                .ToListAsync();
+            _db.WorkItems.RemoveRange(workItems);
+        }
+
+        var pinnedTeams = await _db.PinnedTeams
+            .Where(pt => teamIds.Contains(pt.TeamId))
+            .ToListAsync();
+        if (pinnedTeams.Count > 0)
+        {
+            _db.PinnedTeams.RemoveRange(pinnedTeams);
+        }
+
+        var teamMembers = await _db.TeamMembers
+            .Where(tm => teamIds.Contains(tm.TeamId))
+            .ToListAsync();
+        if (teamMembers.Count > 0)
+        {
+            _db.TeamMembers.RemoveRange(teamMembers);
+        }
+
+        var iterations = await _db.Iterations
+            .Where(i => teamIds.Contains(i.TeamId))
+            .ToListAsync();
+        if (iterations.Count > 0)
+        {
+            _db.Iterations.RemoveRange(iterations);
+        }
+
+        var teams = await _db.Teams
+            .Where(t => teamIds.Contains(t.Id))
+            .ToListAsync();
+        _db.Teams.RemoveRange(teams);
     }
 }
