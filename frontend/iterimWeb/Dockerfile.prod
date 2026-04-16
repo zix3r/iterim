@@ -1,0 +1,27 @@
+# Stage 1: Build the React app
+FROM node:20-alpine AS build
+WORKDIR /app
+
+# Install dependencies (cached layer)
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# VITE_API_URL is baked into the JS bundle at build time
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# Build: tsc + vite build → outputs to /app/dist
+RUN npm run build
+
+# Stage 2: Serve static files
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g serve@latest
+COPY --from=build /app/dist ./dist
+EXPOSE 3000
+
+# serve -s = SPA mode (all routes → index.html)
+CMD ["serve", "-s", "dist", "-l", "3000"]
