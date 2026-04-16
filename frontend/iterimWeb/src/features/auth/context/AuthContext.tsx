@@ -20,6 +20,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  refreshUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -158,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isAuthenticated: !!user, login, register, logout, confirmEmail, resendConfirmation, forgotPassword, resetPassword }}
+      value={{ user, isLoading, isAuthenticated: !!user, refreshUser: fetchMe, login, register, logout, confirmEmail, resendConfirmation, forgotPassword, resetPassword }}
     >
       {children}
     </AuthContext.Provider>
