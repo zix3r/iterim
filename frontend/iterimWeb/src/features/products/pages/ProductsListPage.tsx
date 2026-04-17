@@ -7,6 +7,7 @@ import { CreateProductModal } from '@/features/products/components/CreateProduct
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Package, AlertCircleIcon } from 'lucide-react';
+import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -42,6 +43,16 @@ export function ProductsListPage() {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  useEffect(() => {
+    if (organization && orgId) {
+      addRecentPage({
+        path: `/org/${orgId}/products`,
+        label: `${organization.name} — Products`,
+        iconType: 'Org',
+      });
+    }
+  }, [organization, orgId]);
 
   // 1. SKELETON BŪSENA
   if (isLoading) {

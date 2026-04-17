@@ -1,12 +1,25 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Menu, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { SidebarContent } from './Sidebar';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function Header() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const initials = user?.name
+    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U';
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white shadow-sm">
       <div className="flex h-14 items-center px-4 md:px-6 gap-4">
@@ -20,7 +33,7 @@ export function Header() {
                 <span className="sr-only">Open menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-80 p-0">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               <SidebarContent />
             </SheetContent>
@@ -50,22 +63,26 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full ml-1">
                 <Avatar className="h-9 w-9 border border-zinc-200">
-                  <AvatarFallback className="bg-zinc-100 text-zinc-700 font-semibold">MS</AvatarFallback>
+                  <AvatarFallback className="bg-zinc-100 text-zinc-700 font-semibold">{initials}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">User</p>
-                  <p className="text-xs leading-none text-muted-foreground">user@iterim.lt</p>
+                  <p className="text-sm font-medium leading-none">{user?.name ?? 'User'}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{user?.email ?? ''}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/profile">Profile</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
+              <DropdownMenuItem
+                className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700"
+                onClick={handleLogout}
+              >
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>

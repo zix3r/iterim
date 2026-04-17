@@ -13,7 +13,15 @@ export async function getRecentPages(): Promise<RecentPage[]> {
   try {
     const res = await fetchWithAuth('/users/me/recent-pages');
     if (res.ok) {
-      return await res.json();
+      const pages: RecentPage[] = await res.json();
+      const seen = new Set<string>();
+      const deduped: RecentPage[] = [];
+      for (const p of pages) {
+        if (seen.has(p.path)) continue;
+        seen.add(p.path);
+        deduped.push(p);
+      }
+      return deduped;
     }
   } catch (err) {
     console.error('Failed to get recent pages', err);

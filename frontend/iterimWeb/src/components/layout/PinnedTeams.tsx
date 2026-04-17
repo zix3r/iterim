@@ -1,4 +1,4 @@
-import { Star, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { usePinnedTeams } from '@/lib/favorites';
 import { cn } from '@/lib/utils';
@@ -31,19 +31,14 @@ export function PinnedTeams() {
   };
 
   return (
-    <div className="mt-6 space-y-1">
-      <div className="px-2 mb-2 flex items-center justify-between group">
-        <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-1.5">
-          <Star className="h-3 w-3 fill-current text-zinc-400" /> Pinned
-        </h3>
-      </div>
-      
+    <div className="space-y-1">
       {pinnedTeams.map(pt => {
-        const active = location.pathname.includes(pt.path) || location.pathname.includes(`/teams/${pt.teamId}`);
+        const teamPath = `/org/${pt.orgId}/products/${pt.productId}/teams/${pt.teamId}`;
+        const active = location.pathname === teamPath;
         return (
           <Link
             key={pt.teamId}
-            to={pt.path}
+            to={teamPath}
             className={cn(
               'group relative flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
               active

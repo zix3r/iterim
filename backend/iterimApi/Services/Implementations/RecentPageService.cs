@@ -43,12 +43,12 @@ public class RecentPageService : IRecentPageService
         await _context.SaveChangesAsync();
 
         var count = await _context.RecentPages.CountAsync(rp => rp.UserId == userId);
-        if (count > 5)
+        if (count > 10)
         {
             var oldest = await _context.RecentPages
                 .Where(rp => rp.UserId == userId)
                 .OrderBy(rp => rp.AccessedAt)
-                .Take(count - 5)
+                .Take(count - 10)
                 .ToListAsync();
 
             if (oldest.Any())

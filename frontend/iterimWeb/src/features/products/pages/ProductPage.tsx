@@ -5,6 +5,7 @@ import type { ProductDetail } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EditProductModal } from '@/features/products/components/EditProductModal';
+import { CreateTeamModal } from '@/features/teams/components/CreateTeamModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
@@ -152,6 +153,7 @@ export function ProductPage() {
           )}
         </div>
         <div className="flex gap-2">
+          <CreateTeamModal productId={Number(productId)} onCreated={loadProduct} />
           {isAdmin && (
             <>
               <Button variant="outline" onClick={() => setEditModalOpen(true)}>

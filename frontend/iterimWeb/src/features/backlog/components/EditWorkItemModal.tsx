@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FieldError } from '@/components/ui/field-error';
@@ -175,6 +175,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Edit Work Item</DialogTitle>
+          <DialogDescription>Update work item fields and save changes.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>

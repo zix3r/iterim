@@ -31,23 +31,26 @@ export function RecentPages() {
     return null;
   }
 
-  const getIcon = (type: string) => {
+  const getIcon = (type: string, active: boolean) => {
+    const className = `h-4 w-4 ${active ? 'text-white' : 'text-zinc-400'}`;
     switch (type) {
-      case 'Org': return <Building2 className="w-5 h-5 mr-3 text-slate-300" />;
-      case 'Product': return <Package className="w-5 h-5 mr-3 text-slate-300" />;
-      case 'Team': return <Users className="w-5 h-5 mr-3 text-slate-300" />;
-      case 'Dashboard': return <LayoutDashboard className="w-5 h-5 mr-3 text-slate-300" />;
-      default: return <Compass className="w-5 h-5 mr-3 text-slate-300" />;
+      case 'Org': return <Building2 className={className} />;
+      case 'Product': return <Package className={className} />;
+      case 'Team': return <Users className={className} />;
+      case 'Dashboard': return <LayoutDashboard className={className} />;
+      default: return <Compass className={className} />;
     }
   };
 
   return (
-    <div className="mt-8 ml-4">
-      <div className="flex items-center justify-between mb-2 mr-4">
-        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          Recent Pages
-        </h2>
-        <Button variant="ghost" size="sm" className="h-6 text-xs text-slate-400 hover:text-white" onClick={handleClear}>
+    <div>
+      <div className="flex justify-end px-2 mb-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 text-xs text-zinc-500 hover:text-zinc-900"
+          onClick={handleClear}
+        >
           Clear
         </Button>
       </div>
@@ -56,16 +59,21 @@ export function RecentPages() {
           <NavLink
             key={`${p.path}-${idx}`}
             to={p.path}
+            end
             className={({ isActive }) =>
-              `flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-zinc-900 text-white shadow-md'
+                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
               }`
             }
           >
-            {getIcon(p.iconType)}
-            {p.label}
+            {({ isActive }: { isActive: boolean }) => (
+              <>
+                {getIcon(p.iconType, isActive)}
+                {p.label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>

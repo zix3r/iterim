@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate, Outlet } from 'react-router';
-import { Sidebar } from '@/components/layout/Sidebar';
+import { Routes, Route, Navigate } from 'react-router';
+import { MainLayout } from '@/components/layout/main-layout';
+import { MyTeamsTreeProvider } from '@/context/MyTeamsTreeContext';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { OrganizationPage } from '@/features/organizations/pages/OrganizationPage';
 import { ProductsListPage } from '@/features/products/pages/ProductsListPage';
@@ -21,52 +22,47 @@ import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-function MainLayout() {
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto bg-background">
-        <Outlet />
-      </main>
-    </div>
-  );
-}
-
 function App() {
   return (
     <ErrorBoundary>
-    <ToastProvider>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/check-email" element={<CheckEmailPage />} />
-        <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <ToastProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/check-email" element={<CheckEmailPage />} />
+          <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Protected routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/org/:orgId" element={<OrganizationPage />} />
-            <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
-            <Route path="/org/:orgId/products" element={<ProductsListPage />} />
-            <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
-            <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
-            <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
-            <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
-            <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
-            <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
-            <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route
+              element={
+                <MyTeamsTreeProvider>
+                  <MainLayout />
+                </MyTeamsTreeProvider>
+              }
+            >
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/org/:orgId" element={<OrganizationPage />} />
+              <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
+              <Route path="/org/:orgId/products" element={<ProductsListPage />} />
+              <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
+              <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
+              <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
+              <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
+              <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
+              <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
+              <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Default redirect */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </ToastProvider>
+          {/* Default redirect */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

@@ -9,6 +9,7 @@ import { EditWorkItemModal } from '@/features/backlog/components/EditWorkItemMod
 import { useToast } from '@/components/ui/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, LayoutGrid, LayoutList } from 'lucide-react';
+import { addRecentPage } from '@/lib/recentPages';
 
 export function BoardPage() {
   const { orgId, productId, teamId } = useParams();
@@ -25,9 +26,9 @@ export function BoardPage() {
 
   const tid = Number(teamId);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
       setError(null);
       const [board, teamData, orgData] = await Promise.all([
         getActiveBoard(tid),
@@ -42,13 +43,25 @@ export function BoardPage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load board data.';
       setError(errorMessage);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   }, [tid, orgId]);
+
+  const refreshSilent = useCallback(() => loadData(true), [loadData]);
 
   useEffect(() => {
     if (teamId && orgId) loadData();
   }, [teamId, orgId, loadData]);
+
+  useEffect(() => {
+    if (team && orgId && productId && teamId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams/${teamId}/board`,
+        label: `${team.name} — Board`,
+        iconType: 'Team',
+      });
+    }
+  }, [team, orgId, productId, teamId]);
 
   const handleCardClick = async (id: number) => {
     try {
@@ -95,7 +108,7 @@ export function BoardPage() {
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
           <h3 className="text-lg font-semibold text-red-800">Error Loading Board</h3>
           <p className="text-sm text-red-700">{error || "Team not found."}</p>
-          <Button onClick={loadData} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+          <Button onClick={() => loadData()} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
             Try Again
           </Button>
         </div>
@@ -153,11 +166,11 @@ export function BoardPage() {
              }
            />
         ) : (
-          <KanbanBoard 
-            boardData={boardData} 
+          <KanbanBoard
+            boardData={boardData}
             setBoardData={setBoardData}
-            onBoardUpdate={loadData} 
-            onCardClick={handleCardClick} 
+            onBoardUpdate={refreshSilent}
+            onCardClick={handleCardClick}
           />
         )}
       </div>
@@ -167,7 +180,7 @@ export function BoardPage() {
         members={team.members}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}
-        onUpdated={loadData}
+        onUpdated={refreshSilent}
       />
     </div>
   );

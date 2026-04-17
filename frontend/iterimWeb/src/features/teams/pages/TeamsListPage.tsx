@@ -7,6 +7,7 @@ import { CreateTeamModal } from '@/features/teams/components/CreateTeamModal';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Users, AlertCircleIcon } from 'lucide-react';
+import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -42,6 +43,16 @@ export function TeamsListPage() {
   useEffect(() => {
     loadTeams();
   }, [loadTeams]);
+
+  useEffect(() => {
+    if (product && orgId && productId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams`,
+        label: `${product.name} — Teams`,
+        iconType: 'Product',
+      });
+    }
+  }, [product, orgId, productId]);
 
   // 1. SKELETON BŪSENA (Krovimosi metu)
   if (isLoading) {

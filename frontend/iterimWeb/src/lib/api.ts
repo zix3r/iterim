@@ -371,13 +371,17 @@ export const createOrganization = (name: string): Promise<Organization> =>
     body: JSON.stringify({ name }),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
+    return result;
   });
-  export const deleteOrganization = (orgId: number): Promise<void> =>
+
+export const deleteOrganization = (orgId: number): Promise<void> =>
   fetchWithAuth(`/organizations/${orgId}`, {
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
   });
 
 export const addOrganizationMember = (
@@ -412,6 +416,7 @@ export const declineInvitation = (orgId: number): Promise<void> =>
     method: 'POST',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
   });
 
 export const removeOrganizationMember = (orgId: number, memberId: number): Promise<void> =>
@@ -467,7 +472,9 @@ export const acceptInvitation = (orgId: number): Promise<OrganizationMember> =>
     method: 'POST',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
+    return result;
   });
 
 // Products API
@@ -489,7 +496,9 @@ export const createProduct = (orgId: number, data: CreateProductRequest): Promis
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
+    return result;
   });
 
 export const updateProduct = (productId: number, data: UpdateProductRequest): Promise<Product> =>
@@ -498,7 +507,9 @@ export const updateProduct = (productId: number, data: UpdateProductRequest): Pr
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
+    return result;
   });
 
 export const deleteProduct = (productId: number): Promise<void> =>
@@ -506,7 +517,7 @@ export const deleteProduct = (productId: number): Promise<void> =>
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
   });
 
 // Teams API
@@ -528,7 +539,9 @@ export const createTeam = (productId: number, data: CreateTeamRequest): Promise<
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
+    return result;
   });
 
 export const updateTeam = (teamId: number, data: UpdateTeamRequest): Promise<Team> =>
@@ -537,7 +550,9 @@ export const updateTeam = (teamId: number, data: UpdateTeamRequest): Promise<Tea
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
+    return result;
   });
 
 export const addTeamMember = (teamId: number, data: AddTeamMemberRequest): Promise<TeamMember> =>
@@ -571,7 +586,7 @@ export const deleteTeam = (teamId: number): Promise<void> =>
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    teamDataEventTarget.dispatchEvent(new Event('tree-data-changed'));
   });
 
 // Dashboard API
@@ -677,16 +692,18 @@ export const getWorkItemById = (id: number): Promise<WorkItem> =>
     return r.json();
   });
 
+export const teamDataEventTarget = new EventTarget();
+
 export const createWorkItem = (teamId: number, data: CreateWorkItemRequest): Promise<WorkItem> =>
   fetchWithAuth(`/teams/${teamId}/workitems`, {
     method: 'POST',
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
-
-export const teamDataEventTarget = new EventTarget();
 
 export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise<WorkItem> =>
   fetchWithAuth(`/workitems/${id}`, {
@@ -704,6 +721,7 @@ export const deleteWorkItem = (id: number): Promise<void> =>
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
   });
 
 export const reorderWorkItems = (teamId: number, items: { id: number; position: number }[]): Promise<void> =>
@@ -712,6 +730,7 @@ export const reorderWorkItems = (teamId: number, items: { id: number; position: 
     body: JSON.stringify({ items }),
   }).then(async (r) => {
     if (!r.ok) throw new Error('Failed to reorder');
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
   });
 
 // ── Iteration API ─────────────────────────────────────────────
@@ -734,7 +753,9 @@ export const createIteration = (teamId: number, data: CreateIterationRequest): P
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const updateIteration = (id: number, data: UpdateIterationRequest): Promise<Iteration> =>
@@ -743,7 +764,9 @@ export const updateIteration = (id: number, data: UpdateIterationRequest): Promi
     body: JSON.stringify(data),
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
-    return r.json();
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
   });
 
 export const startIteration = (id: number): Promise<Iteration> =>
@@ -772,6 +795,7 @@ export const deleteIteration = (id: number): Promise<void> =>
     method: 'DELETE',
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
   });
 
 // ── Board (Kanban) Types ───────────────────────────────────────────

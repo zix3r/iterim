@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { getOrganizationAbsences, getOrganizationById } from '@/lib/api';
 import type { MemberAbsence, OrganizationDetail } from '@/lib/api';
 import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
+import { addRecentPage } from '@/lib/recentPages';
 import { AbsenceList } from '@/features/absences/components/AbsenceList';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -89,6 +90,16 @@ export function AbsencesPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (organization && orgId) {
+      addRecentPage({
+        path: `/org/${orgId}/absences`,
+        label: `${organization.name} — Absences`,
+        iconType: 'Org',
+      });
+    }
+  }, [organization, orgId]);
 
   // 1. SKELETON BŪSENA (Pirminis krovimasis)
   if (isLoading) {

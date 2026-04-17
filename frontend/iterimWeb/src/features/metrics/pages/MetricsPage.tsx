@@ -13,6 +13,7 @@ import { BurndownChart } from '../components/BurndownChart';
 import { CapacityCard } from '../components/CapacityCard';
 import {
   getIterationsByTeam,
+  getTeamById,
   getSprintMetrics,
   getVelocity,
   getCapacity,
@@ -20,7 +21,9 @@ import {
   type SprintMetrics,
   type VelocityData,
   type CapacityData,
+  type TeamDetail,
 } from '@/lib/api';
+import { addRecentPage } from '@/lib/recentPages';
 
 const STATUS_BADGE: Record<string, string> = {
   Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -33,6 +36,8 @@ export function MetricsPage() {
     orgId: string; productId: string; teamId: string;
   }>();
   const tid = Number(teamId);
+
+  const [team, setTeam] = useState<TeamDetail | null>(null);
 
   // ── All iterations (for selector) ─────────────────────────
   const [iterations, setIterations] = useState<Iteration[]>([]);
@@ -59,7 +64,11 @@ export function MetricsPage() {
     try {
       setIterLoading(true);
       setIterError(null);
-      const list = await getIterationsByTeam(tid);
+      const [list, teamData] = await Promise.all([
+        getIterationsByTeam(tid),
+        getTeamById(tid),
+      ]);
+      setTeam(teamData);
       
       // Sort: Active first, then newest first by startDate
       const sorted = [...list].sort((a, b) => {
@@ -83,6 +92,16 @@ export function MetricsPage() {
   useEffect(() => {
     loadIterations();
   }, [loadIterations]);
+
+  useEffect(() => {
+    if (team && orgId && productId && teamId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams/${teamId}/metrics`,
+        label: `${team.name} — Metrics`,
+        iconType: 'Team',
+      });
+    }
+  }, [team, orgId, productId, teamId]);
 
   // Load velocity — last N completed sprints before (and including) the selected sprint
   useEffect(() => {

@@ -21,9 +21,9 @@ import { EditIterationModal } from '../components/EditIterationModal';
 import { CompleteIterationModal } from '../components/CompleteIterationModal';
 import { CreateWorkItemModal } from '../components/CreateWorkItemModal';
 import { EditWorkItemModal } from '../components/EditWorkItemModal';
-import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { addRecentPage } from '@/lib/recentPages';
 
 // Map backend string status to numeric for PUT
 const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
@@ -96,8 +96,8 @@ export function BacklogPage() {
     if (team && orgId && productId && teamId) {
       addRecentPage({
         path: `/org/${orgId}/products/${productId}/teams/${teamId}/backlog`,
-        label: `${team.name} Backlog`,
-        iconType: 'Team'
+        label: `${team.name} — Backlog`,
+        iconType: 'Team',
       });
     }
   }, [team, orgId, productId, teamId]);
