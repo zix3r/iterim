@@ -86,6 +86,13 @@ public class UsersController : ControllerBase
             user.Email = normalizedEmail;
             user.UpdatedAt = DateTime.UtcNow;
 
+            // Sync email to all org memberships
+            var orgMemberships = await _context.OrganizationMembers
+                .Where(om => om.UserId == user.Id)
+                .ToListAsync();
+            foreach (var om in orgMemberships)
+                om.Email = normalizedEmail;
+
             await _context.SaveChangesAsync();
 
             return Ok(new CurrentUserProfileDto
@@ -264,7 +271,7 @@ public class UsersController : ControllerBase
             var userId = GetCurrentUserId();
 
             var pinnedTeam = await _context.PinnedTeams.FirstOrDefaultAsync(pt => pt.UserId == userId && pt.TeamId == teamId);
-            
+
             if (pinnedTeam != null)
             {
                 _context.PinnedTeams.Remove(pinnedTeam);
