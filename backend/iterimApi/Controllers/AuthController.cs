@@ -48,6 +48,9 @@ public class AuthController : ControllerBase
             // Atskirti 403 (nepatvirtintas el. paštas) nuo 401 (blogas slaptažodis)
             if (result.Errors.Any(e => e.Contains("confirm your email")))
                 return StatusCode(403, new { errors = result.Errors });
+            
+            if (result.Errors.Any(e => e.Contains("blocked")))
+                return StatusCode(403, new { errors = result.Errors });
 
             return Unauthorized(new { errors = result.Errors });
         }

@@ -88,6 +88,9 @@ public class AuthService : IAuthService
         if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
             return (AuthResultDto.Fail($"Account is locked. Try again after {user.LockoutEnd:HH:mm} UTC."), null);
 
+        if (user.IsBlocked)
+            return (AuthResultDto.Fail("Your account has been blocked. Contact an administrator."), null);
+
         var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
 
         if (verificationResult == PasswordVerificationResult.Failed)
@@ -294,6 +297,7 @@ public class AuthService : IAuthService
         Id = user.Id,
         Email = user.Email,
         Name = user.Name,
-        AvatarUrl = user.AvatarUrl
+        AvatarUrl = user.AvatarUrl,
+        Role = user.Role.ToString()
     };
 }
