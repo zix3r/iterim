@@ -22,14 +22,6 @@ public class AdminController : ControllerBase
         _authService = authService;
     }
 
-    [HttpGet("debug-claims")]
-    [Authorize]  // just Authorize, no role check
-    public IActionResult DebugClaims()
-    {
-        var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
-        return Ok(claims);
-    }
-
     /// <summary>
     /// GET /api/admin/users?search=rom&status=blocked&page=1&pageSize=20
     /// </summary>
