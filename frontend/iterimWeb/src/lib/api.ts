@@ -1038,7 +1038,7 @@ export const adminGetUsers = (params?: {
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  sortOrder?: string; 
+  sortOrder?: string;
 }): Promise<AdminUserListResponse> => {
   const qs = new URLSearchParams();
   if (params?.search) qs.set('search', params.search);
@@ -1046,8 +1046,8 @@ export const adminGetUsers = (params?: {
   if (params?.organizationId) qs.set('organizationId', params.organizationId.toString());
   if (params?.page) qs.set('page', params.page.toString());
   if (params?.pageSize) qs.set('pageSize', params.pageSize.toString());
-  if (params?.sortBy) qs.set('sortBy', params.sortBy);           
-  if (params?.sortOrder) qs.set('sortOrder', params.sortOrder); 
+  if (params?.sortBy) qs.set('sortBy', params.sortBy);
+  if (params?.sortOrder) qs.set('sortOrder', params.sortOrder);
   const query = qs.toString();
   return fetchWithAuth(`/admin/users${query ? `?${query}` : ''}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
@@ -1091,3 +1091,43 @@ export const adminGetOrganizations = (): Promise<AdminOrgOption[]> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+
+// ── Admin System API ─────────────────────────────────
+
+export interface AdminStats {
+  users: { total: number; newThisWeek: number; newThisMonth: number; blocked: number; unconfirmed: number };
+  organizations: { total: number };
+  products: { total: number };
+  teams: { total: number };
+  workItems: { total: number; byStatus: { status: string; count: number }[] };
+  iterations: { total: number; active: number; completed: number };
+}
+
+export interface HealthCheck {
+  name: string;
+  status: string;
+  duration: string;
+  description: string | null;
+  data: Record<string, unknown>;
+}
+
+export interface HealthReport {
+  status: string;
+  totalDuration: string;
+  timestamp: string;
+  checks: HealthCheck[];
+}
+
+export const adminGetStats = (): Promise<AdminStats> =>
+  fetchWithAuth('/admin/stats').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getHealthDetail = (): Promise<HealthReport> => {
+  const baseUrl = API_URL.replace(/\/api\/?$/, '');
+  return fetch(`${baseUrl}/health/detail`, { credentials: 'include' }).then(async (r) => {
+    if (!r.ok) throw new Error('Failed to fetch health data');
+    return r.json();
+  });
+};

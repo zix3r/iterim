@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Search, Shield, ArrowLeft } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useToast } from '@/components/ui/toast';
+import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import {
     adminGetUsers,
     adminGetOrganizations,
@@ -192,165 +193,150 @@ export function AdminUsersPage() {
     if (user?.role !== 'Admin') return null;
 
     return (
-        <div className="min-h-screen bg-zinc-50">
-            {/* Header bar */}
-            <div className="border-b border-zinc-200 bg-white">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                    <Shield className="h-5 w-5 text-zinc-700" />
-                    <h1 className="text-xl font-semibold text-zinc-900">Admin Panel</h1>
-                    <span className="text-sm text-zinc-500">User Management</span>
+        <AdminLayout>
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                    <Input
+                        placeholder="Search by name or email..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="pl-9"
+                    />
                 </div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-6 py-6">
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                    <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                        <Input
-                            placeholder="Search by name or email..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            className="pl-9"
-                        />
-                    </div>
-
-                    <div className="flex gap-1">
-                        {STATUS_OPTIONS.map((opt) => (
-                            <Button
-                                key={opt.value}
-                                variant={status === opt.value ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => { setStatus(opt.value); setPage(1); }}
-                            >
-                                {opt.label}
-                            </Button>
-                        ))}
-                        {/* Org filter */}
-                        <select
-                            value={orgFilter ?? ''}
-                            onChange={(e) => {
-                                setOrgFilter(e.target.value ? Number(e.target.value) : undefined);
-                                setPage(1);
-                            }}
-                            className="h-8 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-700"
+                <div className="flex gap-1">
+                    {STATUS_OPTIONS.map((opt) => (
+                        <Button
+                            key={opt.value}
+                            variant={status === opt.value ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => { setStatus(opt.value); setPage(1); }}
                         >
-                            <option value="">All organizations</option>
-                            {orgs.map((o) => (
-                                <option key={o.id} value={o.id}>{o.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                            {opt.label}
+                        </Button>
+                    ))}
+                    {/* Org filter */}
+                    <select
+                        value={orgFilter ?? ''}
+                        onChange={(e) => {
+                            setOrgFilter(e.target.value ? Number(e.target.value) : undefined);
+                            setPage(1);
+                        }}
+                        className="h-8 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-700"
+                    >
+                        <option value="">All organizations</option>
+                        {orgs.map((o) => (
+                            <option key={o.id} value={o.id}>{o.name}</option>
+                        ))}
+                    </select>
                 </div>
-
-                {/* Stats */}
-                <p className="text-sm text-zinc-500 mb-4">
-                    {totalCount} user{totalCount !== 1 ? 's' : ''} found
-                </p>
-
-                {/* Table */}
-                <div className="bg-white rounded-lg border border-zinc-200 overflow-hidden">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-zinc-100 bg-zinc-50">
-                                <SortHeader field="name" label="Name" />
-                                <SortHeader field="email" label="Email" />
-                                <SortHeader field="status" label="Status" />
-                                <SortHeader field="role" label="Role" />
-                                <SortHeader field="orgs" label="Orgs" />
-                                <SortHeader field="registered" label="Registered" />
-                                <th className="text-right px-4 py-3 font-medium text-zinc-500">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {isLoading ? (
-                                <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">Loading...</td></tr>
-                            ) : users.length === 0 ? (
-                                <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">No users found</td></tr>
-                            ) : (
-                                users.map((u) => (
-                                    <tr key={u.id} className="border-b border-zinc-50 hover:bg-zinc-50/50">
-                                        <td className="px-4 py-3 font-medium text-zinc-900">{u.name}</td>
-                                        <td className="px-4 py-3 text-zinc-600">{u.email}</td>
-                                        <td className="px-4 py-3">{statusBadge(u)}</td>
-                                        <td className="px-4 py-3">
-                                            {u.role === 'Admin'
-                                                ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">Admin</Badge>
-                                                : <span className="text-zinc-500">User</span>}
-                                        </td>
-                                        <td className="px-4 py-3 text-zinc-600">{u.organizationCount}</td>
-                                        <td className="px-4 py-3 text-zinc-500">
-                                            {new Date(u.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            {u.role !== 'Admin' && (
-                                                <div className="flex items-center justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className={u.isBlocked
-                                                            ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-                                                            : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'}
-                                                        onClick={() => handleToggleBlock(u)}
-                                                    >
-                                                        {u.isBlocked ? 'Unblock' : 'Block'}
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        onClick={() => handleResetPassword(u)}
-                                                    >
-                                                        Reset PW
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => setDeleteTarget(u)}
-                                                    >
-                                                        Delete
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4">
-                        <p className="text-sm text-zinc-500">
-                            Page {page} of {totalPages}
-                        </p>
-                        <div className="flex gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={page <= 1}
-                                onClick={() => setPage((p) => p - 1)}
-                            >
-                                Previous
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={page >= totalPages}
-                                onClick={() => setPage((p) => p + 1)}
-                            >
-                                Next
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </div>
+
+            {/* Stats */}
+            <p className="text-sm text-zinc-500 mb-4">
+                {totalCount} user{totalCount !== 1 ? 's' : ''} found
+            </p>
+
+            {/* Table */}
+            <div className="bg-white rounded-lg border border-zinc-200 overflow-hidden">
+                <table className="w-full text-sm">
+                    <thead>
+                        <tr className="border-b border-zinc-100 bg-zinc-50">
+                            <SortHeader field="name" label="Name" />
+                            <SortHeader field="email" label="Email" />
+                            <SortHeader field="status" label="Status" />
+                            <SortHeader field="role" label="Role" />
+                            <SortHeader field="orgs" label="Orgs" />
+                            <SortHeader field="registered" label="Registered" />
+                            <th className="text-right px-4 py-3 font-medium text-zinc-500">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {isLoading ? (
+                            <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">Loading...</td></tr>
+                        ) : users.length === 0 ? (
+                            <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">No users found</td></tr>
+                        ) : (
+                            users.map((u) => (
+                                <tr key={u.id} className="border-b border-zinc-50 hover:bg-zinc-50/50">
+                                    <td className="px-4 py-3 font-medium text-zinc-900">{u.name}</td>
+                                    <td className="px-4 py-3 text-zinc-600">{u.email}</td>
+                                    <td className="px-4 py-3">{statusBadge(u)}</td>
+                                    <td className="px-4 py-3">
+                                        {u.role === 'Admin'
+                                            ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">Admin</Badge>
+                                            : <span className="text-zinc-500">User</span>}
+                                    </td>
+                                    <td className="px-4 py-3 text-zinc-600">{u.organizationCount}</td>
+                                    <td className="px-4 py-3 text-zinc-500">
+                                        {new Date(u.createdAt).toLocaleDateString()}
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                        {u.role !== 'Admin' && (
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={u.isBlocked
+                                                        ? 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                                                        : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'}
+                                                    onClick={() => handleToggleBlock(u)}
+                                                >
+                                                    {u.isBlocked ? 'Unblock' : 'Block'}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                    onClick={() => handleResetPassword(u)}
+                                                >
+                                                    Reset PW
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    onClick={() => setDeleteTarget(u)}
+                                                >
+                                                    Delete
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                    <p className="text-sm text-zinc-500">
+                        Page {page} of {totalPages}
+                    </p>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page <= 1}
+                            onClick={() => setPage((p) => p - 1)}
+                        >
+                            Previous
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page >= totalPages}
+                            onClick={() => setPage((p) => p + 1)}
+                        >
+                            Next
+                        </Button>
+                    </div>
+                </div>
+            )}
             {/* Delete confirmation dialog */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setDeleteTarget(null)}>
@@ -369,6 +355,6 @@ export function AdminUsersPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </AdminLayout>
     );
 }

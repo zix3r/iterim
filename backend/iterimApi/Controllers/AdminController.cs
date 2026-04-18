@@ -163,6 +163,59 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>
+    /// GET /api/admin/organizations — for filter dropdown
+    /// </summary>
+    [HttpGet("organizations")]
+    public async Task<IActionResult> GetOrganizations()
+    {
+        var orgs = await _db.Organizations
+            .OrderBy(o => o.Name)
+            .Select(o => new { o.Id, o.Name })
+            .ToListAsync();
+
+        return Ok(orgs);
+    }
+
+    /// <summary>
+    /// GET /api/admin/stats
+    /// </summary>
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats()
+    {
+        var now = DateTime.UtcNow;
+
+        var totalUsers = await _db.Users.CountAsync();
+        var newUsersWeek = await _db.Users.CountAsync(u => u.CreatedAt >= now.AddDays(-7));
+        var newUsersMonth = await _db.Users.CountAsync(u => u.CreatedAt >= now.AddDays(-30));
+        var blockedUsers = await _db.Users.CountAsync(u => u.IsBlocked);
+        var unconfirmedUsers = await _db.Users.CountAsync(u => !u.IsEmailConfirmed);
+
+        var totalOrganizations = await _db.Organizations.CountAsync();
+        var totalProducts = await _db.Products.CountAsync();
+        var totalTeams = await _db.Teams.CountAsync();
+
+        var totalWorkItems = await _db.WorkItems.CountAsync();
+        var workItemsByStatus = await _db.WorkItems
+            .GroupBy(wi => wi.Status)
+            .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+            .ToListAsync();
+
+        var totalIterations = await _db.Iterations.CountAsync();
+        var activeIterations = await _db.Iterations.CountAsync(i => i.Status == Models.Enums.IterationStatus.Active);
+        var completedIterations = await _db.Iterations.CountAsync(i => i.Status == Models.Enums.IterationStatus.Completed);
+
+        return Ok(new
+        {
+            users = new { total = totalUsers, newThisWeek = newUsersWeek, newThisMonth = newUsersMonth, blocked = blockedUsers, unconfirmed = unconfirmedUsers },
+            organizations = new { total = totalOrganizations },
+            products = new { total = totalProducts },
+            teams = new { total = totalTeams },
+            workItems = new { total = totalWorkItems, byStatus = workItemsByStatus },
+            iterations = new { total = totalIterations, active = activeIterations, completed = completedIterations }
+        });
+    }
+
+    /// <summary>
     /// PATCH /api/admin/users/5/block
     /// </summary>
     [HttpPatch("users/{userId}/block")]
@@ -275,18 +328,5 @@ public class AdminController : ControllerBase
         await _authService.ForgotPasswordAsync(user.Email);
 
         return Ok(new { message = $"Password reset email sent to {user.Email}." });
-    }
-    /// <summary>
-    /// GET /api/admin/organizations — for filter dropdown
-    /// </summary>
-    [HttpGet("organizations")]
-    public async Task<IActionResult> GetOrganizations()
-    {
-        var orgs = await _db.Organizations
-            .OrderBy(o => o.Name)
-            .Select(o => new { o.Id, o.Name })
-            .ToListAsync();
-
-        return Ok(orgs);
     }
 }
