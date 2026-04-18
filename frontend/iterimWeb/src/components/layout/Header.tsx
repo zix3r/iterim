@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -23,7 +23,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white shadow-sm">
       <div className="flex h-14 items-center px-4 md:px-6 gap-4">
-        
+
         {/* Mobile menu */}
         <div className="md:hidden">
           <Sheet>
@@ -55,6 +55,18 @@ export function Header() {
 
         {/* User Actions */}
         <div className="flex items-center gap-2">
+          {user?.role === 'Admin' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+              onClick={() => navigate('/admin')}
+              title="Admin Panel"
+            >
+              <Shield className="h-5 w-5" />
+            </Button>
+          )}
+
           <Button variant="ghost" size="icon" className="text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100">
             <Bell className="h-5 w-5" />
           </Button>

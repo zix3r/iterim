@@ -21,6 +21,7 @@ import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
 import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
 
 function App() {
   return (
@@ -37,6 +38,8 @@ function App() {
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
+            {/* Admin — own layout, no sidebar */}
+            <Route path="/admin" element={<AdminUsersPage />} />
             <Route
               element={
                 <MyTeamsTreeProvider>

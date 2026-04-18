@@ -980,3 +980,114 @@ export const updateMyAvatar = (data: UpdateAvatarRequest): Promise<CurrentUserPr
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+
+// ── Admin API ────────────────────────────────────────────────
+
+export interface AdminUserListItem {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  isBlocked: boolean;
+  isEmailConfirmed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  organizationCount: number;
+}
+
+export interface AdminUserListResponse {
+  users: AdminUserListItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface AdminUserOrg {
+  organizationId: number;
+  organizationName: string;
+  role: string;
+  status: string;
+  joinedAt: string | null;
+  teams: AdminUserTeam[];
+}
+
+export interface AdminUserTeam {
+  teamId: number;
+  teamName: string;
+  role: string;
+  assignedWorkItems: number;
+}
+
+export interface AdminUserDetail {
+  id: number;
+  email: string;
+  name: string;
+  avatarUrl: string | null;
+  role: string;
+  isBlocked: boolean;
+  isEmailConfirmed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  organizations: AdminUserOrg[];
+}
+
+export const adminGetUsers = (params?: {
+  search?: string;
+  status?: string;
+  organizationId?: number;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortOrder?: string; 
+}): Promise<AdminUserListResponse> => {
+  const qs = new URLSearchParams();
+  if (params?.search) qs.set('search', params.search);
+  if (params?.status) qs.set('status', params.status);
+  if (params?.organizationId) qs.set('organizationId', params.organizationId.toString());
+  if (params?.page) qs.set('page', params.page.toString());
+  if (params?.pageSize) qs.set('pageSize', params.pageSize.toString());
+  if (params?.sortBy) qs.set('sortBy', params.sortBy);           
+  if (params?.sortOrder) qs.set('sortOrder', params.sortOrder); 
+  const query = qs.toString();
+  return fetchWithAuth(`/admin/users${query ? `?${query}` : ''}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+};
+
+export const adminGetUser = (userId: number): Promise<AdminUserDetail> =>
+  fetchWithAuth(`/admin/users/${userId}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const adminBlockUser = (userId: number): Promise<void> =>
+  fetchWithAuth(`/admin/users/${userId}/block`, { method: 'PATCH' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const adminUnblockUser = (userId: number): Promise<void> =>
+  fetchWithAuth(`/admin/users/${userId}/unblock`, { method: 'PATCH' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const adminDeleteUser = (userId: number): Promise<void> =>
+  fetchWithAuth(`/admin/users/${userId}`, { method: 'DELETE' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const adminResetPassword = (userId: number): Promise<void> =>
+  fetchWithAuth(`/admin/users/${userId}/reset-password`, { method: 'POST' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export interface AdminOrgOption {
+  id: number;
+  name: string;
+}
+
+export const adminGetOrganizations = (): Promise<AdminOrgOption[]> =>
+  fetchWithAuth('/admin/organizations').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });

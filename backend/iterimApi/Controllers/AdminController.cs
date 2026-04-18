@@ -2,6 +2,7 @@ using iterimApi.Data;
 using iterimApi.DTOs.Admin;
 using iterimApi.Services.Interfaces;
 using iterimApi.Models.Enums;
+using iterimApi.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,8 @@ public class AdminController : ControllerBase
         [FromQuery] string? search,
         [FromQuery] string? status,
         [FromQuery] int? organizationId,
+        [FromQuery] string? sortBy,
+        [FromQuery] string? sortOrder,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -64,8 +67,25 @@ public class AdminController : ControllerBase
 
         var totalCount = await query.CountAsync();
 
-        var users = await query
-            .OrderByDescending(u => u.CreatedAt)
+        // Sorting
+        IOrderedQueryable<User> ordered = (sortBy?.ToLower(), sortOrder?.ToLower()) switch
+        {
+            ("name", "asc") => query.OrderBy(u => u.Name),
+            ("name", _) => query.OrderByDescending(u => u.Name),
+            ("email", "asc") => query.OrderBy(u => u.Email),
+            ("email", _) => query.OrderByDescending(u => u.Email),
+            ("status", "asc") => query.OrderBy(u => u.IsBlocked).ThenBy(u => u.IsEmailConfirmed),
+            ("status", _) => query.OrderByDescending(u => u.IsBlocked).ThenByDescending(u => u.IsEmailConfirmed),
+            ("role", "asc") => query.OrderBy(u => u.Role),
+            ("role", _) => query.OrderByDescending(u => u.Role),
+            ("orgs", "asc") => query.OrderBy(u => u.OrganizationMemberships.Count),
+            ("orgs", _) => query.OrderByDescending(u => u.OrganizationMemberships.Count),
+            ("registered", "asc") => query.OrderBy(u => u.CreatedAt),
+            ("registered", _) => query.OrderByDescending(u => u.CreatedAt),
+            _ => query.OrderByDescending(u => u.CreatedAt)
+        };
+
+        var users = await ordered
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(u => new AdminUserListItemDto
@@ -255,5 +275,18 @@ public class AdminController : ControllerBase
         await _authService.ForgotPasswordAsync(user.Email);
 
         return Ok(new { message = $"Password reset email sent to {user.Email}." });
+    }
+    /// <summary>
+    /// GET /api/admin/organizations — for filter dropdown
+    /// </summary>
+    [HttpGet("organizations")]
+    public async Task<IActionResult> GetOrganizations()
+    {
+        var orgs = await _db.Organizations
+            .OrderBy(o => o.Name)
+            .Select(o => new { o.Id, o.Name })
+            .ToListAsync();
+
+        return Ok(orgs);
     }
 }
