@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router';
 import { Pin, Users2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { usePinnedTeams } from '@/lib/favorites';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import type { DashboardSprint } from '@/lib/api';
+import { IterationStatusBar } from './IterationStatusBar';
 
 interface ResolvedPinnedTeam {
   teamId: number;
@@ -94,9 +94,10 @@ export function PinnedTeamsCard() {
                         {team.activeSprint.daysLeft}d left
                       </span>
                     </div>
-                    <Progress
-                      value={Math.round(team.activeSprint.progress * 100)}
-                      className="h-1.5 bg-zinc-200 [&>[data-slot=progress-indicator]]:bg-zinc-900"
+                    <IterationStatusBar
+                      byStatus={team.activeSprint.byStatus}
+                      progress={team.activeSprint.progress}
+                      iterationId={team.activeSprint.id}
                     />
                   </div>
                 )}

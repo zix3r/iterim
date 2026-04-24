@@ -34,7 +34,7 @@ type PasswordErrors = {
 
 function PasswordReq({ met, label }: { met: boolean; label: string }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs ${met ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-500'}`}>
+    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs ${met ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="12" height="12">
         {met
           ? <polyline points="20 6 9 17 4 12" />
@@ -303,13 +303,13 @@ export function ProfilePage() {
   };
 
   if (isLoading) {
-    return <div className="p-6 md:p-8 max-w-6xl mx-auto py-8 text-sm text-zinc-500">Loading profile information...</div>;
+    return <div className="p-6 md:p-8 max-w-6xl mx-auto py-8 text-sm text-muted-foreground">Loading profile information...</div>;
   }
 
   if (loadingError) {
     return (
       <div className="p-6 md:p-8 max-w-6xl mx-auto py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 mb-4">
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 p-4 text-red-700 dark:text-red-300 mb-4">
           {loadingError}
         </div>
         <Button onClick={loadProfile} variant="outline">Try again</Button>
@@ -337,14 +337,14 @@ export function ProfilePage() {
         <CardContent>
           <form className="space-y-4" onSubmit={handleProfileSubmit} noValidate>
             {profileApiError && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="rounded-md border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 {profileApiError}
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label htmlFor="profile-name" className="text-sm font-medium text-zinc-700">Name</label>
+                <label htmlFor="profile-name" className="text-sm font-medium text-foreground">Name</label>
                 <Input
                   id="profile-name"
                   value={name}
@@ -360,7 +360,7 @@ export function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="profile-email" className="text-sm font-medium text-zinc-700">Email</label>
+                <label htmlFor="profile-email" className="text-sm font-medium text-foreground">Email</label>
                 <Input
                   id="profile-email"
                   type="email"
@@ -378,7 +378,7 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-700">Registration date</label>
+              <label className="text-sm font-medium text-foreground">Registration date</label>
               <Input value={profile ? toDisplayDate(profile.createdAt) : '-'} disabled />
             </div>
 
@@ -403,13 +403,13 @@ export function ProfilePage() {
         <CardContent>
           <form className="space-y-4" onSubmit={handlePasswordSubmit} noValidate>
             {passwordApiError && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="rounded-md border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 {passwordApiError}
               </div>
             )}
 
             <div className="space-y-2">
-              <label htmlFor="old-password" className="text-sm font-medium text-zinc-700">Current password</label>
+              <label htmlFor="old-password" className="text-sm font-medium text-foreground">Current password</label>
               <Input
                 id="old-password"
                 type="password"
@@ -429,7 +429,7 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="new-password" className="text-sm font-medium text-zinc-700">New password</label>
+              <label htmlFor="new-password" className="text-sm font-medium text-foreground">New password</label>
               <Input
                 id="new-password"
                 type="password"
@@ -453,7 +453,7 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="confirm-password" className="text-sm font-medium text-zinc-700">Confirm new password</label>
+              <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">Confirm new password</label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -496,13 +496,13 @@ export function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {avatarApiError && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="rounded-md border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
               {avatarApiError}
             </div>
           )}
 
           <div className="flex flex-col items-start gap-4 md:flex-row md:items-center">
-            <Avatar className="h-20 w-20 border border-zinc-200">
+            <Avatar className="h-20 w-20 border border-border">
               <AvatarImage src={avatarPreview || undefined} alt={profileNameForInitials} />
               <AvatarFallback className="text-lg font-semibold">{getInitials(profileNameForInitials)}</AvatarFallback>
             </Avatar>
@@ -515,23 +515,23 @@ export function ProfilePage() {
                   className="hidden"
                   onChange={handleAvatarUpload}
                 />
-                <span className="inline-flex h-9 cursor-pointer items-center rounded-md border border-zinc-200 px-3 text-sm font-medium hover:bg-zinc-50">
+                <span className="inline-flex h-9 cursor-pointer items-center rounded-md border border-border px-3 text-sm font-medium hover:bg-accent">
                   <Upload className="mr-2 h-4 w-4" />
                   Upload photo
                 </span>
               </label>
-              <p className="text-xs text-zinc-500">PNG/JPG/WEBP, up to 1.5 MB.</p>
+              <p className="text-xs text-muted-foreground">PNG/JPG/WEBP, up to 1.5 MB.</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-zinc-700">Initials colors</p>
+            <p className="text-sm font-medium text-foreground">Initials colors</p>
             <div className="flex flex-wrap gap-2">
               {avatarColors.map((color) => (
                 <button
                   key={color}
                   type="button"
-                  className="h-8 w-8 rounded-full border border-zinc-200 transition-transform hover:scale-105"
+                  className="h-8 w-8 rounded-full border border-border transition-transform hover:scale-105"
                   style={{ backgroundColor: color }}
                   aria-label={`Choose ${color} color`}
                   onClick={() => handleInitialsAvatarPick(color)}

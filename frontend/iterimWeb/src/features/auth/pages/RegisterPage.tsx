@@ -243,6 +243,22 @@ const registerStyles = `
 
   .field-input { background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.1); border-radius:10px; padding:0.7rem 0.9rem; color:#000000; font-family:'Sora',sans-serif; font-size:0.9rem; outline:none; transition:border-color 0.2s,box-shadow 0.2s; width:100%; box-sizing:border-box; }
   .field-input::placeholder { color:#71717a; }
+
+  .field-input:-webkit-autofill,
+  .field-input:-webkit-autofill:hover,
+  .field-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #000000;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    caret-color: #000000;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  .field-input:-moz-autofill {
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    color: #000000;
+  }
+
   .field-input:focus { border-color:rgba(24,24,27,1); box-shadow:0 0 0 3px rgba(24,24,27,0.1); }
 
   .field-input-error { border-color:rgba(239,68,68,0.5) !important; }

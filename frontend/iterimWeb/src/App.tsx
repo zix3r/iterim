@@ -23,12 +23,17 @@ import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
 import { AdminSystemPage } from '@/features/admin/pages/AdminSystemPage';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 function App() {
+  const { user } = useAuth();
+
   return (
-    <ErrorBoundary>
-      <ToastProvider>
-        <Routes>
+    <ThemeProvider serverTheme={user?.theme}>
+      <ErrorBoundary>
+        <ToastProvider>
+          <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -67,9 +72,10 @@ function App() {
 
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </ToastProvider>
-    </ErrorBoundary>
+          </Routes>
+        </ToastProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 }
 

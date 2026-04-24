@@ -1,6 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Shield, Users, Activity, ArrowLeft } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/context/ThemeContext';
+import { updateMyTheme } from '@/lib/api';
 
 const ADMIN_TABS = [
   { label: 'Users', path: '/admin/users', icon: Users },
@@ -10,6 +12,18 @@ const ADMIN_TABS = [
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { resolvedTheme, theme, setTheme, toggleTheme } = useTheme();
+
+  const handleThemeToggle = async () => {
+    const previousTheme = theme;
+    const nextTheme = toggleTheme();
+
+    try {
+      await updateMyTheme({ theme: nextTheme });
+    } catch {
+      setTheme(previousTheme);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -21,6 +35,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </Button>
           <Shield className="h-5 w-5 text-zinc-700" />
           <h1 className="text-xl font-semibold text-zinc-900">Admin Panel</h1>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent"
+            onClick={handleThemeToggle}
+            title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            <span className="sr-only">Toggle theme</span>
+          </Button>
         </div>
       </div>
 

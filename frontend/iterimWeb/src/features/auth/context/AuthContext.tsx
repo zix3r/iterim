@@ -15,6 +15,7 @@ export interface User {
   name: string;
   avatarUrl?: string;
   role?: string;
+  theme?: 'light' | 'dark';
 }
 
 interface AuthContextValue {

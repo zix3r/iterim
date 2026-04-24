@@ -58,11 +58,11 @@ export function CapacityCard({ data, loading }: Props) {
 
         {/* Team availability bar */}
         <div>
-          <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
             <span>Team availability</span>
-            <span className="font-medium text-zinc-700">{availabilityPct}%</span>
+            <span className="font-medium text-foreground">{availabilityPct}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-zinc-100 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 ${
                 availabilityPct >= 80
@@ -79,7 +79,7 @@ export function CapacityCard({ data, loading }: Props) {
         {/* Per-member list */}
         {data.byMember.length > 0 && (
           <div>
-            <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
               Members
             </p>
             <div className="space-y-2">
@@ -93,13 +93,13 @@ export function CapacityCard({ data, loading }: Props) {
                   <div
                     key={m.memberId}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${
-                      hasAbsence ? 'bg-amber-50 border border-amber-100' : 'bg-zinc-50'
+                      hasAbsence ? 'bg-amber-50 border border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25' : 'bg-muted/50'
                     }`}
                   >
                     {/* Avatar */}
                     <Avatar size="sm">
                       <AvatarImage src={m.avatarUrl ?? undefined} alt={m.name} />
-                      <AvatarFallback className="text-[10px] font-semibold bg-zinc-200 text-zinc-700">
+                      <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">
                         {initials(m.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -107,19 +107,19 @@ export function CapacityCard({ data, loading }: Props) {
                     {/* Name + mini bar */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-zinc-800 truncate">{m.name}</span>
+                        <span className="text-sm font-medium text-foreground truncate">{m.name}</span>
                         {hasAbsence && (
                           <Badge
                             variant="outline"
-                            className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700 bg-amber-50 shrink-0"
+                            className="text-[10px] px-1.5 py-0 border-amber-300 text-amber-700 bg-amber-50 dark:border-amber-500/30 dark:text-amber-300 dark:bg-amber-500/10 shrink-0"
                           >
                             {m.absenceDays}d off
                           </Badge>
                         )}
                       </div>
-                      <div className="mt-1 h-1 w-full rounded-full bg-zinc-200 overflow-hidden">
+                      <div className="mt-1 h-1 w-full rounded-full bg-muted overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${hasAbsence ? 'bg-amber-400' : 'bg-zinc-400'}`}
+                          className={`h-full rounded-full ${hasAbsence ? 'bg-amber-400' : 'bg-muted-foreground/50'}`}
                           style={{ width: `${memberPct}%` }}
                         />
                       </div>
@@ -127,8 +127,8 @@ export function CapacityCard({ data, loading }: Props) {
 
                     {/* Days */}
                     <div className="text-right shrink-0">
-                      <span className="text-sm font-semibold text-zinc-700">{m.availableDays}</span>
-                      <span className="text-xs text-zinc-400">/{m.workDays}d</span>
+                      <span className="text-sm font-semibold text-foreground">{m.availableDays}</span>
+                      <span className="text-xs text-muted-foreground">/{m.workDays}d</span>
                     </div>
                   </div>
                 );
@@ -147,11 +147,11 @@ function StatBox({
   label: string; value: number; highlight?: boolean;
 }) {
   return (
-    <div className={`rounded-lg p-3 text-center ${highlight && value > 0 ? 'bg-amber-50' : 'bg-zinc-50'}`}>
-      <p className={`text-xl font-bold ${highlight && value > 0 ? 'text-amber-700' : 'text-zinc-900'}`}>
+    <div className={`rounded-lg p-3 text-center ${highlight && value > 0 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-muted/50'}`}>
+      <p className={`text-xl font-bold ${highlight && value > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-foreground'}`}>
         {value}
       </p>
-      <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{label}</p>
+      <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{label}</p>
     </div>
   );
 }

@@ -16,6 +16,12 @@ namespace iterimApi.Controllers;
 [Authorize]
 public class UsersController : ControllerBase
 {
+    private static readonly HashSet<string> AllowedThemes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "light",
+        "dark"
+    };
+
     private readonly IRecentPageService _recentPageService;
     private readonly AppDbContext _context;
     private readonly IPasswordHasher<User> _passwordHasher;
@@ -46,6 +52,27 @@ public class UsersController : ControllerBase
         return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
     }
 
+    private static string NormalizeTheme(string? theme)
+    {
+        if (string.IsNullOrWhiteSpace(theme)) return "light";
+        return theme.Trim().ToLowerInvariant();
+    }
+
+    private static string GetSafeTheme(string? theme)
+    {
+        var normalized = NormalizeTheme(theme);
+        return AllowedThemes.Contains(normalized) ? normalized : "light";
+    }
+
+    private static CurrentUserProfileDto MapCurrentUserProfile(User user) => new()
+    {
+        Name = user.Name,
+        Email = user.Email,
+        AvatarUrl = user.AvatarUrl,
+        Theme = GetSafeTheme(user.Theme),
+        CreatedAt = user.CreatedAt
+    };
+
     [HttpGet("me")]
     public async Task<ActionResult<CurrentUserProfileDto>> GetCurrentUserProfile()
     {
@@ -55,13 +82,7 @@ public class UsersController : ControllerBase
             if (user is null)
                 return NotFound(new { errors = new[] { "User not found." } });
 
-            return Ok(new CurrentUserProfileDto
-            {
-                Name = user.Name,
-                Email = user.Email,
-                AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
-            });
+            return Ok(MapCurrentUserProfile(user));
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
@@ -84,6 +105,13 @@ public class UsersController : ControllerBase
 
             user.Name = dto.Name.Trim();
             user.Email = normalizedEmail;
+            if (!string.IsNullOrWhiteSpace(dto.Theme))
+            {
+                var theme = NormalizeTheme(dto.Theme);
+                if (!AllowedThemes.Contains(theme))
+                    return BadRequest(new { errors = new[] { "Theme must be one of: light, dark." } });
+                user.Theme = theme;
+            }
             user.UpdatedAt = DateTime.UtcNow;
 
             // Sync email to all org memberships
@@ -95,13 +123,29 @@ public class UsersController : ControllerBase
 
             await _context.SaveChangesAsync();
 
-            return Ok(new CurrentUserProfileDto
-            {
-                Name = user.Name,
-                Email = user.Email,
-                AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
-            });
+            return Ok(MapCurrentUserProfile(user));
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+    }
+
+    [HttpPut("me/theme")]
+    public async Task<ActionResult<CurrentUserProfileDto>> UpdateCurrentUserTheme([FromBody] UpdateThemeDto dto)
+    {
+        try
+        {
+            var user = await GetCurrentUserEntityAsync();
+            if (user is null)
+                return NotFound(new { errors = new[] { "User not found." } });
+
+            var theme = NormalizeTheme(dto.Theme);
+            if (!AllowedThemes.Contains(theme))
+                return BadRequest(new { errors = new[] { "Theme must be one of: light, dark." } });
+
+            user.Theme = theme;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(MapCurrentUserProfile(user));
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
@@ -156,13 +200,7 @@ public class UsersController : ControllerBase
 
             await _context.SaveChangesAsync();
 
-            return Ok(new CurrentUserProfileDto
-            {
-                Name = user.Name,
-                Email = user.Email,
-                AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
-            });
+            return Ok(MapCurrentUserProfile(user));
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }

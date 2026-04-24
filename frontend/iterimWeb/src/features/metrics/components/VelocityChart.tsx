@@ -4,6 +4,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTheme } from '@/context/ThemeContext';
 import type { VelocityData } from '@/lib/api';
 
 interface Props {
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function VelocityChart({ data, loading, highlightIterationId }: Props) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
   if (loading) {
     return (
       <Card>
@@ -26,6 +30,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
   }
 
   const hasData = data && data.sprints.length > 0;
+  const avg = data ? Math.round(data.averageVelocity * 10) / 10 : 0;
 
   const chartData = (data?.sprints ?? []).map((s) => ({
     name: s.name ?? `#${s.iterationId}`,
@@ -34,7 +39,17 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
     Completed: s.completedPoints,
   }));
 
-  const avg = data?.averageVelocity ?? 0;
+  const colors = {
+    planned: isDark ? '#b7b7c1' : '#d4d4d8',
+    plannedActive: isDark ? '#8f8f99' : '#a1a1aa',
+    completed: isDark ? '#ffffff' : '#52525b',
+    completedActive: isDark ? '#a1a1aa' : '#18181b',
+    tick: 'var(--muted-foreground)',
+    grid: 'var(--border)',
+    tooltipBg: 'var(--popover)',
+    tooltipText: isDark ? '#ffffff' : 'var(--popover-foreground)',
+    cursor: 'var(--accent)',
+  };
 
   return (
     <Card>
@@ -46,7 +61,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
           </div>
           {hasData && (
             <div className="text-right shrink-0">
-              <p className="text-2xl font-bold text-zinc-900">{avg}</p>
+              <p className="text-2xl font-bold text-foreground">{avg}</p>
               <p className="text-xs text-muted-foreground">avg pts / iteration</p>
             </div>
           )}
@@ -61,40 +76,53 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData} barGap={4} barCategoryGap="30%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={{ fontSize: 11, fill: colors.tick }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: string) => v.length > 14 ? v.slice(0, 13) + '…' : v}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={{ fontSize: 11, fill: colors.tick }}
                 axisLine={false}
                 tickLine={false}
                 width={32}
               />
               <Tooltip
-                cursor={{ fill: '#f4f4f5' }}
+                cursor={{ fill: colors.cursor }}
                 contentStyle={{
                   borderRadius: '8px',
-                  border: '1px solid #e4e4e7',
+                  border: `1px solid ${colors.grid}`,
                   fontSize: 12,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  backgroundColor: colors.tooltipBg,
+                  color: colors.tooltipText,
                 }}
+                labelStyle={{ color: colors.tooltipText }}
+                itemStyle={{ color: colors.tooltipText }}
               />
               <Legend
-                iconType="square"
-                iconSize={8}
-                wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+                wrapperStyle={{ fontSize: 12, paddingTop: 12, color: colors.tick }}
+                content={() => (
+                  <div className="mt-3 flex items-center justify-center gap-4 text-xs" style={{ color: colors.tick }}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: colors.planned }} />
+                      Planned
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: colors.completed }} />
+                      Completed
+                    </span>
+                  </div>
+                )}
               />
               {/* Average velocity reference line */}
               {avg > 0 && (
                 <ReferenceLine
                   y={avg}
                   stroke="#f59e0b"
-                  strokeDasharray="4 3"
                   strokeWidth={1.5}
                   label={{
                     value: `Avg ${avg}`,
@@ -104,19 +132,19 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
                   }}
                 />
               )}
-              <Bar dataKey="Planned" name="Planned" fill="#d4d4d8" radius={[3, 3, 0, 0]}>
+              <Bar dataKey="Planned" name="Planned" radius={[3, 3, 0, 0]}>
                 {chartData.map((entry) => (
                   <Cell
                     key={entry.iterationId}
-                    fill={entry.iterationId === highlightIterationId ? '#a1a1aa' : '#d4d4d8'}
+                    fill={entry.iterationId === highlightIterationId ? colors.plannedActive : colors.planned}
                   />
                 ))}
               </Bar>
-              <Bar dataKey="Completed" name="Completed" fill="#18181b" radius={[3, 3, 0, 0]}>
+              <Bar dataKey="Completed" name="Completed" radius={[3, 3, 0, 0]}>
                 {chartData.map((entry) => (
                   <Cell
                     key={entry.iterationId}
-                    fill={entry.iterationId === highlightIterationId ? '#18181b' : '#52525b'}
+                    fill={entry.iterationId === highlightIterationId ? colors.completedActive : colors.completed}
                   />
                 ))}
               </Bar>

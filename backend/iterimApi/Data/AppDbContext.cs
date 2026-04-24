@@ -73,6 +73,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email).IsUnique();
+
+            entity.Property(u => u.Theme)
+                .HasMaxLength(16)
+                .HasDefaultValue("light");
         });
 
         // ── RefreshToken ────────────────────────────────────

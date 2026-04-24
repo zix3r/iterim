@@ -106,8 +106,8 @@
     --chart-5: oklch(0.645 0.246 16.439);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.985 0 0);
+    --sidebar-primary-foreground: oklch(0.205 0 0);
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
@@ -117,8 +117,61 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
+
   body {
     @apply bg-background text-foreground;
-    }
+  }
+}
+
+@layer utilities {
+  .dark .bg-white,
+  .dark .bg-zinc-50,
+  .dark .bg-zinc-100,
+  .dark .bg-zinc-200,
+  .dark .bg-zinc-300,
+  .dark .bg-gray-100 {
+    background-color: var(--card);
+  }
+
+  .dark .border-zinc-50,
+  .dark .border-zinc-100,
+  .dark .border-zinc-200,
+  .dark .border-zinc-300,
+  .dark .border-gray-200 {
+    border-color: var(--border);
+  }
+
+  .dark .text-zinc-900,
+  .dark .text-zinc-800,
+  .dark .text-zinc-700,
+  .dark .text-gray-800 {
+    color: var(--foreground);
+  }
+
+  .dark .text-zinc-600,
+  .dark .text-zinc-500,
+  .dark .text-zinc-400,
+  .dark .text-gray-600 {
+    color: var(--muted-foreground);
+  }
+
+  .dark .hover\:bg-zinc-50:hover,
+  .dark .hover\:bg-zinc-100:hover,
+  .dark .hover\:bg-zinc-200:hover,
+  .dark .hover\:bg-zinc-50\/50:hover,
+  .dark .hover\:bg-zinc-200\/80:hover {
+    background-color: var(--accent);
+  }
+
+  .dark .hover\:text-zinc-900:hover,
+  .dark .hover\:text-zinc-700:hover,
+  .dark .hover\:text-zinc-600:hover,
+  .dark .hover\:text-white:hover {
+    color: var(--foreground);
+  }
+
+  .dark .focus\:bg-red-50:focus {
+    background-color: color-mix(in oklab, var(--destructive) 20%, transparent);
+  }
 }

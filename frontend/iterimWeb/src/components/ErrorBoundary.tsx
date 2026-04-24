@@ -1,5 +1,5 @@
 import { Component } from "react";
-import type { ErrorInfo, ReactNode } from "react"; // <-- Pataisyta: Tipai importuojami atskirai su 'type'
+import type { ErrorInfo, ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center space-y-4">
-          <div className="h-20 w-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <div className="h-20 w-20 bg-destructive/15 rounded-full flex items-center justify-center mb-4">
             <AlertTriangle className="h-10 w-10 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold">Something went wrong</h2>
@@ -48,6 +48,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children; // <-- Pataisyta: Pridėtas .props.
+    return this.props.children;
   }
 }

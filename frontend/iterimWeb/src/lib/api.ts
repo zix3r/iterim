@@ -225,16 +225,24 @@ export interface BacklogGroup {
 
 // ── Current User Profile Types ───────────────────────────────
 
+export type UserTheme = 'light' | 'dark';
+
 export interface CurrentUserProfile {
   name: string;
   email: string;
   avatarUrl: string | null;
+  theme: UserTheme;
   createdAt: string;
 }
 
 export interface UpdateProfileRequest {
   name: string;
   email: string;
+  theme?: UserTheme;
+}
+
+export interface UpdateThemeRequest {
+  theme: UserTheme;
 }
 
 export interface ChangePasswordRequest {
@@ -599,6 +607,7 @@ export interface DashboardSprint {
   progress: number;
   totalPoints: number;
   completedPoints: number;
+  byStatus: Record<string, number>;
 }
 
 export interface DashboardTeam {
@@ -974,6 +983,15 @@ export const changeMyPassword = (data: ChangePasswordRequest): Promise<void> =>
 
 export const updateMyAvatar = (data: UpdateAvatarRequest): Promise<CurrentUserProfile> =>
   fetchWithAuth('/users/me/avatar', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateMyTheme = (data: UpdateThemeRequest): Promise<CurrentUserProfile> =>
+  fetchWithAuth('/users/me/theme', {
     method: 'PUT',
     body: JSON.stringify(data),
   }).then(async (r) => {

@@ -10,6 +10,7 @@ public class User
     public string? AvatarUrl { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.User;
+    public string Theme { get; set; } = "light";
     public bool IsBlocked { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
