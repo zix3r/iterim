@@ -405,6 +405,21 @@ const authStyles = `
 
   .field-input::placeholder { color: #71717a; }
 
+  .field-input:-webkit-autofill,
+  .field-input:-webkit-autofill:hover,
+  .field-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #000000;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    caret-color: #000000;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  .field-input:-moz-autofill {
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    color: #000000;
+  }
+
   .field-input:focus {
     border-color: rgba(24,24,27,1);
     box-shadow: 0 0 0 3px rgba(24,24,27,0.12);

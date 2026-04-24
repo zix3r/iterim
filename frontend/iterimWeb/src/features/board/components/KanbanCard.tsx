@@ -54,7 +54,7 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
     <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
       <Card 
         onClick={onClick} 
-        className={`mb-3 transition-shadow cursor-pointer ${isDragging ? 'shadow-xl' : 'hover:shadow-md border-transparent hover:border-primary/20'}`}
+        className={`mb-3 border border-black/20 dark:border-white/25 transition-shadow cursor-pointer ${isDragging ? 'shadow-xl' : 'hover:shadow-md hover:border-black/35 dark:hover:border-white/40'}`}
       >
         <CardHeader className="p-3 pb-2 flex flex-row items-start justify-between space-y-0 gap-2">
           <div className="font-medium text-sm leading-tight">{item.title}</div>

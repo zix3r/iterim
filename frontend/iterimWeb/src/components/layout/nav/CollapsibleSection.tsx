@@ -32,7 +32,7 @@ export function CollapsibleSection({ title, storageKey, children }: Props) {
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
         className={cn(
-          'flex w-full items-center justify-between px-2 py-1 text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-zinc-600 transition-colors',
+          'flex w-full items-center justify-between px-2 py-1 text-[10px] font-bold text-sidebar-foreground/60 uppercase tracking-widest hover:text-sidebar-foreground/85 transition-colors',
         )}
       >
         {title}

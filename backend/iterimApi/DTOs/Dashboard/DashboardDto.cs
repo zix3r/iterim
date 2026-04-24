@@ -39,6 +39,7 @@ public class DashboardSprintDto
     public double Progress { get; set; } // Percentage or points?
     public int TotalPoints { get; set; }
     public int CompletedPoints { get; set; }
+    public Dictionary<string, int> ByStatus { get; set; } = [];
 }
 
 public class DashboardWorkItemDto

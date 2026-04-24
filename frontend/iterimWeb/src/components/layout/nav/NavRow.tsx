@@ -38,8 +38,8 @@ export function NavRow({ to, label, icon: Icon, depth, expandable, expanded, onT
             'flex flex-1 items-center gap-2 rounded-lg py-1.5 pr-1 text-sm font-medium transition-all duration-200 min-w-0',
             depthClass(depth),
             isActive
-              ? 'bg-zinc-900 text-white'
-              : 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900',
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+              : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
           )
         }
       >
@@ -47,7 +47,7 @@ export function NavRow({ to, label, icon: Icon, depth, expandable, expanded, onT
           <>
             {Icon && (
               <Icon
-                className={cn('h-4 w-4 shrink-0', isActive ? 'text-white' : 'text-zinc-500')}
+                className={cn('h-4 w-4 shrink-0', isActive ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground/60')}
               />
             )}
             <span className="truncate">{label}</span>
@@ -64,12 +64,12 @@ export function NavRow({ to, label, icon: Icon, depth, expandable, expanded, onT
             e.stopPropagation();
             onToggle?.();
           }}
-          className="absolute right-1 h-7 w-7 shrink-0 rounded flex items-center justify-center hover:bg-zinc-200 transition-colors"
+          className="absolute right-1 h-7 w-7 shrink-0 rounded flex items-center justify-center hover:bg-sidebar-accent transition-colors"
         >
           {expanded ? (
-            <ChevronDown className="h-4 w-4 text-zinc-500" />
+            <ChevronDown className="h-4 w-4 text-sidebar-foreground/60" />
           ) : (
-            <ChevronRight className="h-4 w-4 text-zinc-500" />
+            <ChevronRight className="h-4 w-4 text-sidebar-foreground/60" />
           )}
         </button>
       )}

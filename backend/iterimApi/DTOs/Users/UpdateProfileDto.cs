@@ -13,4 +13,7 @@ public class UpdateProfileDto
     [EmailAddress]
     [MaxLength(255)]
     public string Email { get; set; } = string.Empty;
+
+    [RegularExpression("^(?i:light|dark)$", ErrorMessage = "Theme must be one of: light, dark.")]
+    public string? Theme { get; set; }
 }

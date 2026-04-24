@@ -292,12 +292,19 @@ public class AuthService : IAuthService
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
             .Replace("+", "-").Replace("/", "_").Replace("=", ""); // URL-safe
 
+    private static string GetSafeTheme(string? theme)
+    {
+        if (string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase)) return "dark";
+        return "light";
+    }
+
     private static UserResponseDto MapToDto(User user) => new()
     {
         Id = user.Id,
         Email = user.Email,
         Name = user.Name,
         AvatarUrl = user.AvatarUrl,
-        Role = user.Role.ToString()
+        Role = user.Role.ToString(),
+        Theme = GetSafeTheme(user.Theme)
     };
 }

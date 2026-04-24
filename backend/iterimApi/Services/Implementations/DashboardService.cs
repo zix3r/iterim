@@ -55,6 +55,9 @@ public class DashboardService : IDashboardService
                         var sprintItems = t.WorkItems.Where(w => w.IterationId == activeSprint.Id).ToList();
                         var totalPoints = sprintItems.Sum(w => w.Points ?? 0);
                         var completedPoints = sprintItems.Where(w => w.Status == WorkItemStatus.Done).Sum(w => w.Points ?? 0);
+                        var byStatus = sprintItems
+                            .GroupBy(w => w.Status.ToString())
+                            .ToDictionary(g => g.Key, g => g.Count());
                         
                         // Avoid division by zero
                         double progress = totalPoints > 0 ? (double)completedPoints / totalPoints * 100 : 0;
@@ -70,7 +73,8 @@ public class DashboardService : IDashboardService
                             DaysLeft = Math.Max(0, daysLeft),
                             TotalPoints = totalPoints,
                             CompletedPoints = completedPoints,
-                            Progress = progress
+                            Progress = progress,
+                            ByStatus = byStatus
                         };
                     }
 

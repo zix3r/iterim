@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router';
 import { Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import type { DashboardSprint } from '@/lib/api';
+import { IterationStatusBar } from './IterationStatusBar';
 
 interface ActiveTeamRow {
   teamId: number;
@@ -77,9 +77,10 @@ export function ActiveIterationsCard() {
                   <span className="text-xs text-zinc-500 shrink-0">{row.sprint.daysLeft}d left</span>
                 </div>
                 <p className="text-xs text-zinc-600 mb-1.5 truncate">{row.sprint.name}</p>
-                <Progress
-                  value={Math.round(row.sprint.progress * 100)}
-                  className="h-1.5 bg-zinc-200 [&>[data-slot=progress-indicator]]:bg-zinc-900"
+                <IterationStatusBar
+                  byStatus={row.sprint.byStatus}
+                  progress={row.sprint.progress}
+                  iterationId={row.sprint.id}
                 />
               </div>
             ))}

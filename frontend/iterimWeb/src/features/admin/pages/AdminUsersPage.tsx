@@ -340,9 +340,9 @@ export function AdminUsersPage() {
             {/* Delete confirmation dialog */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setDeleteTarget(null)}>
-                    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold text-zinc-900 mb-2">Delete user</h3>
-                        <p className="text-sm text-zinc-600 mb-1">
+                    <div className="bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">Delete user</h3>
+                        <p className="text-sm text-muted-foreground mb-1">
                             Are you sure you want to delete <strong>{deleteTarget.name}</strong> ({deleteTarget.email})?
                         </p>
                         <p className="text-sm text-red-600 mb-6">
