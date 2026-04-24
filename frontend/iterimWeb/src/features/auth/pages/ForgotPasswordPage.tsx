@@ -224,8 +224,26 @@ const forgotStyles = `
   }
   .field-input::placeholder { color: #71717a; }
   .field-input:focus { border-color: rgba(24,24,27,1); box-shadow: 0 0 0 3px rgba(24,24,27,0.12); }
+  .field-input:-webkit-autofill,
+  .field-input:-webkit-autofill:hover,
+  .field-input:-webkit-autofill:focus,
+  .field-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #000000;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: background-color 9999s ease-out 0s;
+  }
   .field-input-error { border-color: rgba(239,68,68,0.5) !important; }
   .field-input-error:focus { border-color: rgba(239,68,68,0.5) !important; box-shadow: 0 0 0 3px rgba(239,68,68,0.12) !important; }
+  .field-input-error:-webkit-autofill,
+  .field-input-error:-webkit-autofill:hover,
+  .field-input-error:-webkit-autofill:focus,
+  .field-input-error:-webkit-autofill:active {
+    border: 1px solid rgba(239,68,68,0.5) !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset, 0 0 0 3px rgba(239,68,68,0.12);
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset, 0 0 0 3px rgba(239,68,68,0.12);
+  }
   .field-error { color: #f87171; font-size: 0.75rem; margin-top: 0.25rem; display: block; }
 
   .auth-btn {
