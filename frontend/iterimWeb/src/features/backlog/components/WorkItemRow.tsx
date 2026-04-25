@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, User } from 'lucide-react';
+import { GripVertical, User, Lock, ArrowRight } from 'lucide-react';
 import type { WorkItem } from '@/lib/api';
 import { TagBadge } from '@/components/shared/TagBadge';
 
@@ -90,6 +90,26 @@ export function WorkItemRow({ item, readOnly = false, onClick }: Props) {
           {item.tags.length > 3 && (
             <span className="text-[9px] text-muted-foreground">+{item.tags.length - 3}</span>
           )}
+        </span>
+      )}
+
+      {/* Dependency badges */}
+      {item.blockerCount > 0 && (
+        <span
+          className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          title={`${item.blockerCount} bloker${item.blockerCount === 1 ? 'is' : 'iai'}`}
+        >
+          <Lock className="h-2.5 w-2.5" />
+          {item.blockerCount}
+        </span>
+      )}
+      {item.blocksCount > 0 && (
+        <span
+          className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          title={`Blokuoja ${item.blocksCount}`}
+        >
+          <ArrowRight className="h-2.5 w-2.5" />
+          {item.blocksCount}
         </span>
       )}
 

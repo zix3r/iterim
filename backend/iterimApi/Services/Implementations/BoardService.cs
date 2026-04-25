@@ -28,6 +28,12 @@ namespace iterimApi.Services.Implementations
                 .Include(i => i.WorkItems)
                     .ThenInclude(wi => wi.Tags)
                         .ThenInclude(wit => wit.Tag)
+                .Include(i => i.WorkItems)
+                    .ThenInclude(wi => wi.BlockedBy)
+                        .ThenInclude(d => d.BlockerWorkItem)
+                            .ThenInclude(bwi => bwi.Team)
+                                .ThenInclude(t => t.Product)
+                                    .ThenInclude(p => p.Organization)
                 .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Active)
                 .FirstOrDefaultAsync();
 
@@ -83,6 +89,18 @@ namespace iterimApi.Services.Implementations
                             Name = wit.Tag.Name,
                             Color = wit.Tag.Color,
                             CreatedAt = wit.Tag.CreatedAt
+                        }).ToList(),
+                        Blockers = wi.BlockedBy.Select(d => new BoardBlockerDto
+                        {
+                            DependencyId = d.Id,
+                            WorkItemId = d.BlockerWorkItemId,
+                            Title = d.BlockerWorkItem.Title,
+                            Status = d.BlockerWorkItem.Status.ToString(),
+                            TeamId = d.BlockerWorkItem.TeamId,
+                            TeamName = d.BlockerWorkItem.Team.Name,
+                            ProductId = d.BlockerWorkItem.Team.ProductId,
+                            ProductName = d.BlockerWorkItem.Team.Product.Name,
+                            OrgId = d.BlockerWorkItem.Team.Product.OrganizationId
                         }).ToList()
                     }).ToList() ?? new List<BoardWorkItemDto>();
 

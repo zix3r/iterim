@@ -24,4 +24,7 @@ public class WorkItemDto
     public string UpdatedByName { get; set; } = string.Empty;
     public TeamMemberDto? AssignedMember { get; set; }
     public List<TagDto> Tags { get; set; } = [];
+    public int BlockerCount { get; set; }
+    public int BlocksCount { get; set; }
+    public string? TeamName { get; set; }
 }

@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<WorkItemTag> WorkItemTags => Set<WorkItemTag>();
     public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
+    public DbSet<WorkItemDependency> WorkItemDependencies => Set<WorkItemDependency>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -390,6 +391,29 @@ public class AppDbContext : DbContext
                 .WithMany(t => t.TeamMemberTags)
                 .HasForeignKey(tmt => tmt.TagId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── WorkItemDependency ───────────────────────────────
+        modelBuilder.Entity<WorkItemDependency>(entity =>
+        {
+            entity.HasIndex(d => new { d.BlockerWorkItemId, d.BlockedWorkItemId }).IsUnique();
+            entity.HasIndex(d => d.BlockerWorkItemId);
+            entity.HasIndex(d => d.BlockedWorkItemId);
+
+            entity.HasOne(d => d.BlockerWorkItem)
+                .WithMany(wi => wi.Blocks)
+                .HasForeignKey(d => d.BlockerWorkItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.BlockedWorkItem)
+                .WithMany(wi => wi.BlockedBy)
+                .HasForeignKey(d => d.BlockedWorkItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.CreatedByMember)
+                .WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

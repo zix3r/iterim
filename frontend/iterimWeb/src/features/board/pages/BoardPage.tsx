@@ -177,6 +177,7 @@ export function BoardPage() {
 
       <EditWorkItemModal
         item={editItem}
+        orgId={Number(orgId)}
         members={team.members}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}

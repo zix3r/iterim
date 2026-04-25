@@ -2,6 +2,7 @@ using iterimApi.Data;
 using iterimApi.DTOs.Tags;
 using iterimApi.DTOs.Teams;
 using iterimApi.DTOs.WorkItems;
+using iterimApi.Exceptions;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
@@ -12,10 +13,12 @@ namespace iterimApi.Services.Implementations;
 public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _db;
+    private readonly IWorkItemDependencyService _dependencyService;
 
-    public WorkItemService(AppDbContext db)
+    public WorkItemService(AppDbContext db, IWorkItemDependencyService dependencyService)
     {
         _db = db;
+        _dependencyService = dependencyService;
     }
 
     public async Task<IEnumerable<WorkItemDto>> GetWorkItemsByTeamAsync(int teamId, WorkItemFilterDto filters, int userId)
@@ -55,6 +58,8 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(om => om.User)
             .Include(wi => wi.Tags)
                 .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
             .OrderByDescending(wi => wi.CreatedAt)
             .ToListAsync();
 
@@ -75,6 +80,8 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(om => om.User)
             .Include(wi => wi.Tags)
                 .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
             .OrderBy(wi => wi.Position)
             .ThenByDescending(wi => wi.CreatedAt)
             .ToListAsync();
@@ -110,6 +117,8 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(om => om.User)
             .Include(wi => wi.Tags)
                 .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -213,6 +222,14 @@ public class WorkItemService : IWorkItemService
 
         if (orgMember == null)
             throw new UnauthorizedAccessException("User is not a member of this team");
+
+        // Block transition to InProgress if there are unfinished blockers
+        if (dto.Status == WorkItemStatus.InProgress && workItem.Status != WorkItemStatus.InProgress)
+        {
+            var unfinishedBlockers = await _dependencyService.GetUnfinishedBlockersAsync(workItem.Id);
+            if (unfinishedBlockers.Count > 0)
+                throw new BlockedByDependenciesException(unfinishedBlockers);
+        }
 
         // Track changes and build history entries before mutating the entity
         var historyEntries = BuildHistoryEntries(workItem, dto, orgMember.Id);
@@ -400,7 +417,9 @@ public class WorkItemService : IWorkItemService
                 Name = wit.Tag.Name,
                 Color = wit.Tag.Color,
                 CreatedAt = wit.Tag.CreatedAt
-            }).ToList()
+            }).ToList(),
+            BlockerCount = wi.BlockedBy.Count,
+            BlocksCount = wi.Blocks.Count
         };
     }
 }

@@ -87,6 +87,7 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+builder.Services.AddScoped<IWorkItemDependencyService, WorkItemDependencyService>();
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IIterationService, IterationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();

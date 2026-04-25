@@ -1,9 +1,33 @@
+import { useState, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { BoardWorkItem } from '@/lib/api';
+import type { BoardWorkItem, BoardBlocker, WorkItemDependency } from '@/lib/api';
+
+function blockerToDepForModal(b: BoardBlocker): WorkItemDependency {
+  return {
+    dependencyId: b.dependencyId,
+    workItemId: b.workItemId,
+    title: b.title,
+    status: b.status,
+    type: '',
+    description: null,
+    points: null,
+    teamId: b.teamId,
+    teamName: b.teamName,
+    productId: b.productId,
+    productName: b.productName,
+    orgId: b.orgId,
+    assignedMember: null,
+    tags: [],
+    createdAt: '',
+    updatedAt: '',
+  };
+}
 import { TagBadge } from '@/components/shared/TagBadge';
+import { Lock } from 'lucide-react';
+import { DependencyDetailModal } from '@/features/backlog/components/DependencyDetailModal';
 
 interface KanbanCardProps {
   item: BoardWorkItem;
@@ -15,6 +39,14 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
     id: `item-${item.id}`,
     data: { item },
   });
+
+  const [lockPopupOpen, setLockPopupOpen] = useState(false);
+  const [detailDep, setDetailDep] = useState<BoardBlocker | null>(null);
+  const lockRef = useRef<HTMLButtonElement>(null);
+
+  const blockers = item.blockers ?? [];
+  const unfinishedBlockers = blockers.filter((b: BoardBlocker) => b.status !== 'Done');
+  const isBlocked = unfinishedBlockers.length > 0;
 
   const style = transform
     ? {
@@ -51,14 +83,33 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
         .join(' ')
     : null;
 
+  const handleLockClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLockPopupOpen(prev => !prev);
+  };
+
+  const STATUS_ICON: Record<string, string> = {
+    Done: '✓',
+  };
+
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <Card 
-        onClick={onClick} 
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="relative">
+      <Card
+        onClick={onClick}
         className={`mb-3 border border-black/20 dark:border-white/25 transition-shadow cursor-pointer ${isDragging ? 'shadow-xl' : 'hover:shadow-md hover:border-black/35 dark:hover:border-white/40'}`}
       >
         <CardHeader className="p-3 pb-2 flex flex-row items-start justify-between space-y-0 gap-2">
-          <div className="font-medium text-sm leading-tight">{item.title}</div>
+          <div className="font-medium text-sm leading-tight flex-1">{item.title}</div>
+          {isBlocked && (
+            <button
+              ref={lockRef}
+              onClick={handleLockClick}
+              className="shrink-0 p-0.5 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-500 dark:text-amber-400 transition-colors"
+              title={`Blokuojamas: ${unfinishedBlockers.map(b => b.title).join(', ')}`}
+            >
+              <Lock className="h-3.5 w-3.5" />
+            </button>
+          )}
         </CardHeader>
         <CardContent className="p-3 pt-0 flex flex-col gap-2">
 
@@ -102,6 +153,42 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
 
         </CardContent>
       </Card>
+
+      {/* Lock popup */}
+      {lockPopupOpen && isBlocked && (
+        <div
+          className="absolute right-0 top-full mt-1 z-50 w-64 bg-popover border rounded-lg shadow-lg p-3 space-y-1.5"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="text-xs font-medium text-muted-foreground mb-2">Blokeriai</div>
+          {blockers.map((b: BoardBlocker) => (
+            <button
+              key={b.dependencyId}
+              onClick={() => { setDetailDep(b); setLockPopupOpen(false); }}
+              className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 text-sm transition-colors"
+            >
+              <span className={`text-xs ${b.status === 'Done' ? 'text-green-500' : 'text-amber-500'}`}>
+                {STATUS_ICON[b.status] ?? '✗'}
+              </span>
+              <span className="flex-1 truncate">{b.title}</span>
+              <span className="text-xs text-muted-foreground shrink-0">{b.status}</span>
+            </button>
+          ))}
+          <button
+            onClick={() => setLockPopupOpen(false)}
+            className="w-full text-xs text-muted-foreground hover:text-foreground mt-1 pt-1 border-t text-center"
+          >
+            Uždaryti
+          </button>
+        </div>
+      )}
+
+      <DependencyDetailModal
+        dependency={detailDep ? blockerToDepForModal(detailDep) : null}
+        direction="blockedBy"
+        open={!!detailDep}
+        onOpenChange={v => { if (!v) setDetailDep(null); }}
+      />
     </div>
   );
 }

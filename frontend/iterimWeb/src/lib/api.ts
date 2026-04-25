@@ -161,6 +161,44 @@ export interface WorkItem {
   updatedByName: string;
   assignedMember: TeamMember | null;
   tags: Tag[];
+  blockerCount: number;
+  blocksCount: number;
+  teamName?: string;
+}
+
+// ── Dependency Types ──────────────────────────────────────────
+
+export interface WorkItemDependency {
+  dependencyId: number;
+  workItemId: number;
+  title: string;
+  status: string;
+  type: string;
+  description: string | null;
+  points: number | null;
+  teamId: number;
+  teamName: string;
+  productId: number;
+  productName: string;
+  orgId: number;
+  assignedMember: TeamMember | null;
+  tags: Tag[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WorkItemDependencies {
+  blocks: WorkItemDependency[];
+  blockedBy: WorkItemDependency[];
+}
+
+export class BlockedByDependenciesError extends Error {
+  blockers: WorkItemDependency[];
+  constructor(message: string, blockers: WorkItemDependency[]) {
+    super(message);
+    this.name = 'BlockedByDependenciesError';
+    this.blockers = blockers;
+  }
 }
 
 export interface CreateWorkItemRequest {
@@ -731,7 +769,20 @@ export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise
     method: 'PUT',
     body: JSON.stringify(data),
   }).then(async (r) => {
-    if (!r.ok) throw new Error(await getErrorMessage(r));
+    if (!r.ok) {
+      if (r.status === 400) {
+        let json: Record<string, unknown> | null = null;
+        try { json = await r.json(); } catch { /* ignore parse error */ }
+        if (json && Array.isArray(json.blockers) && (json.blockers as unknown[]).length > 0) {
+          throw new BlockedByDependenciesError(
+            (json.message as string) ?? 'Blocked by unfinished dependencies',
+            json.blockers as WorkItemDependency[]
+          );
+        }
+        throw new Error((json?.message as string) || 'Bad request');
+      }
+      throw new Error(await getErrorMessage(r));
+    }
     const result = await r.json();
     teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
     return result;
@@ -827,6 +878,18 @@ export interface BoardAssignedMember {
   avatarUrl?: string | null;
 }
 
+export interface BoardBlocker {
+  dependencyId: number;
+  workItemId: number;
+  title: string;
+  status: string;
+  teamId: number;
+  teamName: string;
+  productId: number;
+  productName: string;
+  orgId: number;
+}
+
 export interface BoardWorkItem {
   id: number;
   title: string;
@@ -834,6 +897,7 @@ export interface BoardWorkItem {
   points: number | null;
   assignedMember: BoardAssignedMember | null;
   tags: Tag[];
+  blockers: BoardBlocker[];
 }
 
 export interface BoardColumn {
@@ -1201,6 +1265,36 @@ export const assignTeamMemberTags = (teamId: number, memberId: number, tagIds: n
     method: 'PUT',
     body: JSON.stringify({ tagIds }),
   }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// ── WorkItem Dependencies API ─────────────────────────────────
+
+export const getWorkItemDependencies = (workItemId: number): Promise<WorkItemDependencies> =>
+  fetchWithAuth(`/workitems/${workItemId}/dependencies`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const addWorkItemDependency = (workItemId: number, blockedByWorkItemId: number): Promise<WorkItemDependency> =>
+  fetchWithAuth(`/workitems/${workItemId}/dependencies`, {
+    method: 'POST',
+    body: JSON.stringify({ blockedByWorkItemId }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const removeWorkItemDependency = (workItemId: number, dependencyId: number): Promise<void> =>
+  fetchWithAuth(`/workitems/${workItemId}/dependencies/${dependencyId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const searchWorkItems = (q: string): Promise<WorkItem[]> =>
+  fetchWithAuth(`/workitems/search?q=${encodeURIComponent(q)}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });

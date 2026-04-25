@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.WorkItems;
+using iterimApi.Exceptions;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -181,6 +182,10 @@ public class WorkItemsController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             return StatusCode(403, new { message = ex.Message });
+        }
+        catch (BlockedByDependenciesException ex)
+        {
+            return BadRequest(new { message = ex.Message, blockers = ex.Blockers });
         }
         catch (InvalidOperationException ex)
         {

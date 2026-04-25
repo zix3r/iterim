@@ -11,6 +11,7 @@ import type { WorkItem, TeamMember, Tag } from '@/lib/api';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 import { Trash2 } from 'lucide-react';
+import { DependencySection } from './DependencySection';
 
 const STATUS_OPTIONS = [
   { value: 0, label: 'Backlog' },
@@ -177,7 +178,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Work Item</DialogTitle>
           <DialogDescription>Update work item fields and save changes.</DialogDescription>
@@ -290,6 +291,12 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
               rows={3}
             />
           </div>
+
+          {item && (
+            <div className="border-t pt-4">
+              <DependencySection workItemId={item.id} />
+            </div>
+          )}
 
           <DialogFooter className="flex justify-between sm:justify-between">
             <div>

@@ -29,4 +29,6 @@ public class WorkItem
     public ICollection<WorkItemComment> Comments { get; set; } = [];
     public ICollection<WorkItemHistory> History { get; set; } = [];
     public ICollection<WorkItemTag> Tags { get; set; } = [];
+    public ICollection<WorkItemDependency> BlockedBy { get; set; } = [];
+    public ICollection<WorkItemDependency> Blocks { get; set; } = [];
 }
