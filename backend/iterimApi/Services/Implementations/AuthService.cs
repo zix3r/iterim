@@ -18,12 +18,12 @@ public class AuthService : IAuthService
     private readonly IRefreshTokenService _refreshTokenService;
     private readonly IEmailService _emailService;
     private readonly JwtSettings _jwtSettings;
+    private readonly EmailSettings _emailSettings;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IPasswordHasher<User> _passwordHasher;
 
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
-    private const int EmailConfirmationExpiryHours = 24;
     private const int PasswordResetExpiryHours = 1;
 
     public AuthService(
@@ -32,6 +32,7 @@ public class AuthService : IAuthService
         IRefreshTokenService refreshTokenService,
         IEmailService emailService,
         IOptions<JwtSettings> jwtSettings,
+        IOptions<EmailSettings> emailSettings,
         IHttpContextAccessor httpContextAccessor,
         IPasswordHasher<User> passwordHasher)
     {
@@ -40,8 +41,17 @@ public class AuthService : IAuthService
         _refreshTokenService = refreshTokenService;
         _emailService = emailService;
         _jwtSettings = jwtSettings.Value;
+        _emailSettings = emailSettings.Value;
         _httpContextAccessor = httpContextAccessor;
         _passwordHasher = passwordHasher;
+    }
+
+    private int GetEmailConfirmationExpiryMinutes()
+    {
+        if (_emailSettings.EmailConfirmationExpiryMinutes < 1)
+            return 1;
+
+        return _emailSettings.EmailConfirmationExpiryMinutes;
     }
 
     // ── Register ─────────────────────────────────────────────
@@ -60,7 +70,7 @@ public class AuthService : IAuthService
             Name = dto.Name.Trim(),
             IsEmailConfirmed = false,
             EmailConfirmationToken = confirmationToken,
-            EmailConfirmationTokenExpiry = DateTime.UtcNow.AddHours(EmailConfirmationExpiryHours),
+            EmailConfirmationTokenExpiry = DateTime.UtcNow.AddMinutes(GetEmailConfirmationExpiryMinutes()),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -70,7 +80,7 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         // Fire-and-forget: el. laiško siuntimo klaida nesustabdo registracijos
-        _ = SendConfirmationEmailSafe(user);
+        _ = SendConfirmationEmailSafe(user, user.Email);
 
         return (AuthResultDto.Ok(), MapToDto(user));
     }
@@ -156,11 +166,36 @@ public class AuthService : IAuthService
         if (user is null)
             return AuthResultDto.Fail("Invalid confirmation token.");
 
-        if (user.IsEmailConfirmed)
-            return AuthResultDto.Ok(); // Idempotent — jau patvirtinta
-
         if (user.EmailConfirmationTokenExpiry < DateTime.UtcNow)
             return AuthResultDto.Fail("Confirmation token has expired. Please request a new one.");
+
+        if (!string.IsNullOrWhiteSpace(user.PendingEmail))
+        {
+            var normalizedPendingEmail = user.PendingEmail.Trim().ToLowerInvariant();
+            var emailTaken = await _db.Users
+                .AnyAsync(u => u.Id != user.Id && u.Email == normalizedPendingEmail);
+
+            if (emailTaken)
+                return AuthResultDto.Fail("Email is already in use.");
+
+            user.Email = normalizedPendingEmail;
+            user.PendingEmail = null;
+            user.EmailConfirmationToken = null;
+            user.EmailConfirmationTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var orgMemberships = await _db.OrganizationMembers
+                .Where(om => om.UserId == user.Id)
+                .ToListAsync();
+            foreach (var om in orgMemberships)
+                om.Email = normalizedPendingEmail;
+
+            await _db.SaveChangesAsync();
+            return AuthResultDto.Ok();
+        }
+
+        if (user.IsEmailConfirmed)
+            return AuthResultDto.Ok(); // Idempotent — jau patvirtinta
 
         user.IsEmailConfirmed = true;
         user.EmailConfirmationToken = null;
@@ -176,15 +211,15 @@ public class AuthService : IAuthService
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
 
         // Visada grąžiname Ok — neskleidžiame, ar vartotojas egzistuoja
-        if (user is null || user.IsEmailConfirmed)
+        if (user is null || (user.IsEmailConfirmed && string.IsNullOrWhiteSpace(user.PendingEmail)))
             return AuthResultDto.Ok();
 
         user.EmailConfirmationToken = GenerateSecureToken();
-        user.EmailConfirmationTokenExpiry = DateTime.UtcNow.AddHours(EmailConfirmationExpiryHours);
+        user.EmailConfirmationTokenExpiry = DateTime.UtcNow.AddMinutes(GetEmailConfirmationExpiryMinutes());
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        _ = SendConfirmationEmailSafe(user);
+        _ = SendConfirmationEmailSafe(user, user.PendingEmail ?? user.Email);
         return AuthResultDto.Ok();
     }
 
@@ -261,17 +296,26 @@ public class AuthService : IAuthService
         CookieHelper.SetRefreshTokenCookie(response, refreshToken.Token, _jwtSettings.RefreshTokenExpirationDays);
     }
 
-    private async Task SendConfirmationEmailSafe(User user)
+    private async Task SendConfirmationEmailSafe(User user, string targetEmail)
     {
         try
         {
-            await _emailService.SendEmailConfirmationAsync(
-                user.Email, user.Name, user.EmailConfirmationToken!);
+            if (!string.IsNullOrWhiteSpace(user.PendingEmail) &&
+                string.Equals(targetEmail, user.PendingEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                await _emailService.SendEmailChangeConfirmationAsync(
+                    targetEmail, user.Name, user.EmailConfirmationToken!);
+            }
+            else
+            {
+                await _emailService.SendEmailConfirmationAsync(
+                    targetEmail, user.Name, user.EmailConfirmationToken!);
+            }
         }
         catch (Exception ex)
         {
             // Loginti, bet neįkrėsti registracijos srauto
-            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {user.Email}: {ex.Message}");
+            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {targetEmail}: {ex.Message}");
         }
     }
 

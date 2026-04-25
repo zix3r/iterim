@@ -29,6 +29,7 @@ public class User
     public bool IsEmailConfirmed { get; set; } = false;
     public string? EmailConfirmationToken { get; set; }
     public DateTime? EmailConfirmationTokenExpiry { get; set; }
+    public string? PendingEmail { get; set; }
  
     // ── Password reset ───────────────────────────────────
     public string? PasswordResetToken { get; set; }

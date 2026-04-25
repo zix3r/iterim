@@ -174,17 +174,26 @@ export function ProfilePage() {
 
     try {
       setIsSavingProfile(true);
+      const requestedEmail = email.trim().toLowerCase();
       const updated = await updateMyProfile({ name: name.trim(), email: email.trim() });
       setProfile(updated);
       setName(updated.name);
       setEmail(updated.email);
       await refreshUser();
 
-      toast({
-        title: 'Account updated',
-        description: 'Your name and email were saved successfully.',
-        variant: 'success',
-      });
+      if (updated.email.toLowerCase() !== requestedEmail) {
+        toast({
+          title: 'Confirm new email',
+          description: `A confirmation link was sent to ${requestedEmail}. Your email will update after confirmation.`,
+          variant: 'success',
+        });
+      } else {
+        toast({
+          title: 'Account updated',
+          description: 'Your name and email were saved successfully.',
+          variant: 'success',
+        });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update profile.';
       if (message.toLowerCase().includes('email')) {

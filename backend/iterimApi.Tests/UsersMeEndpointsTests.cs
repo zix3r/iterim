@@ -3,11 +3,13 @@ using iterimApi.Controllers;
 using iterimApi.Data;
 using iterimApi.DTOs.Users;
 using iterimApi.Models.Entities;
+using iterimApi.Models.Settings;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace iterimApi.Tests;
@@ -27,7 +29,22 @@ public class UsersMeEndpointsTests
     {
         var recentPageService = new Mock<IRecentPageService>();
         var passwordHasher = new PasswordHasher<User>();
-        var controller = new UsersController(recentPageService.Object, db, passwordHasher)
+        var emailService = new Mock<IEmailService>();
+
+        emailService
+            .Setup(s => s.SendEmailConfirmationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        emailService
+            .Setup(s => s.SendEmailChangeConfirmationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        var emailSettings = Options.Create(new EmailSettings
+        {
+            EmailConfirmationExpiryMinutes = 1440,
+            ProfileEmailChangeConfirmationExpiryMinutes = 10
+        });
+
+        var controller = new UsersController(recentPageService.Object, db, passwordHasher, emailService.Object, emailSettings)
         {
             ControllerContext = new ControllerContext
             {
@@ -68,7 +85,7 @@ public class UsersMeEndpointsTests
     }
 
     [Fact]
-    public async Task PutMe_UpdatesNameAndEmail_WhenEmailIsUnique()
+    public async Task PutMe_QueuesEmailConfirmation_WhenEmailIsUnique()
     {
         using var db = CreateDb();
         var user = await AddUserAsync(db, "john@example.com", "John", "Password123!");
@@ -84,12 +101,15 @@ public class UsersMeEndpointsTests
         var payload = Assert.IsType<CurrentUserProfileDto>(ok.Value);
 
         Assert.Equal("John Updated", payload.Name);
-        Assert.Equal("john.updated@example.com", payload.Email);
+        Assert.Equal("john@example.com", payload.Email);
 
         var updated = await db.Users.FindAsync(user.Id);
         Assert.NotNull(updated);
         Assert.Equal("John Updated", updated!.Name);
-        Assert.Equal("john.updated@example.com", updated.Email);
+        Assert.Equal("john@example.com", updated.Email);
+        Assert.Equal("john.updated@example.com", updated.PendingEmail);
+        Assert.False(string.IsNullOrWhiteSpace(updated.EmailConfirmationToken));
+        Assert.True(updated.EmailConfirmationTokenExpiry.HasValue);
     }
 
     [Fact]

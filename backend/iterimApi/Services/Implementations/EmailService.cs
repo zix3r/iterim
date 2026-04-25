@@ -35,6 +35,14 @@ public class EmailService : IEmailService
         await SendAsync(toEmail, toName, subject, body);
     }
 
+    public async Task SendEmailChangeConfirmationAsync(string toEmail, string toName, string confirmationToken)
+    {
+        var url = $"{_settings.FrontendBaseUrl}/confirm-email?token={Uri.EscapeDataString(confirmationToken)}";
+        var subject = "Patvirtinkite naują el. pašto adresą – Iterim";
+        var body = EmailTemplates.EmailChangeConfirmation(toName, url);
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
     public async Task SendPasswordResetAsync(string toEmail, string toName, string resetToken)
     {
         var url = $"{_settings.FrontendBaseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
