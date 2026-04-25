@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { BoardWorkItem } from '@/lib/api';
+import { TagBadge } from '@/components/shared/TagBadge';
 
 interface KanbanCardProps {
   item: BoardWorkItem;
@@ -60,7 +61,18 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
           <div className="font-medium text-sm leading-tight">{item.title}</div>
         </CardHeader>
         <CardContent className="p-3 pt-0 flex flex-col gap-2">
-          
+
+          {item.tags && item.tags.length > 0 && (
+            <div className="flex flex-wrap gap-0.5">
+              {item.tags.slice(0, 3).map(tag => (
+                <TagBadge key={tag.id} tag={tag} size="xs" />
+              ))}
+              {item.tags.length > 3 && (
+                <span className="text-[9px] text-muted-foreground self-center">+{item.tags.length - 3}</span>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 font-semibold ${getBadgeColor(item.type)}`}>
               {item.type.toUpperCase()}

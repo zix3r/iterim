@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, deleteOrganization } from '@/lib/api';
-import type { OrganizationDetail } from '@/lib/api';
+import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, deleteOrganization, getOrgTags, createOrgTag, deleteOrgTag } from '@/lib/api';
+import type { OrganizationDetail, Tag } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { AlertCircleIcon, Trash2Icon } from 'lucide-react';
+import { AlertCircleIcon, Trash2Icon, PlusIcon } from 'lucide-react';
+import { TagBadge } from '@/components/shared/TagBadge';
 import { AddMemberModal } from '../components/AddMemberModal';
 import { useToast } from '@/components/ui/toast';
 import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
@@ -24,6 +25,11 @@ export function OrganizationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const [orgTags, setOrgTags] = useState<Tag[]>([]);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('#6366f1');
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [showNewTagForm, setShowNewTagForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,11 +48,13 @@ export function OrganizationPage() {
       setError(null);
       Promise.all([
         getOrganizationById(Number(orgId)),
-        getProductsByOrganization(Number(orgId))
+        getProductsByOrganization(Number(orgId)),
+        getOrgTags(Number(orgId))
       ])
-        .then(([orgData, productsData]) => {
+        .then(([orgData, productsData, tagsData]) => {
           setOrganization(orgData);
           setProductCount(productsData.length);
+          setOrgTags(tagsData);
         })
         .catch((err) => {
           console.error('Failed to load organization:', err);
@@ -166,6 +174,36 @@ export function OrganizationPage() {
   }
   
   const canManageAllAbsences = organization.userRole === 'Admin';
+  const isAdmin = organization.userRole === 'Admin';
+
+  const handleCreateTag = async () => {
+    const name = newTagName.trim();
+    if (!name || !orgId) return;
+    setIsCreatingTag(true);
+    try {
+      const tag = await createOrgTag(Number(orgId), { name, color: newTagColor });
+      setOrgTags(prev => [...prev, tag]);
+      setNewTagName('');
+      setNewTagColor('#6366f1');
+      setShowNewTagForm(false);
+      toast({ variant: 'success', title: 'Tag created' });
+    } catch (err) {
+      toast({ variant: 'error', title: 'Error', description: err instanceof Error ? err.message : 'Failed to create tag' });
+    } finally {
+      setIsCreatingTag(false);
+    }
+  };
+
+  const handleDeleteTag = async (tagId: number) => {
+    if (!orgId) return;
+    try {
+      await deleteOrgTag(Number(orgId), tagId);
+      setOrgTags(prev => prev.filter(t => t.id !== tagId));
+      toast({ variant: 'success', title: 'Tag deleted' });
+    } catch (err) {
+      toast({ variant: 'error', title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete tag' });
+    }
+  };
 
   // 3. SĖKMINGA BŪSENA
   return (
@@ -302,6 +340,60 @@ export function OrganizationPage() {
           </Table>
         </div>
       </div>
+
+      {/* Tags Management (Admin only) */}
+      {isAdmin && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Tags</h2>
+            <Button variant="outline" size="sm" onClick={() => setShowNewTagForm(v => !v)}>
+              <PlusIcon className="h-4 w-4 mr-1" /> New Tag
+            </Button>
+          </div>
+
+          {showNewTagForm && (
+            <Card className="mb-4">
+              <CardContent className="py-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={newTagColor}
+                    onChange={e => setNewTagColor(e.target.value)}
+                    className="h-8 w-8 rounded border-0 p-0 bg-transparent cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={newTagName}
+                    onChange={e => setNewTagName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') handleCreateTag(); if (e.key === 'Escape') setShowNewTagForm(false); }}
+                    placeholder="Tag name (e.g. frontend)"
+                    className="flex-1 text-sm border rounded-md px-3 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={handleCreateTag} disabled={isCreatingTag || !newTagName.trim()}>
+                    {isCreatingTag ? 'Creating…' : 'Create'}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowNewTagForm(false)}>Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardContent className="py-4">
+              {orgTags.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No tags yet. Create tags to use them in work items and assign them to team members.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {orgTags.map(tag => (
+                    <TagBadge key={tag.id} tag={tag} onRemove={() => handleDeleteTag(tag.id)} />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Dialog open={deleteOrgDialogOpen} onOpenChange={setDeleteOrgDialogOpen}>
         <DialogContent>

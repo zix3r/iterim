@@ -1,4 +1,5 @@
 using iterimApi.Data;
+using iterimApi.DTOs.Tags;
 using iterimApi.DTOs.Teams;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
@@ -73,6 +74,9 @@ public class TeamService : ITeamService
             .Include(t => t.Members)
                 .ThenInclude(m => m.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(t => t.Members)
+                .ThenInclude(m => m.Tags)
+                .ThenInclude(tmt => tmt.Tag)
             .FirstOrDefaultAsync(t => t.Id == teamId);
 
         if (team == null)
@@ -115,7 +119,15 @@ public class TeamService : ITeamService
                 UserName = m.OrgMember.User.Name,
                 UserEmail = m.OrgMember.User.Email,
                 Role = m.Role.ToString(),
-                CreatedAt = m.CreatedAt
+                CreatedAt = m.CreatedAt,
+                Tags = m.Tags.Select(tmt => new TagDto
+                {
+                    Id = tmt.Tag.Id,
+                    OrganizationId = tmt.Tag.OrganizationId,
+                    Name = tmt.Tag.Name,
+                    Color = tmt.Tag.Color,
+                    CreatedAt = tmt.Tag.CreatedAt
+                }).ToList()
             }).ToList()
         };
     }

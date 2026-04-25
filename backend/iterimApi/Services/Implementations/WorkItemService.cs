@@ -1,4 +1,5 @@
 using iterimApi.Data;
+using iterimApi.DTOs.Tags;
 using iterimApi.DTOs.Teams;
 using iterimApi.DTOs.WorkItems;
 using iterimApi.Models.Entities;
@@ -52,6 +53,8 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
             .OrderByDescending(wi => wi.CreatedAt)
             .ToListAsync();
 
@@ -70,6 +73,8 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
             .OrderBy(wi => wi.Position)
             .ThenByDescending(wi => wi.CreatedAt)
             .ToListAsync();
@@ -103,6 +108,8 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -385,7 +392,15 @@ public class WorkItemService : IWorkItemService
             UpdatedBy = wi.UpdatedBy,
             CreatedByName = wi.CreatedByUser.Name,
             UpdatedByName = wi.UpdatedByUser.Name,
-            AssignedMember = assignedMemberDto
+            AssignedMember = assignedMemberDto,
+            Tags = wi.Tags.Select(wit => new TagDto
+            {
+                Id = wit.Tag.Id,
+                OrganizationId = wit.Tag.OrganizationId,
+                Name = wit.Tag.Name,
+                Color = wit.Tag.Color,
+                CreatedAt = wit.Tag.CreatedAt
+            }).ToList()
         };
     }
 }

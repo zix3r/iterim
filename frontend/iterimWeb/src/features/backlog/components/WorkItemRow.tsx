@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, User } from 'lucide-react';
 import type { WorkItem } from '@/lib/api';
+import { TagBadge } from '@/components/shared/TagBadge';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   Story: { label: 'STORY', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
@@ -78,7 +79,19 @@ export function WorkItemRow({ item, readOnly = false, onClick }: Props) {
       </span>
 
       {/* Title */}
-      <span className="flex-1 text-sm font-medium truncate">{item.title}</span>
+      <span className="flex-1 min-w-0 text-sm font-medium truncate">{item.title}</span>
+
+      {/* Tags */}
+      {item.tags && item.tags.length > 0 && (
+        <span className="flex items-center gap-0.5 shrink-0">
+          {item.tags.slice(0, 3).map(tag => (
+            <TagBadge key={tag.id} tag={tag} size="xs" />
+          ))}
+          {item.tags.length > 3 && (
+            <span className="text-[9px] text-muted-foreground">+{item.tags.length - 3}</span>
+          )}
+        </span>
+      )}
 
       {/* Status */}
       <span className={`text-[10px] font-medium px-2 py-0.5 rounded shrink-0 ${statusConfig.color}`}>

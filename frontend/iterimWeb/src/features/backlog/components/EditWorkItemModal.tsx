@@ -6,8 +6,9 @@ import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { updateWorkItem, deleteWorkItem } from '@/lib/api';
-import type { WorkItem, TeamMember } from '@/lib/api';
+import { updateWorkItem, deleteWorkItem, assignWorkItemTags } from '@/lib/api';
+import type { WorkItem, TeamMember, Tag } from '@/lib/api';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 import { Trash2 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ const PRIORITY_MAP: Record<string, number> = { Low: 0, Medium: 1, High: 2, Criti
 
 interface Props {
   item: WorkItem | null;
+  orgId: number;
   members: TeamMember[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -57,9 +59,10 @@ interface EditWorkItemFormValues {
   type: number;
 }
 
-export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated }: Props) {
+export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, onUpdated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const { toast } = useToast();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<EditWorkItemFormValues>(
@@ -99,6 +102,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
         iterationId: item.iterationId?.toString() ?? '',
         type: TYPE_MAP[item.type] ?? 0,
       });
+      setSelectedTags(item.tags ?? []);
       setConfirmDelete(false);
     }
   }, [item, resetForm]);
@@ -127,6 +131,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
         assignedTo: values.assignedTo ? Number(values.assignedTo) : null,
         iterationId: values.iterationId ? Number(values.iterationId) : null,
       });
+      await assignWorkItemTags(item.id, selectedTags.map(t => t.id));
       toast({ variant: 'success', title: 'Work item updated' });
       onOpenChange(false);
       onUpdated();
@@ -264,6 +269,16 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Tags</label>
+            <TagSelector
+              orgId={orgId}
+              selected={selectedTags}
+              onChange={setSelectedTags}
+              disabled={isLoading}
+            />
           </div>
 
           <div>

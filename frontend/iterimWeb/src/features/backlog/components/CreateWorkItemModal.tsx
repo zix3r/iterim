@@ -6,9 +6,10 @@ import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { createWorkItem } from '@/lib/api';
-import type { TeamMember } from '@/lib/api';
+import { createWorkItem, assignWorkItemTags } from '@/lib/api';
+import type { TeamMember, Tag } from '@/lib/api';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
+import { TagSelector } from '@/components/shared/TagSelector';
 
 const TYPE_OPTIONS = [
   { value: 0, label: 'Story', emoji: '🟦' },
@@ -25,6 +26,7 @@ const PRIORITY_OPTIONS = [
 
 interface Props {
   teamId: number;
+  orgId: number;
   members: TeamMember[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -41,8 +43,9 @@ interface CreateWorkItemFormValues {
   assignedTo: string;
 }
 
-export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defaultType = 0, onCreated }: Props) {
+export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange, defaultType = 0, onCreated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const { toast } = useToast();
 
   const emptyState: CreateWorkItemFormValues = {
@@ -65,6 +68,7 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
   useEffect(() => {
     if (!open) {
       resetForm({ ...emptyState });
+      setSelectedTags([]);
     }
   }, [defaultType, open, resetForm]);
 
@@ -89,7 +93,7 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
 
     setIsLoading(true);
     try {
-      await createWorkItem(teamId, {
+      const created = await createWorkItem(teamId, {
         title: values.title.trim(),
         description: values.description.trim() || undefined,
         type: values.type,
@@ -97,9 +101,13 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
         points: values.points ? Number(values.points) : undefined,
         assignedTo: values.assignedTo ? Number(values.assignedTo) : undefined,
       });
+      if (selectedTags.length > 0) {
+        await assignWorkItemTags(created.id, selectedTags.map(t => t.id));
+      }
       toast({ variant: 'success', title: 'Work item created' });
       onOpenChange(false);
       resetForm();
+      setSelectedTags([]);
       onCreated();
     } catch (error) {
       toast({
@@ -204,6 +212,16 @@ export function CreateWorkItemModal({ teamId, members, open, onOpenChange, defau
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Tags</label>
+            <TagSelector
+              orgId={orgId}
+              selected={selectedTags}
+              onChange={setSelectedTags}
+              disabled={isLoading}
+            />
           </div>
 
           <div>

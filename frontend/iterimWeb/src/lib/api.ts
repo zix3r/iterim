@@ -76,6 +76,16 @@ export interface UpdateProductRequest {
   description?: string;
 }
 
+// ── Tag Types ─────────────────────────────────────────────────
+
+export interface Tag {
+  id: number;
+  organizationId: number;
+  name: string;
+  color: string;
+  createdAt: string;
+}
+
 // Teams
 export interface TeamMember {
   id: number;
@@ -86,6 +96,7 @@ export interface TeamMember {
   userEmail: string;
   role: string;
   createdAt: string;
+  tags: Tag[];
 }
 
 export interface Team {
@@ -149,6 +160,7 @@ export interface WorkItem {
   createdByName: string;
   updatedByName: string;
   assignedMember: TeamMember | null;
+  tags: Tag[];
 }
 
 export interface CreateWorkItemRequest {
@@ -821,6 +833,7 @@ export interface BoardWorkItem {
   type: string;
   points: number | null;
   assignedMember: BoardAssignedMember | null;
+  tags: Tag[];
 }
 
 export interface BoardColumn {
@@ -1149,3 +1162,45 @@ export const getHealthDetail = (): Promise<HealthReport> => {
     return r.json();
   });
 };
+
+// ── Tags API ──────────────────────────────────────────────────
+
+export const getOrgTags = (orgId: number): Promise<Tag[]> =>
+  fetchWithAuth(`/organizations/${orgId}/tags`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createOrgTag = (orgId: number, data: { name: string; color: string }): Promise<Tag> =>
+  fetchWithAuth(`/organizations/${orgId}/tags`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteOrgTag = (orgId: number, tagId: number): Promise<void> =>
+  fetchWithAuth(`/organizations/${orgId}/tags/${tagId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const assignWorkItemTags = (workItemId: number, tagIds: number[]): Promise<Tag[]> =>
+  fetchWithAuth(`/workitems/${workItemId}/tags`, {
+    method: 'PUT',
+    body: JSON.stringify({ tagIds }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const assignTeamMemberTags = (teamId: number, memberId: number, tagIds: number[]): Promise<Tag[]> =>
+  fetchWithAuth(`/teams/${teamId}/members/${memberId}/tags`, {
+    method: 'PUT',
+    body: JSON.stringify({ tagIds }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
-import { getTeamById, getOrganizationById, removeTeamMember, deleteTeam, updateTeamMemberRole } from '@/lib/api';
-import type { TeamDetail, OrganizationDetail } from '@/lib/api';
+import { getTeamById, getOrganizationById, removeTeamMember, deleteTeam, updateTeamMemberRole, assignTeamMemberTags } from '@/lib/api';
+import type { TeamDetail, OrganizationDetail, TeamMember, Tag } from '@/lib/api';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AddTeamMemberModal } from '@/features/teams/components/AddTeamMemberModal';
@@ -10,7 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
-import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon } from 'lucide-react';
+import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon, TagIcon } from 'lucide-react';
+import { TagBadge } from '@/components/shared/TagBadge';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { Link } from 'react-router';
 import { addRecentPage } from '@/lib/recentPages';
 import { usePinnedTeams } from '@/lib/favorites';
@@ -28,6 +30,9 @@ export function TeamDetailPage() {
   const [editTeamDialogOpen, setEditTeamDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [tagEditMember, setTagEditMember] = useState<TeamMember | null>(null);
+  const [tagEditSelected, setTagEditSelected] = useState<Tag[]>([]);
+  const [isSavingTags, setIsSavingTags] = useState(false);
   const { toast } = useToast();
   const { isPinned, togglePin } = usePinnedTeams();
 
@@ -140,6 +145,21 @@ export function TeamDetailPage() {
         description: errorMessage
       });
       loadTeam();
+    }
+  };
+
+  const handleSaveMemberTags = async () => {
+    if (!tagEditMember || !teamId) return;
+    setIsSavingTags(true);
+    try {
+      await assignTeamMemberTags(Number(teamId), tagEditMember.id, tagEditSelected.map(t => t.id));
+      toast({ variant: 'success', title: 'Tags updated' });
+      setTagEditMember(null);
+      loadTeam();
+    } catch (err) {
+      toast({ variant: 'error', title: 'Error', description: err instanceof Error ? err.message : 'Failed to update tags' });
+    } finally {
+      setIsSavingTags(false);
     }
   };
 
@@ -338,7 +358,7 @@ export function TeamDetailPage() {
               <Card key={member.id}>
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium">{member.userName}</h3>
                         {isMemberTeamCreator && (
@@ -351,6 +371,11 @@ export function TeamDetailPage() {
                       <p className="text-xs text-muted-foreground mt-1">
                         Added {formatDate(member.createdAt)}
                       </p>
+                      {member.tags && member.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {member.tags.map(tag => <TagBadge key={tag.id} tag={tag} size="xs" />)}
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       {canManageTeam ? (
@@ -372,9 +397,22 @@ export function TeamDetailPage() {
                           {member.role}
                         </span>
                       )}
+                      {canManageTeam && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setTagEditMember(member);
+                            setTagEditSelected(member.tags ?? []);
+                          }}
+                          title="Edit tags"
+                        >
+                          <TagIcon className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )}
                       {canManageTeam && !isMemberTeamCreator && (
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           onClick={() => {
                             setMemberToDelete(member.userId);
@@ -429,6 +467,30 @@ export function TeamDetailPage() {
               disabled={isDeleting}
             >
               {isDeleting ? 'Removing...' : 'Remove'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Member Tags Dialog */}
+      <Dialog open={!!tagEditMember} onOpenChange={(v) => { if (!v) setTagEditMember(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Tags — {tagEditMember?.userName}</DialogTitle>
+            <DialogDescription>Assign skill tags to this team member.</DialogDescription>
+          </DialogHeader>
+          {tagEditMember && (
+            <TagSelector
+              orgId={Number(orgId)}
+              selected={tagEditSelected}
+              onChange={setTagEditSelected}
+              disabled={isSavingTags}
+            />
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTagEditMember(null)} disabled={isSavingTags}>Cancel</Button>
+            <Button onClick={handleSaveMemberTags} disabled={isSavingTags}>
+              {isSavingTags ? 'Saving…' : 'Save Tags'}
             </Button>
           </DialogFooter>
         </DialogContent>

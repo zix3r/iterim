@@ -23,6 +23,9 @@ public class AppDbContext : DbContext
     public DbSet<MemberAbsence> MemberAbsences => Set<MemberAbsence>();
     public DbSet<RecentPage> RecentPages => Set<RecentPage>();
     public DbSet<PinnedTeam> PinnedTeams => Set<PinnedTeam>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<WorkItemTag> WorkItemTags => Set<WorkItemTag>();
+    public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -340,6 +343,53 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(ma => ma.UpdatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Tag ─────────────────────────────────────────────
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasIndex(t => t.OrganizationId);
+            entity.HasIndex(t => new { t.OrganizationId, t.Name }).IsUnique();
+
+            entity.Property(t => t.Name).HasMaxLength(100);
+            entity.Property(t => t.Color).HasMaxLength(20);
+
+            entity.HasOne(t => t.Organization)
+                .WithMany(o => o.Tags)
+                .HasForeignKey(t => t.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── WorkItemTag ──────────────────────────────────────
+        modelBuilder.Entity<WorkItemTag>(entity =>
+        {
+            entity.HasKey(wit => new { wit.WorkItemId, wit.TagId });
+
+            entity.HasOne(wit => wit.WorkItem)
+                .WithMany(wi => wi.Tags)
+                .HasForeignKey(wit => wit.WorkItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(wit => wit.Tag)
+                .WithMany(t => t.WorkItemTags)
+                .HasForeignKey(wit => wit.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── TeamMemberTag ────────────────────────────────────
+        modelBuilder.Entity<TeamMemberTag>(entity =>
+        {
+            entity.HasKey(tmt => new { tmt.TeamMemberId, tmt.TagId });
+
+            entity.HasOne(tmt => tmt.TeamMember)
+                .WithMany(tm => tm.Tags)
+                .HasForeignKey(tmt => tmt.TeamMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(tmt => tmt.Tag)
+                .WithMany(t => t.TeamMemberTags)
+                .HasForeignKey(tmt => tmt.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

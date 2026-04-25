@@ -1,3 +1,4 @@
+using iterimApi.DTOs.Tags;
 using iterimApi.DTOs.Teams;
 
 namespace iterimApi.DTOs.WorkItems;
@@ -22,4 +23,5 @@ public class WorkItemDto
     public string CreatedByName { get; set; } = string.Empty;
     public string UpdatedByName { get; set; } = string.Empty;
     public TeamMemberDto? AssignedMember { get; set; }
+    public List<TagDto> Tags { get; set; } = [];
 }

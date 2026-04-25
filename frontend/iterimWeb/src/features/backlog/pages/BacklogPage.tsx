@@ -10,8 +10,8 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { Plus, History, AlertCircle, ListTodo } from 'lucide-react';
 import {
-  getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById,
-  updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup,
+  getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
+  updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
 } from '@/lib/api';
 
 import { IterationSection } from '../components/IterationSection';
@@ -46,8 +46,10 @@ export function BacklogPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
+  const [orgTags, setOrgTags] = useState<Tag[]>([]);
 
   // Modals
   const [createItemOpen, setCreateItemOpen] = useState(false);
@@ -69,16 +71,18 @@ export function BacklogPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const [groupsData, itersData, teamData, orgData] = await Promise.all([
+      const [groupsData, itersData, teamData, orgData, tagsData] = await Promise.all([
         getWorkItemsGrouped(tid),
         getIterationsByTeam(tid),
         getTeamById(tid),
         getOrganizationById(Number(orgId)),
+        getOrgTags(Number(orgId)),
       ]);
       setGroups(groupsData);
       setIterations(itersData);
       setTeam(teamData);
       setOrg(orgData);
+      setOrgTags(tagsData);
     } catch (err) {
       console.error('Failed to load backlog:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load backlog data.';
@@ -111,6 +115,7 @@ export function BacklogPage() {
       if (assigneeFilter === 'unassigned' && wi.assignedTo !== null) return false;
       if (assigneeFilter && assigneeFilter !== 'unassigned' && wi.assignedTo !== Number(assigneeFilter)) return false;
       if (searchQuery && !wi.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (tagFilter && !wi.tags?.some(t => t.id === Number(tagFilter))) return false;
       return true;
     });
   };
@@ -369,11 +374,14 @@ export function BacklogPage() {
             typeFilter={typeFilter}
             statusFilter={statusFilter}
             assigneeFilter={assigneeFilter}
+            tagFilter={tagFilter}
             searchQuery={searchQuery}
             members={members}
+            orgTags={orgTags}
             onTypeChange={setTypeFilter}
             onStatusChange={setStatusFilter}
             onAssigneeChange={setAssigneeFilter}
+            onTagChange={setTagFilter}
             onSearchChange={setSearchQuery}
           />
 
@@ -457,6 +465,7 @@ export function BacklogPage() {
       {/* Modals */}
       <CreateWorkItemModal
         teamId={tid}
+        orgId={Number(orgId)}
         members={members}
         open={createItemOpen}
         onOpenChange={setCreateItemOpen}
@@ -465,6 +474,7 @@ export function BacklogPage() {
 
       <EditWorkItemModal
         item={editItem}
+        orgId={Number(orgId)}
         members={members}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}

@@ -19,4 +19,5 @@ public class TeamMember
     public User CreatedByUser { get; set; } = null!;
     public User UpdatedByUser { get; set; } = null!;
     public ICollection<WorkItem> AssignedWorkItems { get; set; } = [];
+    public ICollection<TeamMemberTag> Tags { get; set; } = [];
 }
