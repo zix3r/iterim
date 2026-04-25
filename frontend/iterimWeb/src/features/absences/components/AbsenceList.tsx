@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { deleteAbsence } from '@/lib/api';
 import type { MemberAbsence, OrganizationMember } from '@/lib/api';
@@ -41,17 +42,19 @@ interface Props {
 
 export function AbsenceList({ absences, members, currentUserId, canManageAllAbsences, onChanged }: Props) {
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MemberAbsence | null>(null);
   const { toast } = useToast();
 
   const orgMemberUserById = new Map(members.map((member) => [member.id, member.userId]));
 
-  const handleDelete = async (absenceId: number) => {
-    if (!confirm('Are you sure you want to delete this absence?')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
-    setDeletingId(absenceId);
+    setDeletingId(deleteTarget.id);
     try {
-      await deleteAbsence(absenceId);
+      await deleteAbsence(deleteTarget.id);
       toast({ variant: 'success', title: 'Absence deleted successfully' });
+      setDeleteTarget(null);
       onChanged();
     } catch (error) {
       toast({
@@ -119,7 +122,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDelete(absence.id)}
+                    onClick={() => setDeleteTarget(absence)}
                     disabled={deletingId === absence.id}
                   >
                     <Trash2Icon className="h-4 w-4" />
@@ -133,6 +136,33 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Absence</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this absence for "{deleteTarget?.memberName}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deletingId === deleteTarget?.id}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deletingId === deleteTarget?.id}
+            >
+              {deletingId === deleteTarget?.id ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
