@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { createOrganization } from '@/lib/api';
 import { maxLength, required } from '@/lib/validation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   onCreated: () => void;
@@ -16,6 +17,7 @@ export function CreateOrganizationModal({ onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation(
     {
@@ -39,7 +41,7 @@ export function CreateOrganizationModal({ onCreated }: Props) {
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -49,7 +51,7 @@ export function CreateOrganizationModal({ onCreated }: Props) {
       await createOrganization(values.name.trim());
       toast({
         variant: 'success',
-        title: 'Organization created successfully',
+        title: t('organizations.memberInvited'),
       });
       setOpen(false);
       resetForm();
@@ -57,8 +59,8 @@ export function CreateOrganizationModal({ onCreated }: Props) {
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Failed to create organization',
-        description: getMessageFromError(error, 'Please try again.'),
+        title: t('organizations.failedCreate'),
+        description: getMessageFromError(error, t('common.retry')),
       });
     } finally {
       setIsLoading(false);
@@ -76,13 +78,13 @@ export function CreateOrganizationModal({ onCreated }: Props) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>Create Organization</Button>
+        <Button>{t('organizations.create')}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Organization</DialogTitle>
+          <DialogTitle>{t('organizations.createTitle')}</DialogTitle>
           <DialogDescription>
-            Create a new organization to manage your products and teams.
+            {t('organizations.createDescription')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -104,9 +106,9 @@ export function CreateOrganizationModal({ onCreated }: Props) {
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isLoading}>Create</Button>
+            <Button type="submit" disabled={isLoading}>{t('common.create')}</Button>
           </div>
         </form>
       </DialogContent>

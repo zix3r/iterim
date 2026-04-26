@@ -4,6 +4,7 @@ import type { WorkItemDependency } from '@/lib/api';
 import { Lock } from 'lucide-react';
 import { useState } from 'react';
 import { DependencyDetailModal } from '@/features/backlog/components/DependencyDetailModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   Backlog: { label: 'Backlog', color: 'bg-zinc-100 text-zinc-600' },
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function BlockerErrorModal({ blockers, open, onOpenChange }: Props) {
+  const { t } = useLanguage();
   const [detailDep, setDetailDep] = useState<WorkItemDependency | null>(null);
 
   return (
@@ -29,12 +31,12 @@ export function BlockerErrorModal({ blockers, open, onOpenChange }: Props) {
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Lock className="h-4 w-4 text-amber-500" />
-              <DialogTitle>Negalima pradėti</DialogTitle>
+              <DialogTitle>{t('board.blockerError')}</DialogTitle>
             </div>
           </DialogHeader>
           <div className="mt-1 space-y-3">
             <p className="text-sm text-muted-foreground">
-              Šis work item turi neužbaigtų blokerių. Prieš perkeliant į "In Progress", visi blokeriai turi būti "Done":
+              {t('board.blockerErrorMessage')}
             </p>
             <div className="space-y-1">
               {blockers.map(b => {
@@ -55,7 +57,7 @@ export function BlockerErrorModal({ blockers, open, onOpenChange }: Props) {
               })}
             </div>
             <div className="flex justify-end">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>Uždaryti</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.close')}</Button>
             </div>
           </div>
         </DialogContent>

@@ -4,6 +4,7 @@ import { LayoutDashboard, LogOut, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { RecentPages } from './RecentPages';
 import { NavTree } from './nav/NavTree';
 import { CollapsibleSection } from './nav/CollapsibleSection';
@@ -14,6 +15,7 @@ export function SidebarContent() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { pinnedTeams } = usePinnedTeams();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -41,13 +43,13 @@ export function SidebarContent() {
                 location.pathname === '/dashboard' ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground/60',
               )}
             />
-            Dashboard
+            {t('sidebar.dashboard')}
           </Link>
 
           {/* Pinned Teams */}
           {pinnedTeams.length > 0 && (
             <div className="mt-4">
-              <CollapsibleSection title="Pinned" storageKey="nav-collapse-pinned">
+              <CollapsibleSection title={t('sidebar.pinned')} storageKey="nav-collapse-pinned">
                 <PinnedTeams />
               </CollapsibleSection>
             </div>
@@ -56,14 +58,14 @@ export function SidebarContent() {
           {/* My Organizations tree */}
           <div className="mt-4">
             <div className="px-2 mb-2">
-              <h3 className="text-[10px] font-bold text-sidebar-foreground/60 uppercase tracking-widest">My Organizations</h3>
+              <h3 className="text-[10px] font-bold text-sidebar-foreground/60 uppercase tracking-widest">{t('sidebar.myOrganizations')}</h3>
             </div>
             <NavTree />
           </div>
 
           {/* Recent Pages */}
           <div className="mt-4">
-            <CollapsibleSection title="Recent Pages" storageKey="nav-collapse-recent">
+            <CollapsibleSection title={t('sidebar.recentPages')} storageKey="nav-collapse-recent">
               <RecentPages />
             </CollapsibleSection>
           </div>
@@ -94,7 +96,7 @@ export function SidebarContent() {
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          {t('sidebar.logout')}
         </Button>
       </div>
     </div>

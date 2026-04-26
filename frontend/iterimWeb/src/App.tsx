@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router';
+import { Routes, Route, Navigate, useLocation } from 'react-router';
 import { MainLayout } from '@/components/layout/main-layout';
+import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { MyTeamsTreeProvider } from '@/context/MyTeamsTreeContext';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { OrganizationPage } from '@/features/organizations/pages/OrganizationPage';
@@ -26,6 +27,31 @@ import { AdminSystemPage } from '@/features/admin/pages/AdminSystemPage';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/context/AuthContext';
 
+// Maršrutai, kuriuose nerodomas Header/AdminLayout — jiems reikia
+// atskiro plūduriuojančio kalbos perjungiklio.
+const PUBLIC_ROUTE_PREFIXES = [
+  '/login',
+  '/register',
+  '/check-email',
+  '/confirm-email',
+  '/forgot-password',
+  '/reset-password',
+];
+
+function FloatingLanguageToggle() {
+  const location = useLocation();
+  const isPublicRoute = PUBLIC_ROUTE_PREFIXES.some((prefix) =>
+    location.pathname.startsWith(prefix),
+  );
+  if (!isPublicRoute) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50">
+      <LanguageToggle className="bg-background/90 border border-border shadow-sm backdrop-blur" />
+    </div>
+  );
+}
+
 function App() {
   const { user } = useAuth();
 
@@ -33,6 +59,7 @@ function App() {
     <ThemeProvider serverTheme={user?.theme}>
       <ErrorBoundary>
         <ToastProvider>
+          <FloatingLanguageToggle />
           <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />

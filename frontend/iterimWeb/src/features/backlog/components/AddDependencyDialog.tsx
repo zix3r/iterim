@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/toast';
 import { addWorkItemDependency, searchWorkItems } from '@/lib/api';
 import type { WorkItem, WorkItemDependency } from '@/lib/api';
 import { Search, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   Backlog: { label: 'Backlog', color: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
@@ -28,6 +29,7 @@ export function AddDependencyDialog({ workItemId, existingBlockerIds, open, onOp
   const [isSearching, setIsSearching] = useState(false);
   const [addingId, setAddingId] = useState<number | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -63,11 +65,11 @@ export function AddDependencyDialog({ workItemId, existingBlockerIds, open, onOp
     try {
       const dep = await addWorkItemDependency(workItemId, blocker.id);
       onAdded(dep);
-      toast({ variant: 'success', title: `"${blocker.title}" pridėta kaip blokeris` });
+      toast({ variant: 'success', title: `"${blocker.title}" ${t('common.add')}` });
     } catch (err) {
       toast({
         variant: 'error',
-        title: 'Nepavyko pridėti',
+        title: t('common.error'),
         description: err instanceof Error ? err.message : 'Klaida pridedant priklausomybę',
       });
     } finally {
@@ -79,13 +81,13 @@ export function AddDependencyDialog({ workItemId, existingBlockerIds, open, onOp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Pridėti blokerį</DialogTitle>
+          <DialogTitle>{t('backlog.addDependency')}</DialogTitle>
         </DialogHeader>
         <div className="mt-2 space-y-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Ieškoti work itemų..."
+              placeholder={t('backlog.searchPlaceholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
               className="pl-8"
@@ -94,11 +96,11 @@ export function AddDependencyDialog({ workItemId, existingBlockerIds, open, onOp
           </div>
 
           {isSearching && (
-            <div className="text-sm text-muted-foreground text-center py-2">Ieškoma...</div>
+            <div className="text-sm text-muted-foreground text-center py-2">{t('common.loading')}</div>
           )}
 
           {!isSearching && query.trim().length >= 2 && results.length === 0 && (
-            <div className="text-sm text-muted-foreground text-center py-2">Nerasta</div>
+            <div className="text-sm text-muted-foreground text-center py-2">{t('common.notFound')}</div>
           )}
 
           {results.length > 0 && (
@@ -133,7 +135,7 @@ export function AddDependencyDialog({ workItemId, existingBlockerIds, open, onOp
                       {statusConfig.label}
                     </span>
                     {addingId === item.id && (
-                      <span className="text-xs text-muted-foreground">Pridedama...</span>
+                      <span className="text-xs text-muted-foreground">{t('common.creating')}</span>
                     )}
                   </button>
                 );

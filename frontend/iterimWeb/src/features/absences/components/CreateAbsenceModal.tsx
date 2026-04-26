@@ -10,6 +10,7 @@ import { createOrganizationAbsence } from '@/lib/api';
 import type { AbsenceReason, OrganizationMember } from '@/lib/api';
 import { dateOnOrAfter, required, requiredWhen } from '@/lib/validation';
 import { PlusIcon } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const REASON_OPTIONS: AbsenceReason[] = ['Vacation', 'Sick', 'Late', 'Absent', 'Other'];
 
@@ -45,6 +46,7 @@ export function CreateAbsenceModal({
   triggerSize = 'default',
   triggerDisabled = false,
 }: Props) {
+  const { t } = useLanguage();
   const activeMembers = useMemo(
     () => members.filter((member) => member.status === 'Active'),
     [members],
@@ -73,15 +75,15 @@ export function CreateAbsenceModal({
       otherReason: '',
     },
     {
-      orgMemberId: [required('Member')],
-      fromDate: [required('From date')],
-      toDate: [required('To date'), dateOnOrAfter('fromDate', 'To date must be after or equal to from date.')],
-      reason: [required('Reason')],
+      orgMemberId: [required(t('common.name'))],
+      fromDate: [required(t('absences.startDate'))],
+      toDate: [required(t('absences.endDate')), dateOnOrAfter('fromDate', t('validation.endBeforeStart'))],
+      reason: [required(t('absences.reason'))],
       otherReason: [
         requiredWhen(
           'reason',
           (value) => value === 'Other',
-          'Reason details are required when reason is Other.',
+          t('validation.fieldRequired'),
         ),
       ],
     },
@@ -105,12 +107,12 @@ export function CreateAbsenceModal({
     const submitOrgMemberId = shouldLockMemberSelection ? resolvedInitialMemberId : values.orgMemberId;
 
     if (!submitOrgMemberId) {
-      toast({ variant: 'warning', title: 'Please select a member' });
+      toast({ variant: 'warning', title: t('validation.fieldRequired') });
       return;
     }
 
     if (!validateForm()) {
-      toast({ variant: 'warning', title: 'Please fix validation errors' });
+      toast({ variant: 'warning', title: t('common.error') });
       return;
     }
 
@@ -124,15 +126,15 @@ export function CreateAbsenceModal({
         otherReason: values.otherReason.trim() || undefined,
       });
 
-      toast({ variant: 'success', title: 'Absence registered successfully' });
+      toast({ variant: 'success', title: t('common.success') });
       setOpen(false);
       resetAbsenceForm();
       onCreated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Failed to register absence',
-        description: getMessageFromError(error, 'Please try again.'),
+        title: t('absences.failedCreate'),
+        description: getMessageFromError(error, t('common.tryAgain')),
       });
     } finally {
       setIsLoading(false);
@@ -155,16 +157,16 @@ export function CreateAbsenceModal({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Absence</DialogTitle>
+          <DialogTitle>{t('absences.createTitle')}</DialogTitle>
           <DialogDescription>
-            Register vacation, sick leave, or other absence for an organization member.
+            {t('absences.create')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-member">
-              Member <span className="text-destructive">*</span>
+              {t('common.name')} <span className="text-destructive">*</span>
             </label>
             {shouldLockMemberSelection ? (
               <Input
@@ -184,7 +186,7 @@ export function CreateAbsenceModal({
                 aria-invalid={!!errors.orgMemberId}
                 aria-describedby={errors.orgMemberId ? 'create-absence-member-error' : undefined}
               >
-                <option value="">Select a member</option>
+                <option value="">{t('common.none')}</option>
                 {activeMembers.map((member) => (
                   <option key={member.id} value={member.id.toString()}>
                     {member.email}
@@ -198,7 +200,7 @@ export function CreateAbsenceModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium block mb-2" htmlFor="create-absence-from-date">
-                From date <span className="text-destructive">*</span>
+                {t('absences.startDate')} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="create-absence-from-date"
@@ -214,7 +216,7 @@ export function CreateAbsenceModal({
             </div>
             <div>
               <label className="text-sm font-medium block mb-2" htmlFor="create-absence-to-date">
-                To date <span className="text-destructive">*</span>
+                {t('absences.endDate')} <span className="text-destructive">*</span>
               </label>
               <Input
                 id="create-absence-to-date"
@@ -232,7 +234,7 @@ export function CreateAbsenceModal({
 
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-reason">
-              Reason <span className="text-destructive">*</span>
+              {t('absences.reason')} <span className="text-destructive">*</span>
             </label>
             <select
               id="create-absence-reason"
@@ -255,13 +257,13 @@ export function CreateAbsenceModal({
 
           <div>
             <label className="text-sm font-medium block mb-2" htmlFor="create-absence-other-reason">
-              Reason details {values.reason === 'Other' ? '(required)' : '(optional)'}
+              {t('absences.reason')} {values.reason === 'Other' ? `(${t('common.required')})` : `(${t('common.optional')})`}
             </label>
             <Textarea
               id="create-absence-other-reason"
               value={values.otherReason}
               onChange={(e) => setFieldValue('otherReason', e.target.value)}
-              placeholder="Describe the reason"
+              placeholder={t('absences.reasonPlaceholder')}
               disabled={isLoading}
               rows={3}
               required={values.reason === 'Other'}
@@ -273,10 +275,10 @@ export function CreateAbsenceModal({
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" disabled={isLoading} onClick={() => setOpen(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || activeMembers.length === 0}>
-              {isLoading ? 'Saving...' : 'Save'}
+              {isLoading ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         </form>

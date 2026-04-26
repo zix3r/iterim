@@ -4,6 +4,7 @@ import { useNavExpansion } from '@/hooks/useNavExpansion';
 import { NavRow } from './NavRow';
 import { NavTreeTeam } from './NavTreeTeam';
 import type { DashboardTeam } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   teams: DashboardTeam[];
@@ -13,6 +14,7 @@ interface Props {
 
 export function NavTreeTeamsGroup({ teams, orgId, productId }: Props) {
   const location = useLocation();
+  const { t } = useLanguage();
   const autoOpen = location.pathname.includes(`/products/${productId}/teams`);
   const [expanded, toggle] = useNavExpansion(`nav-expand-teams-${productId}`, autoOpen);
 
@@ -20,7 +22,7 @@ export function NavTreeTeamsGroup({ teams, orgId, productId }: Props) {
     <div>
       <NavRow
         to={`/org/${orgId}/products/${productId}/teams`}
-        label="Teams"
+        label={t('layout.breadcrumbTeams')}
         icon={Users2}
         depth={3}
         expandable

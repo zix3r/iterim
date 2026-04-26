@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { email, minLength, required } from '@/lib/validation';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 function PasswordReq({ met, label }: { met: boolean; label: string }) {
   return (
@@ -19,6 +20,7 @@ function PasswordReq({ met, label }: { met: boolean; label: string }) {
 
 export function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [error, setError] = useState('');
@@ -58,11 +60,11 @@ export function RegisterPage() {
     const customErrors: Partial<Record<'name' | 'email' | 'password' | 'confirm', string>> = {};
 
     if (values.password && !pwdValid) {
-      customErrors.password = 'Password does not meet requirements';
+      customErrors.password = t('auth.passwordRequirementsNotMet');
     }
 
     if (values.confirm && values.password !== values.confirm) {
-      customErrors.confirm = 'Passwords do not match';
+      customErrors.confirm = t('auth.passwordsDontMatch');
     }
 
     if (hasBasicErrors || Object.keys(customErrors).length > 0) {
@@ -78,7 +80,7 @@ export function RegisterPage() {
       await register(values.name.trim(), trimmedEmail, values.password);
       navigate('/check-email', { replace: true, state: { email: trimmedEmail } });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed.';
+      const errorMessage = err instanceof Error ? err.message : t('auth.registrationFailed');
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -92,8 +94,8 @@ export function RegisterPage() {
           <h1 className="auth-title">iterim</h1>
         </div>
 
-        <h2 className="auth-heading">Create account</h2>
-        <p className="auth-subheading">Join iterim and start collaborating</p>
+        <h2 className="auth-heading">{t('auth.createAccount')}</h2>
+        <p className="auth-subheading">{t('auth.signUpSubtitle')}</p>
 
         {error && (
           <div className="auth-error" role="alert">
@@ -106,10 +108,10 @@ export function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="field-group">
-            <label className="field-label" htmlFor="name">Full name</label>
+            <label className="field-label" htmlFor="name">{t('auth.fullName')}</label>
             <input id="name" type="text" className={`field-input ${errors.name ? 'field-input-error' : ''}`} value={values.name}
-              onChange={(e) => setFieldValue('name', e.target.value)} placeholder="John Smith"
-              autoComplete="name" required 
+              onChange={(e) => setFieldValue('name', e.target.value)} placeholder={t('auth.fullNamePlaceholder')}
+              autoComplete="name" required
               aria-invalid={!!errors.name}
               aria-describedby={errors.name ? 'name-error' : undefined} />
             {errors.name && (
@@ -118,10 +120,10 @@ export function RegisterPage() {
           </div>
 
           <div className="field-group">
-            <label className="field-label" htmlFor="email">Email address</label>
+            <label className="field-label" htmlFor="email">{t('auth.emailAddress')}</label>
             <input id="email" type="email" className={`field-input ${errors.email ? 'field-input-error' : ''}`} value={values.email}
-              onChange={(e) => setFieldValue('email', e.target.value)} placeholder="you@example.com"
-              autoComplete="email" required 
+              onChange={(e) => setFieldValue('email', e.target.value)} placeholder={t('auth.emailPlaceholder')}
+              autoComplete="email" required
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? 'email-error' : undefined} />
             {errors.email && (
@@ -130,17 +132,17 @@ export function RegisterPage() {
           </div>
 
           <div className="field-group">
-            <label className="field-label" htmlFor="password">Password</label>
+            <label className="field-label" htmlFor="password">{t('auth.password')}</label>
             <div className="field-password-wrap">
               <input id="password" type={showPassword ? 'text' : 'password'} className={`field-input ${errors.password ? 'field-input-error' : ''}`}
                 value={values.password}
                 onChange={(e) => setFieldValue('password', e.target.value)}
-                placeholder="••••••••" autoComplete="new-password"
-                onFocus={() => setPwdFocused(true)} required 
+                placeholder={t('auth.passwordPlaceholder')} autoComplete="new-password"
+                onFocus={() => setPwdFocused(true)} required
                 aria-invalid={!!errors.password}
                 aria-describedby={errors.password ? 'password-error' : undefined} />
               <button type="button" className="field-eye" onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide' : 'Show'}>
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}>
                 {showPassword
                   ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                   : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -153,21 +155,21 @@ export function RegisterPage() {
 
             {(pwdFocused || values.password.length > 0) && (
               <div className="pwd-reqs">
-                <PasswordReq met={reqs.length} label="8+ characters" />
-                <PasswordReq met={reqs.upper}  label="Uppercase letter" />
-                <PasswordReq met={reqs.lower}  label="Lowercase letter" />
-                <PasswordReq met={reqs.number} label="Number" />
+                <PasswordReq met={reqs.length} label={t('auth.pwdReqLength')} />
+                <PasswordReq met={reqs.upper}  label={t('auth.pwdReqUpper')} />
+                <PasswordReq met={reqs.lower}  label={t('auth.pwdReqLower')} />
+                <PasswordReq met={reqs.number} label={t('auth.pwdReqNumber')} />
               </div>
             )}
           </div>
 
           <div className="field-group">
-            <label className="field-label" htmlFor="confirm">Confirm password</label>
+            <label className="field-label" htmlFor="confirm">{t('auth.confirmPassword')}</label>
             <div className="field-password-wrap">
               <input id="confirm" type={showPassword ? 'text' : 'password'} className={`field-input ${errors.confirm ? 'field-input-error' : ''}`}
                 value={values.confirm}
                 onChange={(e) => setFieldValue('confirm', e.target.value)}
-                placeholder="••••••••" autoComplete="new-password" required 
+                placeholder={t('auth.passwordPlaceholder')} autoComplete="new-password" required
                 aria-invalid={!!errors.confirm}
                 aria-describedby={errors.confirm ? 'confirm-error' : undefined} />
               {values.confirm.length > 0 && !errors.confirm && (
@@ -185,13 +187,13 @@ export function RegisterPage() {
           </div>
 
           <button type="submit" className="auth-btn" disabled={isSubmitting}>
-            {isSubmitting ? <span className="btn-spinner" /> : 'Create account'}
+            {isSubmitting ? <span className="btn-spinner" /> : t('auth.createAccount')}
           </button>
         </form>
 
         <p className="auth-footer-text">
-          Already have an account?{' '}
-          <Link to="/login" className="auth-link">Sign in</Link>
+          {t('auth.alreadyHaveAccount')}{' '}
+          <Link to="/login" className="auth-link">{t('auth.signInLink')}</Link>
         </p>
       </div>
 

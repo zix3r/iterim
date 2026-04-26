@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CapacityData } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   data: CapacityData | null;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function CapacityCard({ data, loading }: Props) {
+  const { t } = useLanguage();
   if (loading) {
     return (
       <Card>
@@ -27,9 +29,9 @@ export function CapacityCard({ data, loading }: Props) {
   if (!data) {
     return (
       <Card>
-        <CardHeader><CardTitle className="text-base">Capacity</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t('metrics.capacity')}</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No capacity data available.</p>
+          <p className="text-sm text-muted-foreground">{t('metrics.noData')}</p>
         </CardContent>
       </Card>
     );
@@ -42,7 +44,7 @@ export function CapacityCard({ data, loading }: Props) {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Capacity</CardTitle>
+        <CardTitle className="text-base">{t('metrics.capacity')}</CardTitle>
         <CardDescription>
           {fmtDate(data.fromDate)} – {fmtDate(data.toDate)}
         </CardDescription>
@@ -51,15 +53,15 @@ export function CapacityCard({ data, loading }: Props) {
       <CardContent className="space-y-5">
         {/* Summary row */}
         <div className="grid grid-cols-3 gap-3">
-          <StatBox label="Total days" value={data.totalWorkDays} />
-          <StatBox label="Absence days" value={data.absenceDays} highlight={data.absenceDays > 0} />
-          <StatBox label="Available" value={data.availableDays} />
+          <StatBox label={t('metrics.day')} value={data.totalWorkDays} />
+          <StatBox label={t('common.none')} value={data.absenceDays} highlight={data.absenceDays > 0} />
+          <StatBox label={t('metrics.remaining')} value={data.availableDays} />
         </div>
 
         {/* Team availability bar */}
         <div>
           <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-            <span>Team availability</span>
+            <span>{t('teams.capacity')}</span>
             <span className="font-medium text-foreground">{availabilityPct}%</span>
           </div>
           <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
@@ -80,7 +82,7 @@ export function CapacityCard({ data, loading }: Props) {
         {data.byMember.length > 0 && (
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-              Members
+              {t('teams.members')}
             </p>
             <div className="space-y-2">
               {data.byMember.map((m) => {

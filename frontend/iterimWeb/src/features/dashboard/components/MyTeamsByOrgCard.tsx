@@ -3,10 +3,12 @@ import { Building2, Users2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import { CreateOrganizationModal } from '@/features/organizations/components/CreateOrganizationModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function MyTeamsByOrgCard() {
   const { organizations, isLoading, refetch } = useMyTeamsTree();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const hasOrgs = organizations.length > 0;
 
   return (
@@ -14,7 +16,7 @@ export function MyTeamsByOrgCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <Building2 className="h-4 w-4 text-zinc-500" />
-          My Organizations
+          {t('dashboard.myOrganizations')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -33,7 +35,7 @@ export function MyTeamsByOrgCard() {
           </div>
         ) : !hasOrgs ? (
           <div className="flex flex-col items-start gap-3">
-            <p className="text-sm text-zinc-500">You don't belong to any organization yet.</p>
+            <p className="text-sm text-zinc-500">{t('dashboard.noOrganizations')}</p>
             <CreateOrganizationModal onCreated={refetch} />
           </div>
         ) : (

@@ -1,5 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActiveIteration } from '@/lib/useActiveIteration';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   teamId: number;
@@ -11,6 +12,7 @@ function fmtDate(s: string) {
 
 export function ActiveIterationIndicator({ teamId }: Props) {
   const { info, isLoading } = useActiveIteration(teamId);
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -28,7 +30,7 @@ export function ActiveIterationIndicator({ teamId }: Props) {
   if (!info) {
     return (
       <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5">
-        <p className="text-[10px] text-zinc-400">No active iteration</p>
+        <p className="text-[10px] text-zinc-400">{t('dashboard.noActiveIterations')}</p>
       </div>
     );
   }

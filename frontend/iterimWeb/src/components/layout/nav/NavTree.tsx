@@ -1,8 +1,10 @@
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import { NavTreeOrg } from './NavTreeOrg';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function NavTree() {
   const { organizations, isLoading, error } = useMyTeamsTree();
+  const { t } = useLanguage();
 
   if (isLoading) {
     return (
@@ -22,7 +24,7 @@ export function NavTree() {
 
   if (organizations.length === 0) {
     return (
-      <p className="px-3 py-2 text-xs text-zinc-500">No organizations yet</p>
+      <p className="px-3 py-2 text-xs text-zinc-500">{t('dashboard.noOrganizations')}</p>
     );
   }
 

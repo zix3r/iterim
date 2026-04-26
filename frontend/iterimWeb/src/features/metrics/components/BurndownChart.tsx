@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '@/context/ThemeContext';
 import type { SprintMetrics } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   data: SprintMetrics | null;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function BurndownChart({ data, loading }: Props) {
+  const { t } = useLanguage();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -55,16 +57,16 @@ export function BurndownChart({ data, loading }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Burndown</CardTitle>
+            <CardTitle className="text-base">{t('metrics.burndown')}</CardTitle>
             <CardDescription className="mt-0.5">
-              Remaining points per day {' '}
-              <span className="text-muted-foreground">(dashed = ideal, solid = actual)</span>
+              {t('metrics.remaining')} {' '}
+              <span className="text-muted-foreground">(dashed = {t('metrics.ideal')}, solid = {t('metrics.actual')})</span>
             </CardDescription>
           </div>
           {data && (
             <div className="text-right shrink-0">
               <p className="text-2xl font-bold text-foreground">{data.remainingPoints}</p>
-              <p className="text-xs text-muted-foreground">pts remaining</p>
+              <p className="text-xs text-muted-foreground">{t('metrics.points')}</p>
             </div>
           )}
         </div>
@@ -73,10 +75,10 @@ export function BurndownChart({ data, loading }: Props) {
       <CardContent>
         {!hasData ? (
           <div className="flex flex-col items-center justify-center h-56 gap-2">
-            <p className="text-sm text-muted-foreground">No burndown data yet.</p>
+            <p className="text-sm text-muted-foreground">{t('metrics.noData')}</p>
             <p className="text-xs text-muted-foreground text-center max-w-xs">
               Burndown is built from work item status change history.
-              Move items to <strong>Done</strong> during the iteration to see the chart fill in.
+              Move items to <strong>{t('board.done')}</strong> during the iteration to see the chart fill in.
             </p>
           </div>
         ) : (
@@ -113,11 +115,11 @@ export function BurndownChart({ data, loading }: Props) {
                   <div className="mt-3 flex items-center justify-center gap-4 text-xs" style={{ color: colors.tick }}>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="inline-block h-0.5 w-3" style={{ backgroundColor: colors.ideal }} />
-                      Ideal
+                      {t('metrics.ideal')}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="inline-block h-0.5 w-3" style={{ backgroundColor: colors.actual }} />
-                      Actual
+                      {t('metrics.actual')}
                     </span>
                   </div>
                 )}

@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/toast';
 import { EditAbsenceModal } from './EditAbsenceModal';
 import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const getMessageFromError = (error: unknown, fallback: string) => {
   if (error instanceof Error) return error.message;
@@ -41,6 +42,7 @@ interface Props {
 }
 
 export function AbsenceList({ absences, members, currentUserId, canManageAllAbsences, onChanged }: Props) {
+  const { t } = useLanguage();
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MemberAbsence | null>(null);
   const { toast } = useToast();
@@ -53,14 +55,14 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
     setDeletingId(deleteTarget.id);
     try {
       await deleteAbsence(deleteTarget.id);
-      toast({ variant: 'success', title: 'Absence deleted successfully' });
+      toast({ variant: 'success', title: t('common.success') });
       setDeleteTarget(null);
       onChanged();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Failed to delete absence',
-        description: getMessageFromError(error, 'Please try again.'),
+        title: t('absences.failedDelete'),
+        description: getMessageFromError(error, t('common.tryAgain')),
       });
     } finally {
       setDeletingId(null);
@@ -71,7 +73,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          No absences found for the selected date range.
+          {t('absences.noAbsences')}
         </CardContent>
       </Card>
     );
@@ -82,11 +84,11 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>From</TableHead>
-            <TableHead>To</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead className="w-[180px]">Actions</TableHead>
+            <TableHead>{t('common.name')}</TableHead>
+            <TableHead>{t('common.from')}</TableHead>
+            <TableHead>{t('common.to')}</TableHead>
+            <TableHead>{t('absences.reason')}</TableHead>
+            <TableHead className="w-[180px]">{t('common.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -112,7 +114,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
                   const canManageThisAbsence = canManageAllAbsences || ownerUserId === currentUserId;
 
                   if (!canManageThisAbsence) {
-                    return <span className="text-sm text-muted-foreground">No access</span>;
+                    return <span className="text-sm text-muted-foreground">{t('common.unauthorized')}</span>;
                   }
 
                   return (
@@ -126,7 +128,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
                     disabled={deletingId === absence.id}
                   >
                     <Trash2Icon className="h-4 w-4" />
-                    Delete
+                    {t('common.delete')}
                   </Button>
                 </div>
                   );
@@ -140,9 +142,9 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Absence</DialogTitle>
+            <DialogTitle>{t('absences.deleteConfirm')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this absence for "{deleteTarget?.memberName}"? This action cannot be undone.
+              {t('common.confirm')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -151,14 +153,14 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
               onClick={() => setDeleteTarget(null)}
               disabled={deletingId === deleteTarget?.id}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deletingId === deleteTarget?.id}
             >
-              {deletingId === deleteTarget?.id ? 'Deleting...' : 'Delete'}
+              {deletingId === deleteTarget?.id ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

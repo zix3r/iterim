@@ -9,6 +9,7 @@ import {
   type CurrentUserProfile,
 } from '@/lib/api';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { useToast } from '@/components/ui/toast';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -94,6 +95,7 @@ function createInitialsAvatar(name: string, color: string): string {
 
 export function ProfilePage() {
   const { refreshUser } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
 
   const [profile, setProfile] = useState<CurrentUserProfile | null>(null);
@@ -312,7 +314,7 @@ export function ProfilePage() {
   };
 
   if (isLoading) {
-    return <div className="p-6 md:p-8 max-w-6xl mx-auto py-8 text-sm text-muted-foreground">Loading profile information...</div>;
+    return <div className="p-6 md:p-8 max-w-6xl mx-auto py-8 text-sm text-muted-foreground">{t('common.loading')}</div>;
   }
 
   if (loadingError) {
@@ -321,7 +323,7 @@ export function ProfilePage() {
         <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 p-4 text-red-700 dark:text-red-300 mb-4">
           {loadingError}
         </div>
-        <Button onClick={loadProfile} variant="outline">Try again</Button>
+        <Button onClick={loadProfile} variant="outline">{t('common.tryAgain')}</Button>
       </div>
     );
   }
@@ -329,18 +331,18 @@ export function ProfilePage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
       <PageHeader
-        title="Profile"
-        description="View and edit your account information"
+        title={t('profile.title')}
+        description={t('profile.personalInfo')}
       />
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserRound className="h-4 w-4" />
-            Personal information
+            {t('profile.personalInfo')}
           </CardTitle>
           <CardDescription>
-            Edit your name and email. Registration date is read-only.
+            {t('profile.email')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -353,7 +355,7 @@ export function ProfilePage() {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label htmlFor="profile-name" className="text-sm font-medium text-foreground">Name</label>
+                <label htmlFor="profile-name" className="text-sm font-medium text-foreground">{t('profile.fullName')}</label>
                 <Input
                   id="profile-name"
                   value={name}
@@ -369,7 +371,7 @@ export function ProfilePage() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="profile-email" className="text-sm font-medium text-foreground">Email</label>
+                <label htmlFor="profile-email" className="text-sm font-medium text-foreground">{t('profile.email')}</label>
                 <Input
                   id="profile-email"
                   type="email"
@@ -393,7 +395,7 @@ export function ProfilePage() {
 
             <Button type="submit" disabled={isSavingProfile} className="gap-2">
               <Save className="h-4 w-4" />
-              {isSavingProfile ? 'Saving...' : 'Save changes'}
+              {isSavingProfile ? t('common.saving') : t('common.save')}
             </Button>
           </form>
         </CardContent>
@@ -403,10 +405,10 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LockKeyhole className="h-4 w-4" />
-            Password
+            {t('profile.changePassword')}
           </CardTitle>
           <CardDescription>
-            Your current password is required to change it.
+            {t('profile.currentPassword')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -418,7 +420,7 @@ export function ProfilePage() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="old-password" className="text-sm font-medium text-foreground">Current password</label>
+              <label htmlFor="old-password" className="text-sm font-medium text-foreground">{t('profile.currentPassword')}</label>
               <Input
                 id="old-password"
                 type="password"
@@ -438,7 +440,7 @@ export function ProfilePage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="new-password" className="text-sm font-medium text-foreground">New password</label>
+              <label htmlFor="new-password" className="text-sm font-medium text-foreground">{t('profile.newPassword')}</label>
               <Input
                 id="new-password"
                 type="password"
@@ -454,15 +456,15 @@ export function ProfilePage() {
               {passwordErrors.newPassword && <p className="text-xs text-red-600">{passwordErrors.newPassword}</p>}
 
               <div className="flex flex-wrap gap-2 pt-1">
-                <PasswordReq met={passwordStrengthChecks.length} label="8+ characters" />
-                <PasswordReq met={passwordStrengthChecks.upper} label="Uppercase letter" />
-                <PasswordReq met={passwordStrengthChecks.lower} label="Lowercase letter" />
-                <PasswordReq met={passwordStrengthChecks.number} label="Number" />
+                <PasswordReq met={passwordStrengthChecks.length} label={t('auth.pwdReqLength')} />
+                <PasswordReq met={passwordStrengthChecks.upper} label={t('auth.pwdReqUpper')} />
+                <PasswordReq met={passwordStrengthChecks.lower} label={t('auth.pwdReqLower')} />
+                <PasswordReq met={passwordStrengthChecks.number} label={t('auth.pwdReqNumber')} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">Confirm new password</label>
+              <label htmlFor="confirm-password" className="text-sm font-medium text-foreground">{t('profile.confirmNewPassword')}</label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -487,7 +489,7 @@ export function ProfilePage() {
 
             <Button type="submit" disabled={isSavingPassword} className="gap-2">
               <Save className="h-4 w-4" />
-              {isSavingPassword ? 'Saving...' : 'Change password'}
+              {isSavingPassword ? t('common.saving') : t('profile.changePassword')}
             </Button>
           </form>
         </CardContent>
@@ -497,10 +499,10 @@ export function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-4 w-4" />
-            Avatar
+            {t('profile.avatar')}
           </CardTitle>
           <CardDescription>
-            Upload a photo or choose a colorful initials avatar.
+            {t('profile.changeAvatar')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -526,7 +528,7 @@ export function ProfilePage() {
                 />
                 <span className="inline-flex h-9 cursor-pointer items-center rounded-md border border-border px-3 text-sm font-medium hover:bg-accent">
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload photo
+                  {t('profile.changeAvatar')}
                 </span>
               </label>
               <p className="text-xs text-muted-foreground">PNG/JPG/WEBP, up to 1.5 MB.</p>
@@ -534,7 +536,7 @@ export function ProfilePage() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-foreground">Initials colors</p>
+            <p className="text-sm font-medium text-foreground">{t('profile.avatar')}</p>
             <div className="flex flex-wrap gap-2">
               {avatarColors.map((color) => (
                 <button
@@ -551,7 +553,7 @@ export function ProfilePage() {
 
           <Button onClick={handleAvatarSave} disabled={isSavingAvatar} className="gap-2">
             <Save className="h-4 w-4" />
-            {isSavingAvatar ? 'Saving...' : 'Save avatar'}
+            {isSavingAvatar ? t('common.saving') : t('common.save')}
           </Button>
         </CardContent>
       </Card>

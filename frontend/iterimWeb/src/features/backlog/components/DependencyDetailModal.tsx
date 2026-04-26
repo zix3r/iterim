@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TagBadge } from '@/components/shared/TagBadge';
 import { ExternalLink } from 'lucide-react';
 import type { WorkItemDependency } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   Backlog: { label: 'Backlog', color: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
@@ -30,6 +31,8 @@ function formatDate(iso: string) {
 }
 
 export function DependencyDetailModal({ dependency, direction, open, onOpenChange }: Props) {
+  const { t } = useLanguage();
+
   if (!dependency) return null;
 
   const statusConfig = STATUS_CONFIG[dependency.status] ?? { label: dependency.status, color: 'bg-gray-100 text-gray-600' };
@@ -42,8 +45,8 @@ export function DependencyDetailModal({ dependency, direction, open, onOpenChang
   const backlogUrl = `/org/${dependency.orgId}/products/${dependency.productId}/teams/${dependency.teamId}/backlog`;
 
   const directionLabel = direction === 'blocks'
-    ? 'Šis item blokuoja'
-    : 'Blokuoja šį item';
+    ? `${t('backlog.blocks')}`
+    : `${t('backlog.blockedBy')}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,7 +73,7 @@ export function DependencyDetailModal({ dependency, direction, open, onOpenChang
           {/* Points */}
           {dependency.points != null && (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground w-20 shrink-0">Points</span>
+              <span className="text-xs text-muted-foreground w-20 shrink-0">{t('backlog.points')}</span>
               <span className="text-sm font-mono font-semibold bg-secondary/50 px-2 py-0.5 rounded">
                 {dependency.points}
               </span>
@@ -79,7 +82,7 @@ export function DependencyDetailModal({ dependency, direction, open, onOpenChang
 
           {/* Assignee */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-20 shrink-0">Assignee</span>
+            <span className="text-xs text-muted-foreground w-20 shrink-0">{t('backlog.assignee')}</span>
             {dependency.assignedMember ? (
               <div className="flex items-center gap-1.5">
                 <Avatar className="h-5 w-5">
@@ -88,14 +91,14 @@ export function DependencyDetailModal({ dependency, direction, open, onOpenChang
                 <span className="text-sm">{dependency.assignedMember.userName}</span>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground italic">Unassigned</span>
+              <span className="text-sm text-muted-foreground italic">{t('backlog.unassigned')}</span>
             )}
           </div>
 
           {/* Tags */}
           {dependency.tags.length > 0 && (
             <div className="flex items-start gap-2">
-              <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">Tags</span>
+              <span className="text-xs text-muted-foreground w-20 shrink-0 pt-0.5">{t('backlog.tags')}</span>
               <div className="flex flex-wrap gap-1">
                 {dependency.tags.map(tag => (
                   <TagBadge key={tag.id} tag={tag} size="sm" />
@@ -107,7 +110,7 @@ export function DependencyDetailModal({ dependency, direction, open, onOpenChang
           {/* Description */}
           {dependency.description && (
             <div>
-              <div className="text-xs text-muted-foreground mb-1">Description</div>
+              <div className="text-xs text-muted-foreground mb-1">{t('backlog.itemDescription')}</div>
               <div className="text-sm bg-muted/30 rounded-md p-3 whitespace-pre-wrap max-h-40 overflow-y-auto">
                 {dependency.description}
               </div>

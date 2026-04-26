@@ -21,6 +21,7 @@ import { KanbanColumn } from './KanbanColumn';
 import { KanbanCard } from './KanbanCard';
 import { BlockerErrorModal } from './BlockerErrorModal';
 import { useToast } from '@/components/ui/toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface KanbanBoardProps {
   boardData: BoardData;
@@ -30,6 +31,7 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ boardData, setBoardData, onBoardUpdate, onCardClick }: KanbanBoardProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [activeItem, setActiveItem] = useState<BoardWorkItem | null>(null);
   const [blockerModalDeps, setBlockerModalDeps] = useState<WorkItemDependency[]>([]);
@@ -112,7 +114,7 @@ export function KanbanBoard({ boardData, setBoardData, onBoardUpdate, onCardClic
         setBlockerModalOpen(true);
       } else {
         console.error('Failed to update status', error);
-        toast({ variant: 'error', title: 'Error', description: 'Failed to update item status. Try again.' });
+        toast({ variant: 'error', title: t('common.error'), description: t('board.failedMove') });
       }
     }
   };

@@ -3,9 +3,11 @@ import { NavLink } from 'react-router';
 import { Building2, Package, Users, Compass, LayoutDashboard } from 'lucide-react';
 import { getRecentPages, clearRecentPages, type RecentPage } from '../../lib/recentPages';
 import { Button } from '../ui/button';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function RecentPages() {
   const [pages, setPages] = useState<RecentPage[]>([]);
+  const { t } = useLanguage();
 
   const fetchPages = async () => {
     const fetchedPages = await getRecentPages();
@@ -51,7 +53,7 @@ export function RecentPages() {
           className="h-6 text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground"
           onClick={handleClear}
         >
-          Clear
+          {t('common.close')}
         </Button>
       </div>
       <nav className="space-y-1">

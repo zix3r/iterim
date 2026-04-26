@@ -14,6 +14,7 @@ import { useToast } from '@/components/ui/toast';
 import { CreateAbsenceModal } from '@/features/absences/components/CreateAbsenceModal';
 import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function OrganizationPage() {
   const { orgId } = useParams();
@@ -31,6 +32,7 @@ export function OrganizationPage() {
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [showNewTagForm, setShowNewTagForm] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (organization && orgId) {
@@ -66,21 +68,21 @@ export function OrganizationPage() {
   }, [orgId]);
 
   const handleRemoveMember = async (memberId: number) => {
-    if (!confirm('Are you sure you want to remove this member?')) return;
+    if (!confirm(t('organizations.removeMember'))) return;
     
     setRemovingMemberId(memberId);
     try {
       await removeOrganizationMember(Number(orgId), memberId);
       toast({
-        title: "Success",
-        description: "Organization member removed successfully",
+        title: t('common.success'),
+        description: t('organizations.memberRemoved'),
         variant: "default",
       });
       loadData(); // Reload data
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to remove member';
+      const errorMessage = err instanceof Error ? err.message : t('organizations.failedDelete');
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: errorMessage,
         variant: "error",
       });
@@ -95,11 +97,11 @@ export function OrganizationPage() {
     setIsDeletingOrg(true);
     try {
       await deleteOrganization(Number(orgId));
-      toast({ title: "Success", description: "Organization deleted successfully." });
-      navigate('/dashboard'); // Ištrynus, grąžiname į pagrindinį puslapį
+      toast({ title: t('common.success'), description: t('organizations.failedDelete') });
+      navigate('/dashboard');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete organization';
-      toast({ title: "Error", description: errorMessage, variant: "error" });
+      const errorMessage = err instanceof Error ? err.message : t('organizations.failedDelete');
+      toast({ title: t('common.error'), description: errorMessage, variant: "error" });
       setIsDeletingOrg(false);
       setDeleteOrgDialogOpen(false);
     }
@@ -160,13 +162,13 @@ export function OrganizationPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Organization</h3>
-          <p className="text-sm text-red-700">{error || "Organization not found."}</p>
-          <button 
-            onClick={loadData} 
+          <h3 className="text-lg font-semibold text-red-800">{t('organizations.failedLoad')}</h3>
+          <p className="text-sm text-red-700">{error || t('common.notFound')}</p>
+          <button
+            onClick={loadData}
             className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-md font-medium transition-colors"
           >
-            Try Again
+            {t('common.retry')}
           </button>
         </div>
       </div>
@@ -210,7 +212,7 @@ export function OrganizationPage() {
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: t('dashboard.title'), href: '/dashboard' },
           { label: organization.name }
         ]}
       />
@@ -221,22 +223,21 @@ export function OrganizationPage() {
           <p className="text-muted-foreground">Slug: {organization.slug}</p>
         </div>
         <div className="flex gap-2">
-          {/* TIK ADMINAMS: Raudonas trynimo mygtukas */}
           {organization.userRole === 'Admin' && (
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => setDeleteOrgDialogOpen(true)}
               disabled={isDeletingOrg}
             >
-              {isDeletingOrg ? 'Deleting...' : 'Delete Organization'}
+              {isDeletingOrg ? t('common.deleting') : t('common.delete')}
             </Button>
           )}
-          
+
           <Link to={`/org/${orgId}/absences`}>
             <Button variant="outline">Manage Absences</Button>
           </Link>
           <Link to={`/org/${orgId}/products`}>
-            <Button>View Products</Button>
+            <Button>{t('organizations.products')}</Button>
           </Link>
         </div>
       </div>
@@ -245,7 +246,7 @@ export function OrganizationPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Members</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('organizations.members')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{organization.members.length}</div>
@@ -254,7 +255,7 @@ export function OrganizationPage() {
         <Link to={`/org/${orgId}/products`} className="block h-full group">
           <Card className="h-full transition-colors group-hover:border-primary">
             <CardHeader>
-              <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">Products</CardTitle>
+              <CardTitle className="text-sm font-medium group-hover:text-primary transition-colors">{t('organizations.products')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{productCount}</div>
@@ -276,7 +277,7 @@ export function OrganizationPage() {
       {/* Members Table */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Members</h2>
+          <h2 className="text-xl font-semibold">{t('organizations.members')}</h2>
           {organization.userRole === 'Admin' && (
             <AddMemberModal 
               organizationId={organization.id} 
@@ -289,8 +290,8 @@ export function OrganizationPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('organizations.role')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
                 <TableHead className="w-[150px]">Absence</TableHead>
                 {organization.userRole === 'Admin' && <TableHead className="w-[80px]"></TableHead>}
               </TableRow>
@@ -347,7 +348,7 @@ export function OrganizationPage() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Tags</h2>
             <Button variant="outline" size="sm" onClick={() => setShowNewTagForm(v => !v)}>
-              <PlusIcon className="h-4 w-4 mr-1" /> New Tag
+              <PlusIcon className="h-4 w-4 mr-1" /> {t('common.add')} Tag
             </Button>
           </div>
 
@@ -371,9 +372,9 @@ export function OrganizationPage() {
                     autoFocus
                   />
                   <Button size="sm" onClick={handleCreateTag} disabled={isCreatingTag || !newTagName.trim()}>
-                    {isCreatingTag ? 'Creating…' : 'Create'}
+                    {isCreatingTag ? t('common.creating') : t('common.create')}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setShowNewTagForm(false)}>Cancel</Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowNewTagForm(false)}>{t('common.cancel')}</Button>
                 </div>
               </CardContent>
             </Card>
@@ -398,17 +399,17 @@ export function OrganizationPage() {
       <Dialog open={deleteOrgDialogOpen} onOpenChange={setDeleteOrgDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Organization</DialogTitle>
+            <DialogTitle>{t('organizations.deleteConfirm')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{organization.name}"? This will permanently remove all products, teams, sprints, and work items. This action cannot be undone.
+              {t('organizations.deleteWarning')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteOrgDialogOpen(false)} disabled={isDeletingOrg}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={handleDeleteOrganization} disabled={isDeletingOrg}>
-              {isDeletingOrg ? 'Deleting...' : 'Delete Organization'}
+              {isDeletingOrg ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

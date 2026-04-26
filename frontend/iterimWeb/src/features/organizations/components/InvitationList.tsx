@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
-import { 
-  getPendingInvitations, 
-  acceptInvitation, 
+import {
+  getPendingInvitations,
+  acceptInvitation,
   declineInvitation,
-  type Invitation 
+  type Invitation
 } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function InvitationList({ onInvitationProcessed }: { onInvitationProcessed: () => void }) {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const { t } = useLanguage();
 
   const loadInvitations = () => {
     setIsLoading(true);
@@ -59,12 +61,12 @@ export function InvitationList({ onInvitationProcessed }: { onInvitationProcesse
 
   return (
     <div className="space-y-4 mb-8">
-      <h2 className="text-xl font-semibold">Pending Invitations</h2>
+      <h2 className="text-xl font-semibold">{t('organizations.pendingInvitations')}</h2>
       
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t('common.error')}</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
@@ -74,26 +76,26 @@ export function InvitationList({ onInvitationProcessed }: { onInvitationProcesse
           <Card key={invitation.organizationId}>
             <CardHeader className="pb-3">
               <CardTitle>{invitation.organizationName}</CardTitle>
-              <CardDescription>Invited as {invitation.role}</CardDescription>
+              <CardDescription>{t('organizations.invited')} {invitation.role}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleDecline(invitation.organizationId)}
                   disabled={processingId === invitation.organizationId}
                 >
                   <XCircle className="mr-2 h-4 w-4" />
-                  Decline
+                  {t('organizations.declineInvitation')}
                 </Button>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   onClick={() => handleAccept(invitation.organizationId)}
                   disabled={processingId === invitation.organizationId}
                 >
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Accept
+                  {t('organizations.acceptInvitation')}
                 </Button>
               </div>
             </CardContent>

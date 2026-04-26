@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Check, ChevronDown, Plus, Tag as TagIcon } from 'lucide-react';
 import { getOrgTags, createOrgTag, type Tag } from '@/lib/api';
 import { TagBadge } from './TagBadge';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface TagSelectorProps {
   orgId: number;
@@ -11,6 +12,7 @@ interface TagSelectorProps {
 }
 
 export function TagSelector({ orgId, selected, onChange, disabled }: TagSelectorProps) {
+  const { t } = useLanguage();
   const [orgTags, setOrgTags] = useState<Tag[]>([]);
   const [open, setOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -79,7 +81,7 @@ export function TagSelector({ orgId, selected, onChange, disabled }: TagSelector
           ))
         ) : (
           <span className="text-muted-foreground flex items-center gap-1">
-            <TagIcon className="h-3.5 w-3.5" /> Select tags…
+            <TagIcon className="h-3.5 w-3.5" /> {t('backlog.tags')}
           </span>
         )}
         <ChevronDown className="ml-auto h-4 w-4 text-muted-foreground shrink-0" />
@@ -89,7 +91,7 @@ export function TagSelector({ orgId, selected, onChange, disabled }: TagSelector
         <div className="absolute z-50 top-full mt-1 w-full rounded-md border bg-popover shadow-md text-popover-foreground">
           <div className="max-h-52 overflow-y-auto p-1">
             {orgTags.length === 0 && (
-              <p className="text-xs text-muted-foreground px-2 py-1.5">No tags yet</p>
+              <p className="text-xs text-muted-foreground px-2 py-1.5">{t('backlog.tags')}</p>
             )}
             {orgTags.map(tag => {
               const isSelected = selected.some(s => s.id === tag.id);
@@ -118,7 +120,7 @@ export function TagSelector({ orgId, selected, onChange, disabled }: TagSelector
                 onClick={() => setShowCreate(true)}
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
               >
-                <Plus className="h-3.5 w-3.5" /> New tag
+                <Plus className="h-3.5 w-3.5" /> {t('common.add')}
               </button>
             ) : (
               <div className="flex items-center gap-1.5 px-1 py-1">
@@ -143,7 +145,7 @@ export function TagSelector({ orgId, selected, onChange, disabled }: TagSelector
                   disabled={isCreating || !newName.trim()}
                   className="text-xs font-medium text-primary hover:underline disabled:opacity-50"
                 >
-                  Add
+                  {t('common.add')}
                 </button>
               </div>
             )}

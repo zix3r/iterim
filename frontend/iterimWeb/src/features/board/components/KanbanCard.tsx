@@ -28,6 +28,7 @@ function blockerToDepForModal(b: BoardBlocker): WorkItemDependency {
 import { TagBadge } from '@/components/shared/TagBadge';
 import { Lock } from 'lucide-react';
 import { DependencyDetailModal } from '@/features/backlog/components/DependencyDetailModal';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface KanbanCardProps {
   item: BoardWorkItem;
@@ -35,6 +36,7 @@ interface KanbanCardProps {
 }
 
 export function KanbanCard({ item, onClick }: KanbanCardProps) {
+  const { t } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `item-${item.id}`,
     data: { item },
@@ -147,7 +149,7 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
                 </span>
               </>
             ) : (
-              <span className="text-[11px] text-muted-foreground italic">Unassigned</span>
+              <span className="text-[11px] text-muted-foreground italic">{t('backlog.unassigned')}</span>
             )}
           </div>
 
@@ -160,7 +162,7 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
           className="absolute right-0 top-full mt-1 z-50 w-64 bg-popover border rounded-lg shadow-lg p-3 space-y-1.5"
           onClick={e => e.stopPropagation()}
         >
-          <div className="text-xs font-medium text-muted-foreground mb-2">Blokeriai</div>
+          <div className="text-xs font-medium text-muted-foreground mb-2">{t('backlog.blocks')}</div>
           {blockers.map((b: BoardBlocker) => (
             <button
               key={b.dependencyId}
@@ -178,7 +180,7 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
             onClick={() => setLockPopupOpen(false)}
             className="w-full text-xs text-muted-foreground hover:text-foreground mt-1 pt-1 border-t text-center"
           >
-            Uždaryti
+            {t('common.close')}
           </button>
         </div>
       )}

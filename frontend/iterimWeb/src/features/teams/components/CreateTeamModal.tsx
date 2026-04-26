@@ -9,6 +9,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { createTeam } from '@/lib/api';
 import type { CreateTeamRequest } from '@/lib/api';
 import { maxLength, required } from '@/lib/validation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   productId: number;
@@ -19,6 +20,7 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<CreateTeamRequest>(
     {
@@ -45,7 +47,7 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -58,8 +60,8 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
       });
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Team created successfully'
+        title: t('common.success'),
+        description: t('teams.failedCreate')
       });
       setOpen(false);
       resetForm({ name: '', description: '' });
@@ -67,8 +69,8 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to create team. Please try again.')
+        title: t('common.error'),
+        description: getMessageFromError(error, t('teams.failedCreate'))
       });
     } finally {
       setIsLoading(false);
@@ -86,11 +88,11 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>Create Team</Button>
+        <Button>{t('teams.create')}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Team</DialogTitle>
+          <DialogTitle>{t('teams.createTitle')}</DialogTitle>
           <DialogDescription>
             Add a new team to this product.
           </DialogDescription>
@@ -128,10 +130,10 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create'}
+              {isLoading ? t('common.creating') : t('common.create')}
             </Button>
           </div>
         </form>

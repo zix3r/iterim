@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/toast';
 import { startIteration, deleteIteration } from '@/lib/api';
 import { WorkItemRow } from './WorkItemRow';
 import type { Iteration, WorkItem } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   iteration: Iteration | null;
@@ -27,6 +28,7 @@ export function IterationSection({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Droppable zone for drag-and-drop
   const droppableId = isBacklog ? 'backlog' : `iteration-${iteration?.id}`;
@@ -39,10 +41,10 @@ export function IterationSection({
     if (!iteration) return;
     try {
       await startIteration(iteration.id);
-      toast({ variant: 'success', title: 'Iteration started!' });
+      toast({ variant: 'success', title: t('common.success') });
       onRefresh();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to start iteration' });
+      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedUpdate') });
     }
   };
 
@@ -51,11 +53,11 @@ export function IterationSection({
     setIsDeleting(true);
     try {
       await deleteIteration(iteration.id);
-      toast({ variant: 'success', title: 'Iteration deleted' });
+      toast({ variant: 'success', title: t('common.success') });
       setConfirmDelete(false);
       onRefresh();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to delete iteration' });
+      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedDelete') });
     } finally {
       setIsDeleting(false);
     }
@@ -80,7 +82,7 @@ export function IterationSection({
         {isBacklog ? (
           <>
             <LayoutList className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="font-semibold text-sm">Backlog</span>
+            <span className="font-semibold text-sm">{t('backlog.title')}</span>
             <span className="text-xs text-muted-foreground ml-1">{workItems.length} items</span>
           </>
         ) : (
@@ -130,10 +132,10 @@ export function IterationSection({
                 {confirmDelete ? (
                   <div className="flex items-center gap-1">
                     <Button variant="destructive" size="sm" className="h-7 px-2 text-xs" onClick={handleDelete} disabled={isDeleting}>
-                      {isDeleting ? '...' : 'Yes'}
+                      {isDeleting ? t('common.deleting') : t('common.yes')}
                     </Button>
                     <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => setConfirmDelete(false)}>
-                      No
+                      {t('common.no')}
                     </Button>
                   </div>
                 ) : (
@@ -146,7 +148,7 @@ export function IterationSection({
             {iteration.status === 'Active' && (
               <>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onCompleteIteration?.(iteration)}>
-                  <CheckCircle2 className="h-3 w-3 mr-1" /> Complete
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> {t('backlog.completeIteration')}
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => onEditIteration?.(iteration)}>
                   <Pencil className="h-3 w-3" />
@@ -167,7 +169,7 @@ export function IterationSection({
           <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
             {workItems.length === 0 ? (
               <p className="text-xs text-muted-foreground/60 py-4">
-                {isBacklog ? 'No unassigned items' : 'Drag items here to plan this iteration'}
+                {isBacklog ? t('backlog.noItems') : 'Drag items here to plan this iteration'}
               </p>
             ) : (
               workItems.map((item) => (

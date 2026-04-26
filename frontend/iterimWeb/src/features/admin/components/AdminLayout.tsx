@@ -1,17 +1,21 @@
 import { Link, useLocation, useNavigate } from 'react-router';
 import { Shield, Users, Activity, ArrowLeft, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/i18n/translations';
 import { updateMyTheme } from '@/lib/api';
 
-const ADMIN_TABS = [
-  { label: 'Users', path: '/admin/users', icon: Users },
-  { label: 'System', path: '/admin/system', icon: Activity },
+const ADMIN_TABS: { labelKey: TranslationKey; path: string; icon: typeof Users }[] = [
+  { labelKey: 'admin.sidebarUsers', path: '/admin/users', icon: Users },
+  { labelKey: 'admin.sidebarSystem', path: '/admin/system', icon: Activity },
 ];
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { resolvedTheme, theme, setTheme, toggleTheme } = useTheme();
 
   const handleThemeToggle = async () => {
@@ -34,14 +38,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Shield className="h-5 w-5 text-zinc-700" />
-          <h1 className="text-xl font-semibold text-zinc-900">Admin Panel</h1>
+          <h1 className="text-xl font-semibold text-zinc-900">{t('header.adminPanel')}</h1>
           <div className="flex-1" />
+          <LanguageToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
           <Button
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground hover:bg-accent"
             onClick={handleThemeToggle}
-            title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={resolvedTheme === 'dark' ? t('header.themeToggle.toLight') : t('header.themeToggle.toDark')}
           >
             {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             <span className="sr-only">Toggle theme</span>
@@ -65,7 +70,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
-                {tab.label}
+                {t(tab.labelKey)}
               </Link>
             );
           })}

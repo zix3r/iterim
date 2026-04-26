@@ -17,6 +17,7 @@ import { Link } from 'react-router';
 import { addRecentPage } from '@/lib/recentPages';
 import { usePinnedTeams } from '@/lib/favorites';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function TeamDetailPage() {
   const { orgId, productId, teamId } = useParams();
@@ -35,6 +36,7 @@ export function TeamDetailPage() {
   const [isSavingTags, setIsSavingTags] = useState(false);
   const { toast } = useToast();
   const { isPinned, togglePin } = usePinnedTeams();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (team && orgId && productId && teamId) {
@@ -73,24 +75,24 @@ export function TeamDetailPage() {
 
   const handleRemoveMember = async () => {
     if (!teamId || !memberToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await removeTeamMember(Number(teamId), memberToDelete);
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Team member removed successfully'
+        title: t('common.success'),
+        description: t('teams.failedDelete')
       });
       setDeleteMemberDialogOpen(false);
       setMemberToDelete(null);
-      loadTeam(); // Reload team data
+      loadTeam();
     } catch (err) {
       console.error('Failed to remove team member', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to remove team member.';
+      const errorMessage = err instanceof Error ? err.message : t('teams.failedDelete');
       toast({
         variant: 'error',
-        title: 'Error',
+        title: t('common.error'),
         description: errorMessage
       });
     } finally {
@@ -100,22 +102,22 @@ export function TeamDetailPage() {
 
   const handleDeleteTeam = async () => {
     if (!teamId) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteTeam(Number(teamId));
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Team deleted successfully'
+        title: t('common.success'),
+        description: t('teams.failedDelete')
       });
       navigate(`/org/${orgId}/products/${productId}/teams`);
     } catch (err) {
       console.error('Failed to delete team', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete team.';
+      const errorMessage = err instanceof Error ? err.message : t('teams.failedDelete');
       toast({
         variant: 'error',
-        title: 'Error',
+        title: t('common.error'),
         description: errorMessage
       });
       setIsDeleting(false);
@@ -125,23 +127,23 @@ export function TeamDetailPage() {
 
   const handleRoleChange = async (memberUserId: number, newRole: string) => {
     if (!teamId) return;
-    
+
     try {
       await updateTeamMemberRole(Number(teamId), memberUserId, {
         role: Number(newRole)
       });
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Member role updated successfully'
+        title: t('common.success'),
+        description: t('teams.failedUpdate')
       });
-      loadTeam(); // Reload team data
+      loadTeam();
     } catch (err) {
       console.error('Failed to update member role', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update member role.';
+      const errorMessage = err instanceof Error ? err.message : t('teams.failedUpdate');
       toast({
         variant: 'error',
-        title: 'Error',
+        title: t('common.error'),
         description: errorMessage
       });
       loadTeam();
@@ -214,10 +216,10 @@ export function TeamDetailPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Team</h3>
-          <p className="text-sm text-red-700">{error || "Team not found."}</p>
+          <h3 className="text-lg font-semibold text-red-800">{t('teams.failedLoad')}</h3>
+          <p className="text-sm text-red-700">{error || t('common.notFound')}</p>
           <Button onClick={loadTeam} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -238,11 +240,11 @@ export function TeamDetailPage() {
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: t('dashboard.title'), href: '/dashboard' },
           { label: organization.name, href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
+          { label: t('products.title'), href: `/org/${orgId}/products` },
           { label: team.productName, href: `/org/${orgId}/products/${productId}` },
-          { label: 'Teams', href: `/org/${orgId}/products/${productId}/teams` },
+          { label: t('teams.title'), href: `/org/${orgId}/products/${productId}/teams` },
           { label: team.name }
         ]}
       />
@@ -261,14 +263,14 @@ export function TeamDetailPage() {
                     await togglePin(team.id, currentlyPinned);
                     toast({
                       variant: 'success',
-                      title: currentlyPinned ? 'Unpinned' : 'Pinned',
-                      description: currentlyPinned ? 'Team removed from pinned list.' : 'Team successfully pinned.',
+                      title: currentlyPinned ? t('common.remove') : t('common.add'),
+                      description: currentlyPinned ? t('common.remove') : t('common.add'),
                     });
                   } catch (err) {
-                    const errorMessage = err instanceof Error ? err.message : 'Failed to toggle pin state.';
+                    const errorMessage = err instanceof Error ? err.message : t('common.error');
                     toast({
                       variant: 'error',
-                      title: 'Error',
+                      title: t('common.error'),
                       description: errorMessage,
                     });
                   }
@@ -287,20 +289,20 @@ export function TeamDetailPage() {
         <div className="flex items-center gap-2">
           <Button asChild>
             <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
-              Open Backlog
+              {t('backlog.title')}
             </Link>
           </Button>
           {canManageTeam && (
             <Button variant="outline" onClick={() => setEditTeamDialogOpen(true)}>
-              Edit
+              {t('common.edit')}
             </Button>
           )}
           {canManageTeam && (
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => setDeleteTeamDialogOpen(true)}
             >
-              Delete Team
+              {t('common.delete')}
             </Button>
           )}
         </div>
@@ -316,7 +318,7 @@ export function TeamDetailPage() {
             <span className="font-medium">Team ID:</span> {team.id}
           </div>
           <div>
-            <span className="font-medium">Product:</span> {team.productName}
+            <span className="font-medium">{t('products.title')}:</span> {team.productName}
           </div>
           <div>
             <span className="font-medium">Created:</span> {formatDate(team.createdAt)} by {team.createdByName}
@@ -332,7 +334,7 @@ export function TeamDetailPage() {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold flex items-center">
             <UsersIcon className="h-5 w-5 mr-2" />
-            Team Members ({team.members.length})
+            {t('teams.members')} ({team.members.length})
           </h2>
           {canManageTeam && (
             <AddTeamMemberModal 
@@ -363,7 +365,7 @@ export function TeamDetailPage() {
                         <h3 className="font-medium">{member.userName}</h3>
                         {isMemberTeamCreator && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground">
-                            Creator
+                            {t('common.create')}
                           </span>
                         )}
                       </div>
@@ -445,28 +447,28 @@ export function TeamDetailPage() {
       <Dialog open={deleteMemberDialogOpen} onOpenChange={setDeleteMemberDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Remove Team Member</DialogTitle>
+            <DialogTitle>{t('teams.removeMember')}</DialogTitle>
             <DialogDescription>
               Are you sure you want to remove this member from the team? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setDeleteMemberDialogOpen(false);
                 setMemberToDelete(null);
               }}
               disabled={isDeleting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleRemoveMember}
               disabled={isDeleting}
             >
-              {isDeleting ? 'Removing...' : 'Remove'}
+              {isDeleting ? t('common.deleting') : t('common.remove')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -488,9 +490,9 @@ export function TeamDetailPage() {
             />
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTagEditMember(null)} disabled={isSavingTags}>Cancel</Button>
+            <Button variant="outline" onClick={() => setTagEditMember(null)} disabled={isSavingTags}>{t('common.cancel')}</Button>
             <Button onClick={handleSaveMemberTags} disabled={isSavingTags}>
-              {isSavingTags ? 'Saving…' : 'Save Tags'}
+              {isSavingTags ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -500,25 +502,25 @@ export function TeamDetailPage() {
       <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Team</DialogTitle>
+            <DialogTitle>{t('teams.deleteConfirm')}</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete "{team.name}"? This will remove all team members and cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setDeleteTeamDialogOpen(false)}
               disabled={isDeleting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDeleteTeam}
               disabled={isDeleting}
             >
-              {isDeleting ? 'Deleting...' : 'Delete Team'}
+              {isDeleting ? t('common.deleting') : t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

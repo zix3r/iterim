@@ -5,13 +5,16 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { SidebarContent } from './Sidebar';
+import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { updateMyTheme } from '@/lib/api';
 
 export function Header() {
   const { user, logout } = useAuth();
   const { resolvedTheme, theme, setTheme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const initials = user?.name
@@ -44,11 +47,11 @@ export function Header() {
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5 text-muted-foreground" />
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{t('header.openMenu')}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
-              <SheetTitle className="sr-only">Navigation</SheetTitle>
+              <SheetTitle className="sr-only">{t('header.navigation')}</SheetTitle>
               <SidebarContent />
             </SheetContent>
           </Sheet>
@@ -74,11 +77,14 @@ export function Header() {
             size="icon"
             className="text-muted-foreground hover:text-foreground hover:bg-accent"
             onClick={handleThemeToggle}
-            title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={resolvedTheme === 'dark' ? t('header.themeToggle.toLight') : t('header.themeToggle.toDark')}
           >
             {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            <span className="sr-only">Toggle theme</span>
+            <span className="sr-only">{t('header.themeToggle.srLabel')}</span>
           </Button>
+
+          {/* Kalbos perjungimo mygtukas — perjungia tarp lt <-> en */}
+          <LanguageToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
 
           {user?.role === 'Admin' && (
             <Button
@@ -86,13 +92,18 @@ export function Header() {
               size="icon"
               className="text-muted-foreground hover:text-foreground hover:bg-accent"
               onClick={() => navigate('/admin')}
-              title="Admin Panel"
+              title={t('header.adminPanel')}
             >
               <Shield className="h-5 w-5" />
             </Button>
           )}
 
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-accent">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent"
+            title={t('header.notifications')}
+          >
             <Bell className="h-5 w-5" />
           </Button>
 
@@ -107,20 +118,20 @@ export function Header() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.name ?? 'User'}</p>
+                  <p className="text-sm font-medium leading-none">{user?.name ?? t('user.fallbackName')}</p>
                   <p className="text-xs leading-none text-muted-foreground">{user?.email ?? ''}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/profile">Profile</Link>
+                <Link to="/profile">{t('user.profile')}</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-red-600 cursor-pointer focus:bg-red-500/10 focus:text-red-700"
                 onClick={handleLogout}
               >
-                Logout
+                {t('user.logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

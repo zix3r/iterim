@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function CheckEmailPage() {
   const location = useLocation();
   const email = (location.state as { email?: string })?.email ?? '';
   const { resendConfirmation } = useAuth();
+  const { t } = useLanguage();
 
   const [resendStatus, setResendStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
 
@@ -35,11 +37,11 @@ export function CheckEmailPage() {
           </svg>
         </div>
 
-        <h2 className="auth-heading">Check your email</h2>
+        <h2 className="auth-heading">{t('auth.checkEmailTitle')}</h2>
         <p className="auth-subheading">
           {email
-            ? <>A confirmation link has been sent to <strong>{email}</strong>. Open it to activate your account.</>
-            : 'A confirmation link has been sent. Open it to activate your account.'}
+            ? <>{t('auth.checkEmailSubtitle')} <strong>{email}</strong></>
+            : t('auth.checkEmailSubtitle')}
         </p>
 
         <div className="check-email-info">
@@ -48,11 +50,11 @@ export function CheckEmailPage() {
             <line x1="12" y1="8" x2="12" y2="12"/>
             <line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          Can't find it? Check your spam or junk folder.
+          {t('auth.didntReceive')}
         </div>
 
         <div className="resend-section">
-          <p className="resend-label">Didn't receive the email?</p>
+          <p className="resend-label">{t('auth.didntReceive')}</p>
 
           {resendStatus === 'idle' && (
             <button
@@ -60,14 +62,14 @@ export function CheckEmailPage() {
               onClick={handleResend}
               disabled={!email}
             >
-              Resend confirmation email
+              {t('auth.resendConfirmation')}
             </button>
           )}
 
           {resendStatus === 'sending' && (
             <button className="auth-btn auth-btn-secondary" disabled>
               <span className="btn-spinner btn-spinner-dark" />
-              Sending...
+              {t('auth.sending')}
             </button>
           )}
 
@@ -76,22 +78,22 @@ export function CheckEmailPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="15" height="15">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
-              Confirmation email resent!
+              {t('auth.confirmationLinkSent')}
             </div>
           )}
 
           {resendStatus === 'error' && (
             <div className="resend-error">
-              Failed to send. Please try again later.
+              {t('auth.failedToSend')}
               <button className="resend-retry-btn" onClick={() => setResendStatus('idle')}>
-                Try again
+                {t('common.retry')}
               </button>
             </div>
           )}
         </div>
 
         <p className="auth-footer-text">
-          <Link to="/login" className="auth-link">← Back to sign in</Link>
+          <Link to="/login" className="auth-link">← {t('auth.backToSignIn')}</Link>
         </p>
       </div>
 

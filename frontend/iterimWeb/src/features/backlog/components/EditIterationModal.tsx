@@ -9,6 +9,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { updateIteration } from '@/lib/api';
 import type { Iteration } from '@/lib/api';
 import { dateOnOrAfter, maxLength, required } from '@/lib/validation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   iteration: Iteration | null;
@@ -20,6 +21,7 @@ interface Props {
 export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation(
     {
@@ -74,14 +76,14 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
         endDate: values.endDate,
         goal: values.goal.trim() || undefined,
       });
-      toast({ variant: 'success', title: 'Iteration updated successfully' });
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to update iteration'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedUpdate')),
       });
     } finally {
       setIsLoading(false);
@@ -92,12 +94,12 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Iteration</DialogTitle>
+          <DialogTitle>{t('backlog.editIteration')}</DialogTitle>
           <DialogDescription>Update iteration details.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm font-medium">Name</label>
+            <label className="text-sm font-medium">{t('backlog.iterationName')}</label>
             <Input
               value={values.name}
               onChange={(e) => setFieldValue('name', e.target.value)}
@@ -110,7 +112,7 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">
-                Start Date <span className="text-destructive">*</span>
+                {t('backlog.iterationStartDate')} <span className="text-destructive">*</span>
               </label>
               <Input
                 type="date"
@@ -125,7 +127,7 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
             </div>
             <div>
               <label className="text-sm font-medium">
-                End Date <span className="text-destructive">*</span>
+                {t('backlog.iterationEndDate')} <span className="text-destructive">*</span>
               </label>
               <Input
                 type="date"
@@ -140,7 +142,7 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Goal (optional)</label>
+            <label className="text-sm font-medium">{t('backlog.iterationGoal')} ({t('common.optional')})</label>
             <Textarea
               value={values.goal}
               onChange={(e) => setFieldValue('goal', e.target.value)}
@@ -149,8 +151,8 @@ export function EditIterationModal({ iteration, open, onOpenChange, onUpdated }:
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Changes'}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{t('common.cancel')}</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? t('common.saving') : t('common.save')}</Button>
           </div>
         </form>
       </DialogContent>

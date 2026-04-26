@@ -5,10 +5,12 @@ import { addRecentPage } from '@/lib/recentPages';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { DashboardGrid } from '../components/DashboardGrid';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function DashboardPage() {
   const { dashboardData, isLoading, error, refetch, refetchSilent } = useMyTeamsTree();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     refetchSilent();
@@ -17,10 +19,10 @@ export function DashboardPage() {
   useEffect(() => {
     addRecentPage({
       path: '/dashboard',
-      label: 'Dashboard',
+      label: t('dashboard.title'),
       iconType: 'Dashboard',
     });
-  }, []);
+  }, [t]);
 
   if (isLoading) {
     return (
@@ -52,13 +54,13 @@ export function DashboardPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Dashboard</h3>
+          <h3 className="text-lg font-semibold text-red-800">{t('common.error')}</h3>
           <p className="text-sm text-red-700">{error || 'Could not retrieve dashboard data.'}</p>
           <button
             onClick={refetch}
             className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-md font-medium transition-colors"
           >
-            Try Again
+            {t('common.tryAgain')}
           </button>
         </div>
       </div>

@@ -12,6 +12,7 @@ import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 import { Trash2 } from 'lucide-react';
 import { DependencySection } from './DependencySection';
+import { useLanguage } from '@/context/LanguageContext';
 
 const STATUS_OPTIONS = [
   { value: 0, label: 'Backlog' },
@@ -65,6 +66,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<EditWorkItemFormValues>(
     {
@@ -133,14 +135,14 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
         iterationId: values.iterationId ? Number(values.iterationId) : null,
       });
       await assignWorkItemTags(item.id, selectedTags.map(t => t.id));
-      toast({ variant: 'success', title: 'Work item updated' });
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to update work item'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedUpdate')),
       });
     } finally {
       setIsLoading(false);
@@ -152,14 +154,14 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
     setIsLoading(true);
     try {
       await deleteWorkItem(item.id);
-      toast({ variant: 'success', title: 'Work item deleted' });
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to delete work item'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedDelete')),
       });
     } finally {
       setIsLoading(false);
@@ -180,13 +182,13 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Work Item</DialogTitle>
+          <DialogTitle>{t('backlog.editItemTitle')}</DialogTitle>
           <DialogDescription>Update work item fields and save changes.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium">
-              Title <span className="text-destructive">*</span>
+              {t('backlog.itemTitle')} <span className="text-destructive">*</span>
             </label>
             <Input
               value={values.title}
@@ -201,7 +203,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium">Type</label>
+              <label className="text-sm font-medium">{t('backlog.type')}</label>
               <select
                 value={values.type}
                 onChange={(e) => setFieldValue('type', Number(e.target.value))}
@@ -214,7 +216,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-sm font-medium">{t('backlog.status')}</label>
               <select
                 value={values.status}
                 onChange={(e) => setFieldValue('status', Number(e.target.value))}
@@ -227,7 +229,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Priority</label>
+              <label className="text-sm font-medium">{t('backlog.priority')}</label>
               <select
                 value={values.priority}
                 onChange={(e) => setFieldValue('priority', Number(e.target.value))}
@@ -243,7 +245,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Points</label>
+              <label className="text-sm font-medium">{t('backlog.points')}</label>
               <Input
                 type="number"
                 min={0}
@@ -257,14 +259,14 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
               <FieldError id="edit-work-item-points-error" message={errors.points} />
             </div>
             <div>
-              <label className="text-sm font-medium">Assignee</label>
+              <label className="text-sm font-medium">{t('backlog.assignee')}</label>
               <select
                 value={values.assignedTo}
                 onChange={(e) => setFieldValue('assignedTo', e.target.value)}
                 className={selectClass}
                 disabled={isLoading}
               >
-                <option value="">Unassigned</option>
+                <option value="">{t('backlog.unassigned')}</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id.toString()}>{m.userName}</option>
                 ))}
@@ -273,7 +275,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
           </div>
 
           <div>
-            <label className="text-sm font-medium">Tags</label>
+            <label className="text-sm font-medium">{t('backlog.tags')}</label>
             <TagSelector
               orgId={orgId}
               selected={selectedTags}
@@ -283,7 +285,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
           </div>
 
           <div>
-            <label className="text-sm font-medium">Description</label>
+            <label className="text-sm font-medium">{t('backlog.itemDescription')}</label>
             <Textarea
               value={values.description}
               onChange={(e) => setFieldValue('description', e.target.value)}
@@ -302,23 +304,23 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
             <div>
               {confirmDelete ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-destructive">Are you sure?</span>
+                  <span className="text-sm text-destructive">{t('shared.confirmMessage')}</span>
                   <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={isLoading}>
-                    {isLoading ? 'Deleting...' : 'Yes, delete'}
+                    {isLoading ? t('common.deleting') : t('common.yes')}
                   </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => setConfirmDelete(false)} disabled={isLoading}>
-                    No
+                    {t('common.no')}
                   </Button>
                 </div>
               ) : (
                 <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} disabled={isLoading}>
-                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> {t('common.delete')}
                 </Button>
               )}
             </div>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-              <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Changes'}</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{t('common.cancel')}</Button>
+              <Button type="submit" disabled={isLoading}>{isLoading ? t('common.saving') : t('common.save')}</Button>
             </div>
           </DialogFooter>
         </form>

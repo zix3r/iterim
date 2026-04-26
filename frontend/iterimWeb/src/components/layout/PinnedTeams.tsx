@@ -3,11 +3,13 @@ import { Link, useLocation } from 'react-router';
 import { usePinnedTeams } from '@/lib/favorites';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function PinnedTeams() {
   const { pinnedTeams, togglePin } = usePinnedTeams();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   if (pinnedTeams.length === 0) return null;
 
@@ -24,7 +26,7 @@ export function PinnedTeams() {
     } catch (err) {
       toast({
         variant: 'error',
-        title: 'Error',
+        title: t('common.error'),
         description: 'Failed to unpin team.',
       });
     }

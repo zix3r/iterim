@@ -7,6 +7,7 @@ import { RecentPagesCard } from './RecentPagesCard';
 import { MyTeamsByOrgCard } from './MyTeamsByOrgCard';
 import { ActiveIterationsCard } from './ActiveIterationsCard';
 import type { DashboardWorkItem, DashboardActivity } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   firstName: string;
@@ -24,10 +25,11 @@ function SectionHeader({ label }: { label: string }) {
 }
 
 export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationProcessed }: Props) {
+  const { t } = useLanguage();
   const now = new Date();
   const hour = now.getHours();
   const greeting =
-    hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    hour < 12 ? t('dashboard.greetingMorning') : hour < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening');
 
   const dateLabel = now.toLocaleDateString('en-US', {
     weekday: 'long',

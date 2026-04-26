@@ -5,6 +5,7 @@ import { usePinnedTeams } from '@/lib/favorites';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import type { DashboardSprint } from '@/lib/api';
 import { IterationStatusBar } from './IterationStatusBar';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ResolvedPinnedTeam {
   teamId: number;
@@ -21,6 +22,7 @@ export function PinnedTeamsCard() {
   const { pinnedTeams, isLoading } = usePinnedTeams();
   const { organizations } = useMyTeamsTree();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const resolved: ResolvedPinnedTeam[] = pinnedTeams.map((pt) => {
     let orgName = '';
@@ -57,7 +59,7 @@ export function PinnedTeamsCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <Pin className="h-4 w-4 text-zinc-500" />
-          Pinned Teams
+          {t('sidebar.pinned')}
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -12,6 +12,7 @@ import { addRecentPage } from '@/lib/recentPages';
 import { AbsenceList } from '@/features/absences/components/AbsenceList';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 
 const toDateInputValue = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -26,6 +27,7 @@ const getCurrentMonthRange = () => {
 };
 
 export function AbsencesPage() {
+  const { t } = useLanguage();
   const { orgId } = useParams();
   const defaultRange = getCurrentMonthRange();
 
@@ -140,10 +142,10 @@ export function AbsencesPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Absences</h3>
-          <p className="text-sm text-red-700">{error || "Organization not found."}</p>
+          <h3 className="text-lg font-semibold text-red-800">{t('absences.failedLoad')}</h3>
+          <p className="text-sm text-red-700">{error || t('common.notFound')}</p>
           <Button onClick={() => loadData()} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.tryAgain')}
           </Button>
         </div>
       </div>
@@ -168,8 +170,8 @@ export function AbsencesPage() {
 
       <div className="flex justify-between items-start gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold">Absence Management</h1>
-          <p className="text-muted-foreground">Track vacations, sick leaves, and other member absences.</p>
+          <h1 className="text-3xl font-bold">{t('absences.title')}</h1>
+          <p className="text-muted-foreground">{t('dashboard.upcomingAbsences')}</p>
         </div>
         <CreateAbsenceModal
           orgId={organization.id}
@@ -182,13 +184,13 @@ export function AbsencesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Date Range Filter</CardTitle>
+          <CardTitle>{t('metrics.dateRange')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-3 items-end">
             <div className="w-full sm:w-auto">
               <label className="text-sm font-medium block mb-2" htmlFor="absences-filter-from-date">
-                From date
+                {t('absences.startDate')}
               </label>
               <Input
                 id="absences-filter-from-date"
@@ -199,7 +201,7 @@ export function AbsencesPage() {
             </div>
             <div className="w-full sm:w-auto">
               <label className="text-sm font-medium block mb-2" htmlFor="absences-filter-to-date">
-                To date
+                {t('absences.endDate')}
               </label>
               <Input
                 id="absences-filter-to-date"
@@ -212,27 +214,27 @@ export function AbsencesPage() {
               onClick={handleApplyFilter}
               disabled={isRefreshing || toDate < fromDate}
             >
-              {isRefreshing ? 'Filtering...' : 'Apply Filter'}
+              {isRefreshing ? t('common.saving') : t('common.refresh')}
             </Button>
             <Button
               variant="outline"
               disabled={isRefreshing}
               onClick={handleResetRange}
             >
-              Reset Range
+              {t('common.refresh')}
             </Button>
           </div>
           {toDate < fromDate && (
-            <p className="text-sm text-destructive mt-2">To date must be after or equal to from date.</p>
+            <p className="text-sm text-destructive mt-2">{t('validation.endBeforeStart')}</p>
           )}
         </CardContent>
       </Card>
 
       {/* TUŠČIA BŪSENA ARBA LENTELĖ */}
       {absences.length === 0 ? (
-        <EmptyState 
-          title="No registered absences"
-          description="There are no absences found for the selected date range."
+        <EmptyState
+          title={t('absences.noAbsences')}
+          description={t('absences.noAbsences')}
           icon={<CalendarOff className="h-8 w-8" />}
           action={
             <CreateAbsenceModal

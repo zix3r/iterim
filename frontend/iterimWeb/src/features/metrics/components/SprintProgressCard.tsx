@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { SprintMetrics } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/i18n/translations';
 
 interface Props {
   data: SprintMetrics | null;
@@ -10,15 +12,17 @@ interface Props {
 
 const STATUS_ORDER = ['Done', 'InProgress', 'Review', 'Todo', 'Backlog'];
 
-const STATUS_CONFIG: Record<string, { label: string; bar: string; text: string }> = {
-  Done:       { label: 'Done',        bar: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
-  InProgress: { label: 'In Progress', bar: 'bg-blue-500',    text: 'text-blue-700 dark:text-blue-300'   },
-  Review:     { label: 'Review',      bar: 'bg-violet-500',  text: 'text-violet-700 dark:text-violet-300' },
-  Todo:       { label: 'To Do',       bar: 'bg-amber-400',   text: 'text-amber-700 dark:text-amber-300'  },
+const getStatusConfig = (t: (key: TranslationKey) => string): Record<string, { label: string; bar: string; text: string }> => ({
+  Done:       { label: t('board.done'),        bar: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-300' },
+  InProgress: { label: t('board.inProgress'), bar: 'bg-blue-500',    text: 'text-blue-700 dark:text-blue-300'   },
+  Review:     { label: t('board.review'),      bar: 'bg-violet-500',  text: 'text-violet-700 dark:text-violet-300' },
+  Todo:       { label: t('board.todo'),       bar: 'bg-amber-400',   text: 'text-amber-700 dark:text-amber-300'  },
   Backlog:    { label: 'Backlog',     bar: 'bg-muted-foreground/40', text: 'text-muted-foreground'   },
-};
+});
 
 export function SprintProgressCard({ data, loading }: Props) {
+  const { t } = useLanguage();
+  const STATUS_CONFIG = getStatusConfig(t);
   if (loading) {
     return (
       <Card>
@@ -35,9 +39,9 @@ export function SprintProgressCard({ data, loading }: Props) {
   if (!data) {
     return (
       <Card>
-        <CardHeader><CardTitle className="text-base">Iteration Progress</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t('metrics.sprintProgress')}</CardTitle></CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No active iteration found.</p>
+          <p className="text-sm text-muted-foreground">{t('board.noActiveIteration')}</p>
         </CardContent>
       </Card>
     );
@@ -59,7 +63,7 @@ export function SprintProgressCard({ data, loading }: Props) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <CardTitle className="text-base">Iteration Progress</CardTitle>
+            <CardTitle className="text-base">{t('metrics.sprintProgress')}</CardTitle>
             <p className="text-sm text-muted-foreground mt-0.5 truncate">
               {data.name ?? `Iteration #${data.iterationId}`}
             </p>
@@ -86,7 +90,7 @@ export function SprintProgressCard({ data, loading }: Props) {
           </div>
           <div className="text-right text-sm">
             <span className="font-semibold text-foreground">{data.completedPoints}</span>
-            <span className="text-muted-foreground"> / {data.totalPoints} pts</span>
+            <span className="text-muted-foreground"> / {data.totalPoints} {t('metrics.points')}</span>
           </div>
         </div>
 
@@ -102,7 +106,7 @@ export function SprintProgressCard({ data, loading }: Props) {
         {totalItems > 0 && (
           <div>
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
-              Items by status
+              {t('common.status')}
             </p>
             <div className="flex h-2 w-full rounded-full overflow-hidden gap-px bg-muted">
               {statusEntries.map(([status, count]) => {

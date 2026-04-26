@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import {
     adminGetStats,
@@ -19,6 +20,7 @@ import {
 export function AdminSystemPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { t } = useLanguage();
 
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [health, setHealth] = useState<HealthReport | null>(null);
@@ -75,25 +77,25 @@ export function AdminSystemPage() {
     return (
         <AdminLayout>
             {isLoading ? (
-                <div className="flex items-center justify-center py-20 text-zinc-400">Loading...</div>
+                <div className="flex items-center justify-center py-20 text-zinc-400">{t('common.loading')}</div>
             ) : (
                 <>
                     {/* Stats cards */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                        <StatCard icon={Users} label="Users" value={stats?.users.total ?? 0}
-                            sub={`+${stats?.users.newThisWeek ?? 0} this week`} />
-                        <StatCard icon={Building2} label="Organizations" value={stats?.organizations.total ?? 0} />
-                        <StatCard icon={Package} label="Products" value={stats?.products.total ?? 0} />
+                        <StatCard icon={Users} label={t('admin.totalUsers')} value={stats?.users.total ?? 0}
+                            sub={`+${stats?.users.newThisWeek ?? 0}`} />
+                        <StatCard icon={Building2} label={t('admin.totalOrganizations')} value={stats?.organizations.total ?? 0} />
+                        <StatCard icon={Package} label={t('admin.totalProducts')} value={stats?.products.total ?? 0} />
                         <StatCard icon={UsersRound} label="Teams" value={stats?.teams.total ?? 0} />
                         <StatCard icon={ClipboardList} label="Work Items" value={stats?.workItems.total ?? 0} />
                         <StatCard icon={Repeat} label="Iterations" value={stats?.iterations.total ?? 0}
-                            sub={`${stats?.iterations.active ?? 0} active`} />
+                            sub={`${stats?.iterations.active ?? 0}`} />
                     </div>
 
                     {/* User breakdown */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                         <div className="bg-white rounded-lg border border-zinc-200 p-5">
-                            <h3 className="text-sm font-medium text-zinc-500 mb-4">User breakdown</h3>
+                            <h3 className="text-sm font-medium text-zinc-500 mb-4">{t('admin.activeUsers')}</h3>
                             <div className="space-y-3">
                                 <InfoRow label="Total" value={stats?.users.total ?? 0} />
                                 <InfoRow label="New this week" value={stats?.users.newThisWeek ?? 0} />
@@ -119,7 +121,7 @@ export function AdminSystemPage() {
                     <div className="mb-4 flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-zinc-900 flex items-center gap-2">
                             <Heart className="h-5 w-5" />
-                            System Health
+                            {t('admin.systemHealth')}
                         </h2>
                         <div className="flex items-center gap-3">
                             <span className="text-xs text-zinc-400">
@@ -127,7 +129,7 @@ export function AdminSystemPage() {
                             </span>
                             <Button variant="outline" size="sm" onClick={fetchData}>
                                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                                Refresh
+                                {t('common.refresh')}
                             </Button>
                             <Button variant="outline" size="sm" asChild>
                                 <a href={healthDetailUrl} target="_blank" rel="noopener noreferrer">
@@ -155,7 +157,7 @@ export function AdminSystemPage() {
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <Database className="h-4 w-4 text-zinc-500" />
-                                        <span className="font-medium text-zinc-900">Database</span>
+                                        <span className="font-medium text-zinc-900">{t('admin.systemHealth')}</span>
                                     </div>
                                     {healthBadge(check.status)}
                                 </div>
@@ -174,7 +176,7 @@ export function AdminSystemPage() {
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-zinc-500" />
-                                        <span className="font-medium text-zinc-900">Uptime</span>
+                                        <span className="font-medium text-zinc-900">{t('admin.systemUptime')}</span>
                                     </div>
                                     {healthBadge(check.status)}
                                 </div>
@@ -195,7 +197,7 @@ export function AdminSystemPage() {
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         <Cpu className="h-4 w-4 text-zinc-500" />
-                                        <span className="font-medium text-zinc-900">Memory</span>
+                                        <span className="font-medium text-zinc-900">{t('admin.systemHealth')}</span>
                                     </div>
                                     {healthBadge(check.status)}
                                 </div>

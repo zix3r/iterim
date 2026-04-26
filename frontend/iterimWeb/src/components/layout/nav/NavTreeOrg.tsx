@@ -4,6 +4,7 @@ import { useNavExpansion } from '@/hooks/useNavExpansion';
 import { NavRow } from './NavRow';
 import { NavTreeProductsGroup } from './NavTreeProductsGroup';
 import type { DashboardOrganization } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   org: DashboardOrganization;
@@ -11,6 +12,7 @@ interface Props {
 
 export function NavTreeOrg({ org }: Props) {
   const location = useLocation();
+  const { t } = useLanguage();
   const autoOpen = location.pathname.includes(`/org/${org.id}`);
   const [expanded, toggle] = useNavExpansion(`nav-expand-org-${org.id}`, autoOpen);
 
@@ -28,7 +30,7 @@ export function NavTreeOrg({ org }: Props) {
       />
       {expanded && (
         <div className="space-y-0.5">
-          <NavRow to={`/org/${org.id}/absences`} label="Absences" icon={CalendarX2} depth={1} />
+          <NavRow to={`/org/${org.id}/absences`} label={t('layout.breadcrumbAbsences')} icon={CalendarX2} depth={1} />
           <NavTreeProductsGroup products={org.products} orgId={org.id} />
         </div>
       )}

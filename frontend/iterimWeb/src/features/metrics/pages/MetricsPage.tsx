@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 import { SprintProgressCard } from '../components/SprintProgressCard';
 import { VelocityChart } from '../components/VelocityChart';
 import { BurndownChart } from '../components/BurndownChart';
@@ -32,6 +33,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export function MetricsPage() {
+  const { t } = useLanguage();
   const { orgId, productId, teamId } = useParams<{
     orgId: string; productId: string; teamId: string;
   }>();
@@ -185,10 +187,10 @@ export function MetricsPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 dark:bg-red-500/10 dark:border-red-500/30 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">Error Loading Metrics</h3>
-          <p className="text-sm text-red-700 dark:text-red-300">{iterError ?? velocityError ?? 'Unknown error occurred.'}</p>
+          <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">{t('metrics.failedLoad')}</h3>
+          <p className="text-sm text-red-700 dark:text-red-300">{iterError ?? velocityError ?? t('common.error')}</p>
           <Button onClick={loadIterations} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 dark:border-red-500/30 dark:hover:bg-red-500/15 text-red-800 dark:text-red-300">
-            Try Again
+            {t('common.tryAgain')}
           </Button>
         </div>
       </div>
@@ -213,8 +215,8 @@ export function MetricsPage() {
       />
 
       <PageHeader
-        title="Metrics"
-        description="Team analytics and iteration health"
+        title={t('metrics.title')}
+        description={t('products.metrics')}
         actions={
           iterations.length > 0 ? (
             <SprintSelector
@@ -230,8 +232,8 @@ export function MetricsPage() {
       {iterations.length === 0 ? (
         <EmptyState
           icon={<BarChart2 className="h-8 w-8" />}
-          title="No iterations yet"
-          description="Create and start an iteration in the Backlog to see analytics here."
+          title={t('board.noActiveIteration')}
+          description={t('backlog.failedLoad')}
         />
       ) : (
         <div className="space-y-6">
@@ -274,11 +276,12 @@ interface SprintSelectorProps {
 }
 
 function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProps) {
+  const { t } = useLanguage();
   const selected = iterations.find((i) => i.id === selectedId);
 
   return (
     <div className="relative">
-      <label className="text-xs text-muted-foreground font-medium block mb-1">Viewing iteration</label>
+      <label className="text-xs text-muted-foreground font-medium block mb-1">{t('board.selectIteration')}</label>
       <div className="relative">
         <select
           value={selectedId ?? ''}

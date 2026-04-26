@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTheme } from '@/context/ThemeContext';
 import type { VelocityData } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   data: VelocityData | null;
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function VelocityChart({ data, loading, highlightIterationId }: Props) {
+  const { t } = useLanguage();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
@@ -56,13 +58,13 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Velocity</CardTitle>
-            <CardDescription className="mt-0.5">Planned vs completed points per iteration</CardDescription>
+            <CardTitle className="text-base">{t('metrics.velocity')}</CardTitle>
+            <CardDescription className="mt-0.5">{t('metrics.velocityDescription')}</CardDescription>
           </div>
           {hasData && (
             <div className="text-right shrink-0">
               <p className="text-2xl font-bold text-foreground">{avg}</p>
-              <p className="text-xs text-muted-foreground">avg pts / iteration</p>
+              <p className="text-xs text-muted-foreground">{t('metrics.points')}</p>
             </div>
           )}
         </div>
@@ -71,7 +73,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
       <CardContent>
         {!hasData ? (
           <div className="flex items-center justify-center h-56 text-sm text-muted-foreground">
-            No completed iterations yet.
+            {t('metrics.noData')}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
@@ -109,11 +111,11 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
                   <div className="mt-3 flex items-center justify-center gap-4 text-xs" style={{ color: colors.tick }}>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: colors.planned }} />
-                      Planned
+                      {t('metrics.committed')}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: colors.completed }} />
-                      Completed
+                      {t('metrics.completed')}
                     </span>
                   </div>
                 )}

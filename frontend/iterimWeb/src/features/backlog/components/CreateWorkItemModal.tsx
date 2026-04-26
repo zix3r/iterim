@@ -10,6 +10,7 @@ import { createWorkItem, assignWorkItemTags } from '@/lib/api';
 import type { TeamMember, Tag } from '@/lib/api';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 import { TagSelector } from '@/components/shared/TagSelector';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TYPE_OPTIONS = [
   { value: 0, label: 'Story', emoji: '🟦' },
@@ -47,6 +48,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const emptyState: CreateWorkItemFormValues = {
     title: '',
@@ -104,7 +106,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
       if (selectedTags.length > 0) {
         await assignWorkItemTags(created.id, selectedTags.map(t => t.id));
       }
-      toast({ variant: 'success', title: 'Work item created' });
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       resetForm();
       setSelectedTags([]);
@@ -112,8 +114,8 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to create work item'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedCreate')),
       });
     } finally {
       setIsLoading(false);
@@ -134,16 +136,16 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Work Item</DialogTitle>
-          <DialogDescription>Add a new item to the backlog.</DialogDescription>
+          <DialogTitle>{t('backlog.createItemTitle')}</DialogTitle>
+          <DialogDescription>{t('backlog.addItem')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium">
-              Title <span className="text-destructive">*</span>
+              {t('backlog.itemTitle')} <span className="text-destructive">*</span>
             </label>
             <Input
-              placeholder="As a user, I want to..."
+              placeholder={t('backlog.itemTitlePlaceholder')}
               value={values.title}
               onChange={(e) => setFieldValue('title', e.target.value)}
               disabled={isLoading}
@@ -156,7 +158,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Type</label>
+              <label className="text-sm font-medium">{t('backlog.type')}</label>
               <select
                 value={values.type}
                 onChange={(e) => setFieldValue('type', Number(e.target.value))}
@@ -169,7 +171,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Priority</label>
+              <label className="text-sm font-medium">{t('backlog.priority')}</label>
               <select
                 value={values.priority}
                 onChange={(e) => setFieldValue('priority', Number(e.target.value))}
@@ -185,7 +187,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Points</label>
+              <label className="text-sm font-medium">{t('backlog.points')}</label>
               <Input
                 type="number"
                 min={0}
@@ -199,14 +201,14 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
               <FieldError id="create-work-item-points-error" message={errors.points} />
             </div>
             <div>
-              <label className="text-sm font-medium">Assignee</label>
+              <label className="text-sm font-medium">{t('backlog.assignee')}</label>
               <select
                 value={values.assignedTo}
                 onChange={(e) => setFieldValue('assignedTo', e.target.value)}
                 className={selectClass}
                 disabled={isLoading}
               >
-                <option value="">Unassigned</option>
+                <option value="">{t('backlog.unassigned')}</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id.toString()}>{m.userName}</option>
                 ))}
@@ -215,7 +217,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
           </div>
 
           <div>
-            <label className="text-sm font-medium">Tags</label>
+            <label className="text-sm font-medium">{t('backlog.tags')}</label>
             <TagSelector
               orgId={orgId}
               selected={selectedTags}
@@ -225,7 +227,7 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
           </div>
 
           <div>
-            <label className="text-sm font-medium">Description (optional)</label>
+            <label className="text-sm font-medium">{t('backlog.itemDescription')} ({t('common.optional')})</label>
             <Textarea
               placeholder="Details..."
               value={values.description}
@@ -236,8 +238,8 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>{isLoading ? 'Creating...' : 'Create'}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{t('common.cancel')}</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? t('common.creating') : t('common.create')}</Button>
           </div>
         </form>
       </DialogContent>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import type { DashboardSprint } from '@/lib/api';
 import { IterationStatusBar } from './IterationStatusBar';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ActiveTeamRow {
   teamId: number;
@@ -18,6 +19,7 @@ interface ActiveTeamRow {
 export function ActiveIterationsCard() {
   const { organizations, isLoading } = useMyTeamsTree();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const rows: ActiveTeamRow[] = [];
   for (const org of organizations) {
@@ -43,7 +45,7 @@ export function ActiveIterationsCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <Zap className="h-4 w-4 text-zinc-500" />
-          Active Iterations
+          {t('dashboard.activeIterations')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -54,7 +56,7 @@ export function ActiveIterationsCard() {
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <p className="text-sm text-zinc-500">No active iterations right now.</p>
+          <p className="text-sm text-zinc-500">{t('dashboard.noActiveIterations')}</p>
         ) : (
           <div className="space-y-3">
             {rows.map((row) => (

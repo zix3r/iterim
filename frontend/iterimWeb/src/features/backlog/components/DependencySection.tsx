@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DependencyDetailModal } from './DependencyDetailModal';
 import { AddDependencyDialog } from './AddDependencyDialog';
 import { Plus, X, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   Backlog: { label: 'Backlog', color: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
@@ -25,6 +26,7 @@ export function DependencySection({ workItemId }: Props) {
   const [detailModal, setDetailModal] = useState<{ dep: WorkItemDependency; direction: 'blocks' | 'blockedBy' } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const load = useCallback(async () => {
     try {
@@ -50,8 +52,8 @@ export function DependencySection({ workItemId }: Props) {
     } catch (err) {
       toast({
         variant: 'error',
-        title: 'Nepavyko pašalinti',
-        description: err instanceof Error ? err.message : 'Klaida',
+        title: t('common.error'),
+        description: err instanceof Error ? err.message : t('common.error'),
       });
     }
   };
@@ -62,14 +64,14 @@ export function DependencySection({ workItemId }: Props) {
 
   const existingBlockerIds = deps.blockedBy.map(d => d.workItemId);
 
-  if (loading) return <div className="text-xs text-muted-foreground">Kraunama...</div>;
+  if (loading) return <div className="text-xs text-muted-foreground">{t('common.loading')}</div>;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">Priklausomybės</span>
+        <span className="text-sm font-medium">{t('backlog.dependencies')}</span>
         <Button type="button" variant="ghost" size="sm" onClick={() => setAddOpen(true)} className="h-6 px-2 text-xs gap-1">
-          <Plus className="h-3 w-3" /> Pridėti blokerį
+          <Plus className="h-3 w-3" /> {t('backlog.addDependency')}
         </Button>
       </div>
 
@@ -78,7 +80,7 @@ export function DependencySection({ workItemId }: Props) {
         <div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1.5">
             <ArrowLeft className="h-3 w-3" />
-            <span>Blokuojamas</span>
+            <span>{t('backlog.blockedBy')}</span>
           </div>
           <div className="space-y-1">
             {deps.blockedBy.map(dep => (
@@ -98,7 +100,7 @@ export function DependencySection({ workItemId }: Props) {
         <div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1.5">
             <ArrowRight className="h-3 w-3" />
-            <span>Blokuoja</span>
+            <span>{t('backlog.blocks')}</span>
           </div>
           <div className="space-y-1">
             {deps.blocks.map(dep => (

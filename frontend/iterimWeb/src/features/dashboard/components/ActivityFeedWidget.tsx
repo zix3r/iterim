@@ -1,16 +1,18 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Activity, Clock } from 'lucide-react'; 
+import { Activity, Clock } from 'lucide-react';
 import type { DashboardActivity } from '@/lib/api';
 import { WorkItemBadge } from '@/components/shared/WorkItemBadge';
 import { Link } from 'react-router';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function ActivityFeedWidget({ activities }: { activities: DashboardActivity[] }) {
+  const { t } = useLanguage();
   return (
     <Card className="h-full border-none shadow-none bg-transparent lg:bg-card lg:border lg:shadow-sm">
       <CardHeader className="pb-3 px-0 lg:px-6 border-b-0">
         <CardTitle className="text-lg font-bold flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary" />
-          Recent Activity
+          {t('dashboard.recentActivity')}
         </CardTitle>
       </CardHeader>
       <CardContent className="max-h-[400px] overflow-y-auto pr-2 px-0 lg:px-6 pt-2">

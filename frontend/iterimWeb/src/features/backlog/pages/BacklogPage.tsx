@@ -13,6 +13,7 @@ import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
   updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
 } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 import { IterationSection } from '../components/IterationSection';
 import { BacklogFilters } from '../components/BacklogFilters';
@@ -33,6 +34,7 @@ const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 export function BacklogPage() {
   const { orgId, productId, teamId } = useParams();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Data
   const [groups, setGroups] = useState<BacklogGroup[]>([]);
@@ -191,7 +193,7 @@ export function BacklogPage() {
         const items = reordered.map((wi: WorkItem, i: number) => ({ id: wi.id, position: i }));
         await reorderWorkItems(tid, items);
       } catch {
-        toast({ variant: 'error', title: 'Error', description: 'Failed to reorder. Refreshing...' });
+        toast({ variant: 'error', title: t('common.error'), description: 'Failed to reorder. Refreshing...' });
         loadData();
       }
       return;
@@ -248,7 +250,7 @@ export function BacklogPage() {
           iterationId: targetIterationId,
         });
       } catch {
-        toast({ variant: 'error', title: 'Error', description: 'Failed to move item. Refreshing...' });
+        toast({ variant: 'error', title: t('common.error'), description: 'Failed to move item. Refreshing...' });
         loadData();
       }
     }
@@ -297,10 +299,10 @@ export function BacklogPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Backlog</h3>
+          <h3 className="text-lg font-semibold text-red-800">{t('backlog.failedLoad')}</h3>
           <p className="text-sm text-red-700">{error || "Failed to load team data."}</p>
           <Button onClick={loadData} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -345,25 +347,25 @@ export function BacklogPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Backlog</h1>
+          <h1 className="text-3xl font-bold">{t('backlog.title')}</h1>
           <p className="text-muted-foreground">{team.name}</p>
         </div>
         <div className="flex items-center gap-2">
           <CreateIterationModal teamId={tid} onCreated={loadData} />
           <Button size="sm" onClick={() => setCreateItemOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Add Item
+            <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
           </Button>
         </div>
       </div>
 
       {isCompletelyEmpty ? (
-        <EmptyState 
-          title="No work items in this team yet"
+        <EmptyState
+          title={t('backlog.noItems')}
           description="Create your first work item or start an iteration to begin planning your work."
           icon={<ListTodo className="h-8 w-8" />}
           action={
             <Button onClick={() => setCreateItemOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Create Work Item
+              <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
             </Button>
           }
           className="mt-8"
@@ -399,7 +401,7 @@ export function BacklogPage() {
                   onClick={() => setShowCompleted(!showCompleted)}
                 >
                   <History className="h-3 w-3 mr-1" />
-                  {showCompleted ? 'Hide' : 'Show'} completed ({completedGroups.length})
+                  {showCompleted ? t('common.close') : 'Show'} completed ({completedGroups.length})
                 </Button>
               )}
             </span>

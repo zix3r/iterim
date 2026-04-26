@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/i18n/translations';
 import { useToast } from '@/components/ui/toast';
 import { AdminLayout } from '@/features/admin/components/AdminLayout';
 import {
@@ -18,17 +20,18 @@ import {
     type AdminOrgOption,
 } from '@/lib/api';
 
-const STATUS_OPTIONS = [
-    { label: 'All', value: '' },
-    { label: 'Active', value: 'active' },
-    { label: 'Blocked', value: 'blocked' },
-    { label: 'Unconfirmed', value: 'unconfirmed' },
+const STATUS_OPTIONS: { labelKey: TranslationKey; value: string }[] = [
+    { labelKey: 'common.all', value: '' },
+    { labelKey: 'admin.statusActive', value: 'active' },
+    { labelKey: 'admin.statusSuspended', value: 'blocked' },
+    { labelKey: 'auth.emailNotConfirmed', value: 'unconfirmed' },
 ];
 
 
 export function AdminUsersPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { t } = useLanguage();
 
     const { toast } = useToast();
     const [deleteTarget, setDeleteTarget] = useState<AdminUserListItem | null>(null);
@@ -167,10 +170,10 @@ export function AdminUsersPage() {
     function statusBadge(u: AdminUserListItem) {
         const s = getUserStatus(u);
         if (s === 'blocked')
-            return <Badge variant="destructive">Blocked</Badge>;
+            return <Badge variant="destructive">{t('admin.statusSuspended')}</Badge>;
         if (s === 'unconfirmed')
-            return <Badge variant="outline" className="text-amber-600 border-amber-300">Unconfirmed</Badge>;
-        return <Badge variant="outline" className="text-emerald-600 border-emerald-300">Active</Badge>;
+            return <Badge variant="outline" className="text-amber-600 border-amber-300">{t('auth.emailNotConfirmed')}</Badge>;
+        return <Badge variant="outline" className="text-emerald-600 border-emerald-300">{t('admin.statusActive')}</Badge>;
     }
 
     function SortHeader({ field, label }: { field: string; label: string }) {
@@ -199,7 +202,7 @@ export function AdminUsersPage() {
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
                     <Input
-                        placeholder="Search by name or email..."
+                        placeholder={t('admin.search')}
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         className="pl-9"
@@ -214,7 +217,7 @@ export function AdminUsersPage() {
                             size="sm"
                             onClick={() => { setStatus(opt.value); setPage(1); }}
                         >
-                            {opt.label}
+                            {t(opt.labelKey)}
                         </Button>
                     ))}
                     {/* Org filter */}
@@ -226,7 +229,7 @@ export function AdminUsersPage() {
                         }}
                         className="h-8 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-700"
                     >
-                        <option value="">All organizations</option>
+                        <option value="">{t('common.all')}</option>
                         {orgs.map((o) => (
                             <option key={o.id} value={o.id}>{o.name}</option>
                         ))}
@@ -244,20 +247,20 @@ export function AdminUsersPage() {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b border-zinc-100 bg-zinc-50">
-                            <SortHeader field="name" label="Name" />
-                            <SortHeader field="email" label="Email" />
-                            <SortHeader field="status" label="Status" />
-                            <SortHeader field="role" label="Role" />
-                            <SortHeader field="orgs" label="Orgs" />
-                            <SortHeader field="registered" label="Registered" />
-                            <th className="text-right px-4 py-3 font-medium text-zinc-500">Actions</th>
+                            <SortHeader field="name" label={t('common.name')} />
+                            <SortHeader field="email" label={t('profile.email')} />
+                            <SortHeader field="status" label={t('admin.status')} />
+                            <SortHeader field="role" label={t('admin.role')} />
+                            <SortHeader field="orgs" label={t('common.name')} />
+                            <SortHeader field="registered" label={t('common.date')} />
+                            <th className="text-right px-4 py-3 font-medium text-zinc-500">{t('common.actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {isLoading ? (
-                            <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">Loading...</td></tr>
+                            <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">{t('common.loading')}</td></tr>
                         ) : users.length === 0 ? (
-                            <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">No users found</td></tr>
+                            <tr><td colSpan={7} className="px-4 py-12 text-center text-zinc-400">{t('admin.failedLoad')}</td></tr>
                         ) : (
                             users.map((u) => (
                                 <tr key={u.id} className="border-b border-zinc-50 hover:bg-zinc-50/50">
@@ -266,8 +269,8 @@ export function AdminUsersPage() {
                                     <td className="px-4 py-3">{statusBadge(u)}</td>
                                     <td className="px-4 py-3">
                                         {u.role === 'Admin'
-                                            ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">Admin</Badge>
-                                            : <span className="text-zinc-500">User</span>}
+                                            ? <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">{t('admin.roleAdmin')}</Badge>
+                                            : <span className="text-zinc-500">{t('admin.roleUser')}</span>}
                                     </td>
                                     <td className="px-4 py-3 text-zinc-600">{u.organizationCount}</td>
                                     <td className="px-4 py-3 text-zinc-500">
@@ -284,7 +287,7 @@ export function AdminUsersPage() {
                                                         : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'}
                                                     onClick={() => handleToggleBlock(u)}
                                                 >
-                                                    {u.isBlocked ? 'Unblock' : 'Block'}
+                                                    {u.isBlocked ? t('admin.activate') : t('admin.suspend')}
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -292,7 +295,7 @@ export function AdminUsersPage() {
                                                     className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                                     onClick={() => handleResetPassword(u)}
                                                 >
-                                                    Reset PW
+                                                    {t('profile.changePassword')}
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
@@ -300,7 +303,7 @@ export function AdminUsersPage() {
                                                     className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                                     onClick={() => setDeleteTarget(u)}
                                                 >
-                                                    Delete
+                                                    {t('common.delete')}
                                                 </Button>
                                             </div>
                                         )}
@@ -324,7 +327,7 @@ export function AdminUsersPage() {
                             disabled={page <= 1}
                             onClick={() => setPage((p) => p - 1)}
                         >
-                            Previous
+                            {t('common.back')}
                         </Button>
                         <Button
                             variant="outline"
@@ -332,7 +335,7 @@ export function AdminUsersPage() {
                             disabled={page >= totalPages}
                             onClick={() => setPage((p) => p + 1)}
                         >
-                            Next
+                            {t('common.next')}
                         </Button>
                     </div>
                 </div>
@@ -341,7 +344,7 @@ export function AdminUsersPage() {
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setDeleteTarget(null)}>
                     <div className="bg-card text-card-foreground border border-border rounded-lg shadow-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-semibold text-foreground mb-2">Delete user</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-2">{t('admin.deleteUser')}</h3>
                         <p className="text-sm text-muted-foreground mb-1">
                             Are you sure you want to delete <strong>{deleteTarget.name}</strong> ({deleteTarget.email})?
                         </p>
@@ -349,8 +352,8 @@ export function AdminUsersPage() {
                             This will remove them from all organizations and teams. Their work items will be unassigned. This cannot be undone.
                         </p>
                         <div className="flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-                            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+                            <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('common.cancel')}</Button>
+                            <Button variant="destructive" onClick={handleDelete}>{t('common.delete')}</Button>
                         </div>
                     </div>
                 </div>
