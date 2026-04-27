@@ -12,6 +12,7 @@ interface Props {
 
 export function CapacityCard({ data, loading }: Props) {
   const { t } = useLanguage();
+
   if (loading) {
     return (
       <Card>
@@ -37,8 +38,9 @@ export function CapacityCard({ data, loading }: Props) {
     );
   }
 
-  const availabilityPct = data.totalWorkDays > 0
-    ? Math.round((data.availableDays / data.totalWorkDays) * 100)
+  // 1. Skaičiuojame bendrą komandos prieinamumą procentais pagal VALANDAS
+  const availabilityPct = data.totalWorkHours > 0
+    ? Math.round((data.availableHours / data.totalWorkHours) * 100)
     : 100;
 
   return (
@@ -51,11 +53,11 @@ export function CapacityCard({ data, loading }: Props) {
       </CardHeader>
 
       <CardContent className="space-y-5">
-        {/* Summary row */}
+        {/* Summary row - PAKEISTA: Rodome valandas, o ne dienas */}
         <div className="grid grid-cols-3 gap-3">
-          <StatBox label={t('metrics.day')} value={data.totalWorkDays} />
-          <StatBox label={t('common.none')} value={data.absenceDays} highlight={data.absenceDays > 0} />
-          <StatBox label={t('metrics.remaining')} value={data.availableDays} />
+          <StatBox label="Total Hours" value={data.totalWorkHours} unit="h" />
+          <StatBox label="Absence" value={data.absenceDays} unit="d" highlight={data.absenceDays > 0} />
+          <StatBox label="Available" value={data.availableHours} unit="h" />
         </div>
 
         {/* Team availability bar */}
@@ -86,8 +88,9 @@ export function CapacityCard({ data, loading }: Props) {
             </p>
             <div className="space-y-2">
               {data.byMember.map((m) => {
-                const memberPct = m.workDays > 0
-                  ? Math.round((m.availableDays / m.workDays) * 100)
+                // 2. Skaičiuojame nario procentą pagal jo individualias valandas
+                const memberPct = m.totalWorkHours > 0
+                  ? Math.round((m.availableHours / m.totalWorkHours) * 100)
                   : 100;
                 const hasAbsence = m.absenceDays > 0;
 
@@ -98,7 +101,6 @@ export function CapacityCard({ data, loading }: Props) {
                       hasAbsence ? 'bg-amber-50 border border-amber-100 dark:bg-amber-500/10 dark:border-amber-500/25' : 'bg-muted/50'
                     }`}
                   >
-                    {/* Avatar */}
                     <Avatar size="sm">
                       <AvatarImage src={m.avatarUrl ?? undefined} alt={m.name} />
                       <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">
@@ -106,7 +108,6 @@ export function CapacityCard({ data, loading }: Props) {
                       </AvatarFallback>
                     </Avatar>
 
-                    {/* Name + mini bar */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-foreground truncate">{m.name}</span>
@@ -127,10 +128,10 @@ export function CapacityCard({ data, loading }: Props) {
                       </div>
                     </div>
 
-                    {/* Days */}
+                    {/* 3. PAKEISTA: Rodome h (valandas) vietoj d (dienų) */}
                     <div className="text-right shrink-0">
-                      <span className="text-sm font-semibold text-foreground">{m.availableDays}</span>
-                      <span className="text-xs text-muted-foreground">/{m.workDays}d</span>
+                      <span className="text-sm font-semibold text-foreground">{m.availableHours}h</span>
+                      <div className="text-[10px] text-muted-foreground">norm: {m.totalWorkHours}h</div>
                     </div>
                   </div>
                 );
@@ -143,15 +144,16 @@ export function CapacityCard({ data, loading }: Props) {
   );
 }
 
+// Atnaujintas StatBox su vienetų palaikymu
 function StatBox({
-  label, value, highlight = false,
+  label, value, unit = "", highlight = false,
 }: {
-  label: string; value: number; highlight?: boolean;
+  label: string; value: number; unit?: string; highlight?: boolean;
 }) {
   return (
     <div className={`rounded-lg p-3 text-center ${highlight && value > 0 ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-muted/50'}`}>
       <p className={`text-xl font-bold ${highlight && value > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-foreground'}`}>
-        {value}
+        {value}{unit}
       </p>
       <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">{label}</p>
     </div>
@@ -159,12 +161,7 @@ function StatBox({
 }
 
 function initials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('');
+  return name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
 }
 
 function fmtDate(s: string) {

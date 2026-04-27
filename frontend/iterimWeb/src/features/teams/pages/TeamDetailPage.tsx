@@ -6,18 +6,29 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AddTeamMemberModal } from '@/features/teams/components/AddTeamMemberModal';
 import { EditTeamModal } from '@/features/teams/components/EditTeamModal';
+import { WorkScheduleEditor } from '@/features/teams/components/WorkScheduleEditor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
-import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon, TagIcon } from 'lucide-react';
+import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon, TagIcon, ClockIcon } from 'lucide-react';
 import { TagBadge } from '@/components/shared/TagBadge';
 import { TagSelector } from '@/components/shared/TagSelector';
+import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router';
 import { addRecentPage } from '@/lib/recentPages';
 import { usePinnedTeams } from '@/lib/favorites';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/context/LanguageContext';
+
+// Pagalbinė funkcija grafiko ženkliukui
+const getScheduleBadgeLabel = (type?: string, hours?: number) => {
+  const t = type || 'FullTime';
+  const h = hours || 40;
+  if (t === 'FullTime') return `FT ${h}h`;
+  if (t === 'PartTime') return `PT ${h}h`;
+  return `Custom ${h}h`;
+};
 
 export function TeamDetailPage() {
   const { orgId, productId, teamId } = useParams();
@@ -34,6 +45,8 @@ export function TeamDetailPage() {
   const [tagEditMember, setTagEditMember] = useState<TeamMember | null>(null);
   const [tagEditSelected, setTagEditSelected] = useState<Tag[]>([]);
   const [isSavingTags, setIsSavingTags] = useState(false);
+  const [editingScheduleMember, setEditingScheduleMember] = useState<TeamMember | null>(null);
+  
   const { toast } = useToast();
   const { isPinned, togglePin } = usePinnedTeams();
   const { t } = useLanguage();
@@ -82,7 +95,7 @@ export function TeamDetailPage() {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedDelete')
+        description: t('teams.failedDelete') // Pakeiskite į sėkmės pranešimą, jei norite
       });
       setDeleteMemberDialogOpen(false);
       setMemberToDelete(null);
@@ -109,7 +122,7 @@ export function TeamDetailPage() {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedDelete')
+        description: 'Team deleted successfully'
       });
       navigate(`/org/${orgId}/products/${productId}/teams`);
     } catch (err) {
@@ -135,7 +148,7 @@ export function TeamDetailPage() {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedUpdate')
+        description: 'Role updated successfully'
       });
       loadTeam();
     } catch (err) {
@@ -363,6 +376,10 @@ export function TeamDetailPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium">{member.userName}</h3>
+                        {/* 1. PRIDĖTAS GRAFIKO ŽENKLIUKAS (Badge) */}
+                        <Badge variant="outline" className="font-mono text-xs text-muted-foreground bg-zinc-50/50">
+                          {getScheduleBadgeLabel(member.scheduleType, member.weeklyHours)}
+                        </Badge>
                         {isMemberTeamCreator && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground">
                             {t('common.create')}
@@ -399,6 +416,19 @@ export function TeamDetailPage() {
                           {member.role}
                         </span>
                       )}
+                      
+                      {/* 2. PRIDĖTAS MYGTUKAS VALANDŲ REDAGAVIMUI */}
+                      {canManageTeam && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingScheduleMember(member)}
+                          title="Edit work schedule"
+                        >
+                          <ClockIcon className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )}
+
                       {canManageTeam && (
                         <Button
                           variant="ghost"
@@ -525,6 +555,15 @@ export function TeamDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 3. NAUJAS DARBO VALANDŲ REDAGAVIMO MODALAS */}
+      <WorkScheduleEditor
+        teamId={Number(teamId)}
+        member={editingScheduleMember as unknown as import('@/lib/api').TeamMember}
+        isOpen={editingScheduleMember !== null}
+        onClose={() => setEditingScheduleMember(null)}
+        onUpdated={loadTeam}
+      />
     </div>
   );
 }

@@ -4,7 +4,6 @@ using iterimApi.DTOs.Teams;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
 namespace iterimApi.Controllers;
 
 [ApiController]
@@ -12,6 +11,7 @@ namespace iterimApi.Controllers;
 public class TeamsController : ControllerBase
 {
     private readonly ITeamService _teamService;
+
 
     public TeamsController(ITeamService teamService)
     {
@@ -310,6 +310,44 @@ public class TeamsController : ControllerBase
         }
 
         return userId;
+    }
+    /// <summary>
+    /// PUT /api/teams/{teamId}/members/{memberId}/schedule
+    /// </summary>
+    /// <summary>
+    /// PUT /api/teams/{teamId}/members/{memberId}/schedule
+    /// </summary>
+    [HttpPut("api/teams/{teamId}/members/{memberId}/schedule")]
+    public async Task<IActionResult> UpdateMemberSchedule(int teamId, int memberId, [FromBody] UpdateTeamMemberScheduleDto dto)
+    {
+        try
+        {
+            // 1. NAUDOJAME SAUGŲ METODĄ (pataiso NullReferenceException)
+            var userId = GetUserId(); 
+
+            if (dto == null) return BadRequest(new { message = "Request body is empty" });
+
+            await _teamService.UpdateMemberScheduleAsync(teamId, memberId, dto, userId);
+            return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            // Jei vartotojas neturi teisių (pvz., nėra komandos adminas)
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            // Grąžiname detalią klaidą, jei vėl kas nors nepavyktų
+            return StatusCode(500, new { message = "Internal server error", detail = ex.Message });
+        }
     }
 
     /* kol kas užkomentuoju, neįsivaizduoju kam reikalingas

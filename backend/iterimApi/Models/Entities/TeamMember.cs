@@ -12,6 +12,8 @@ public class TeamMember
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int CreatedBy { get; set; }
     public int UpdatedBy { get; set; }
+    public int WeeklyHours { get; set; } = 40;
+    public WorkScheduleType ScheduleType { get; set; } = WorkScheduleType.FullTime;
 
     // Navigation
     public Team Team { get; set; } = null!;

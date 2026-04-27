@@ -97,6 +97,8 @@ export interface TeamMember {
   role: string;
   createdAt: string;
   tags: Tag[];
+  weeklyHours: number;
+  scheduleType: string;
 }
 
 export interface Team {
@@ -967,6 +969,8 @@ export interface MemberCapacityItem {
   workDays: number;
   absenceDays: number;
   availableDays: number;
+  totalWorkHours: number; // PRIDĖTA
+  availableHours: number; // PRIDĖTA
 }
 
 export interface CapacityData {
@@ -975,6 +979,8 @@ export interface CapacityData {
   totalWorkDays: number;
   absenceDays: number;
   availableDays: number;
+  availableHours: number;
+  totalWorkHours: number; // PRIDĖTA
   byMember: MemberCapacityItem[];
 }
 
@@ -1354,5 +1360,16 @@ export const getAdminOrganizationDetails = (orgId: number): Promise<AdminOrganiz
 
 export const deleteAdminOrganization = (orgId: number): Promise<void> =>
   fetchWithAuth(`/admin/organizations/manage/${orgId}`, { method: 'DELETE' }).then(async r => { // PRIDĖTA /manage
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+  export interface UpdateTeamMemberScheduleDto {
+  scheduleType: 'FullTime' | 'PartTime' | 'Custom';
+  weeklyHours: number;
+}
+export const updateTeamMemberSchedule = (teamId: number, memberId: number, data: UpdateTeamMemberScheduleDto): Promise<void> =>
+  fetchWithAuth(`/teams/${teamId}/members/${memberId}/schedule`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async r => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
