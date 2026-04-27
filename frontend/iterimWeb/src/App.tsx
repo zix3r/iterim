@@ -26,6 +26,7 @@ import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
 import { AdminSystemPage } from '@/features/admin/pages/AdminSystemPage';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganizationsPage';
 
 // Maršrutai, kuriuose nerodomas Header/AdminLayout — jiems reikia
 // atskiro plūduriuojančio kalbos perjungiklio.
@@ -75,6 +76,7 @@ function App() {
             <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
             <Route path="/admin/users" element={<AdminUsersPage />} />
             <Route path="/admin/system" element={<AdminSystemPage />} />
+            <Route path="/admin/organizations" element={<AdminOrganizationsPage />} />
             <Route
               element={
                 <MyTeamsTreeProvider>

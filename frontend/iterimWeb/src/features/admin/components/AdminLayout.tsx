@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Shield, Users, Activity, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Moon, Sun, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,6 +9,8 @@ import { updateMyTheme } from '@/lib/api';
 
 const ADMIN_TABS: { labelKey: TranslationKey; path: string; icon: typeof Users }[] = [
   { labelKey: 'admin.sidebarUsers', path: '/admin/users', icon: Users },
+  
+  { labelKey: 'Organizations' as TranslationKey, path: '/admin/organizations', icon: Building2 },
   { labelKey: 'admin.sidebarSystem', path: '/admin/system', icon: Activity },
 ];
 

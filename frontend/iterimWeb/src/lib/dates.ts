@@ -2,12 +2,15 @@
  * Format a date string to a readable format
  */
 export function formatDate(dateString: string): string {
+  if (!dateString) {
+    return 'Unknown date';
+  }
   // Ensure UTC dates are properly parsed by appending 'Z' if not present
   const isoString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
   const date = new Date(isoString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
+ 
   // Less than a minute
   if (diffInSeconds < 60) {
     return 'just now';
@@ -30,6 +33,7 @@ export function formatDate(dateString: string): string {
     const days = Math.floor(diffInSeconds / 86400);
     return `${days} day${days > 1 ? 's' : ''} ago`;
   }
+ 
 
   // Format as full date
   return date.toLocaleDateString('en-US', {

@@ -1298,3 +1298,61 @@ export const searchWorkItems = (q: string): Promise<WorkItem[]> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+  // ── Admin API ──────────────────────────────────────────
+
+export interface AdminOrganizationListDto {
+  id: number;
+  name: string;
+  slug: string;
+  memberCount: number;
+  productCount: number;
+  teamCount: number;
+  createdAt: string;
+  lastActivityAt: string | null;
+}
+
+export interface AdminOrgMemberDto {
+  id: number;
+  userId: number;
+  email: string;
+  role: string;
+  status: string;
+}
+
+export interface AdminOrgTeamDto {
+  id: number;
+  name: string;
+}
+
+export interface AdminOrgProductDto {
+  id: number;
+  name: string;
+  teamCount: number;
+  teams: AdminOrgTeamDto[];
+}
+
+export interface AdminOrganizationDetailDto {
+  id: number;
+  name: string;
+  slug: string;
+  createdAt: string;
+  members: AdminOrgMemberDto[];
+  products: AdminOrgProductDto[];
+}
+
+export const getAdminOrganizations = (): Promise<AdminOrganizationListDto[]> =>
+  fetchWithAuth('/admin/organizations/manage').then(async r => { // PRIDĖTA /manage
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getAdminOrganizationDetails = (orgId: number): Promise<AdminOrganizationDetailDto> =>
+  fetchWithAuth(`/admin/organizations/manage/${orgId}/details`).then(async r => { // PRIDĖTA /manage
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteAdminOrganization = (orgId: number): Promise<void> =>
+  fetchWithAuth(`/admin/organizations/manage/${orgId}`, { method: 'DELETE' }).then(async r => { // PRIDĖTA /manage
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });

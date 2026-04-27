@@ -1398,6 +1398,7 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Total products',
     'admin.failedLoad': 'Failed to load data.',
     'admin.search': 'Search users…',
+    
 
     // Layout
     'layout.breadcrumbHome': 'Home',

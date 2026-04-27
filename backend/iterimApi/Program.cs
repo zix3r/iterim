@@ -96,6 +96,8 @@ builder.Services.AddScoped<IMemberAbsenceService, MemberAbsenceService>();
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 builder.Services.AddScoped<IRecentPageService, RecentPageService>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IAdminOrganizationService, AdminOrganizationService>();
+
 
 // CORS — restrict methods and headers
 builder.Services.AddCors(options =>
