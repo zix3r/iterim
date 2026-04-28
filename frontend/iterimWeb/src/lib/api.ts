@@ -18,7 +18,13 @@ export interface OrganizationDetail extends Organization {
   userRole: string;
   currentUserId: number;
 }
-
+// Surask, kur aprašyti Absence tipai ir pridėk šį:
+export interface AbsenceFilters {
+  memberName?: string;
+  from?: string;
+  to?: string;
+  type?: string;
+}
 export type AbsenceReason = 'Sick' | 'Vacation' | 'Late' | 'Absent' | 'Other';
 
 export interface MemberAbsence {
@@ -488,13 +494,20 @@ export const removeOrganizationMember = (orgId: number, memberId: number): Promi
 
 export const getOrganizationAbsences = (
   orgId: number,
-  fromDate: string,
-  toDate: string
-): Promise<MemberAbsence[]> =>
-  fetchWithAuth(`/organizations/${orgId}/absences?from=${encodeURIComponent(fromDate)}&to=${encodeURIComponent(toDate)}`).then(async (r) => {
+  filters: AbsenceFilters = {} // Naudojame naują filtrų objektą
+): Promise<MemberAbsence[]> => {
+  const params = new URLSearchParams();
+  if (filters.memberName) params.set('memberName', filters.memberName);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  if (filters.type && filters.type !== 'all') params.set('type', filters.type);
+
+  const qs = params.toString();
+  return fetchWithAuth(`/organizations/${orgId}/absences${qs ? `?${qs}` : ''}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+};
 
 export const createOrganizationAbsence = (
   orgId: number,

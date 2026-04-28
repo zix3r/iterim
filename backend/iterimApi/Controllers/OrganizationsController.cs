@@ -4,6 +4,7 @@ using System.Security.Claims;
 using iterimApi.DTOs.Organizations;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity.Data;
+using iterimApi.Models.Enums;
 
 namespace iterimApi.Controllers;
 
@@ -185,5 +186,23 @@ public class OrganizationsController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+    }
+    
+[HttpGet("{orgId:int}/absences")]
+    public async Task<IActionResult> GetAbsences(
+        int orgId, 
+        [FromQuery] string? memberName, 
+        [FromQuery] string? from, // Pakeista į string
+        [FromQuery] string? to,   // Pakeista į string
+        [FromQuery] iterimApi.Models.Enums.AbsenceReason? type)
+    {
+        // 1. Saugiai paverčiame tekstą į datą (jei tekstas atsiųstas)
+        DateOnly? fromDate = DateOnly.TryParse(from, out var f) ? f : null;
+        DateOnly? toDate = DateOnly.TryParse(to, out var t) ? t : null;
+
+        // 2. Kviečiame servisą perduodami konvertuotas datas
+        var absences = await _organizationService.GetOrganizationAbsencesAsync(orgId, memberName, fromDate, toDate, type);
+        
+        return Ok(absences);
     }
 }
