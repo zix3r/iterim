@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
-import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, deleteOrganization, getOrgTags, createOrgTag, deleteOrgTag } from '@/lib/api';
+import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, updateOrganizationMemberRole, deleteOrganization, getOrgTags, createOrgTag, deleteOrgTag } from '@/lib/api';
 import type { OrganizationDetail, Tag } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,13 @@ export function OrganizationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const [updatingRoleMemberId, setUpdatingRoleMemberId] = useState<number | null>(null);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{
+    memberId: number;
+    memberEmail: string;
+    currentRole: string;
+    newRole: string;
+  } | null>(null);
   const [orgTags, setOrgTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState('#6366f1');
@@ -66,6 +73,37 @@ export function OrganizationPage() {
         .finally(() => setIsLoading(false));
     }
   }, [orgId]);
+
+  const requestRoleChange = (memberId: number, memberEmail: string, currentRole: string, newRole: string) => {
+    if (newRole === currentRole) return;
+    setPendingRoleChange({ memberId, memberEmail, currentRole, newRole });
+  };
+
+  const confirmRoleChange = async () => {
+    if (!pendingRoleChange) return;
+    const { memberId, newRole } = pendingRoleChange;
+
+    setUpdatingRoleMemberId(memberId);
+    try {
+      await updateOrganizationMemberRole(Number(orgId), memberId, newRole);
+      toast({
+        title: t('common.success'),
+        description: t('organizations.roleUpdated'),
+        variant: 'default',
+      });
+      setPendingRoleChange(null);
+      loadData();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : t('organizations.failedRoleUpdate');
+      toast({
+        title: t('common.error'),
+        description: errorMessage,
+        variant: 'error',
+      });
+    } finally {
+      setUpdatingRoleMemberId(null);
+    }
+  };
 
   const handleRemoveMember = async (memberId: number) => {
     if (!confirm(t('organizations.removeMember'))) return;
@@ -300,7 +338,23 @@ export function OrganizationPage() {
               {organization.members.map((member) => (
                 <TableRow key={member.userId}>
                   <TableCell className="font-medium">{member.email}</TableCell>
-                  <TableCell>{member.role}</TableCell>
+                  <TableCell>
+                    {isAdmin && member.userId !== organization.currentUserId && member.status !== 'Removed' && member.status !== 'Declined' ? (
+                      <select
+                        value={member.role}
+                        onChange={(e) => requestRoleChange(member.id, member.email, member.role, e.target.value)}
+                        disabled={updatingRoleMemberId === member.id}
+                        className="px-2 py-1 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                        aria-label={`Change role for ${member.email}`}
+                      >
+                        <option value="Admin">Admin</option>
+                        <option value="Member">Member</option>
+                        <option value="Viewer">Viewer</option>
+                      </select>
+                    ) : (
+                      <span>{member.role}</span>
+                    )}
+                  </TableCell>
                   <TableCell>{member.status}</TableCell>
                   <TableCell>
                     {(canManageAllAbsences || member.userId === organization.currentUserId) ? (
@@ -410,6 +464,48 @@ export function OrganizationPage() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteOrganization} disabled={isDeletingOrg}>
               {isDeletingOrg ? t('common.deleting') : t('common.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={pendingRoleChange !== null}
+        onOpenChange={(open) => {
+          if (!open && updatingRoleMemberId === null) {
+            setPendingRoleChange(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('organizations.changeRoleConfirm')}</DialogTitle>
+            <DialogDescription>
+              {pendingRoleChange && (
+                <>
+                  <span className="block">{pendingRoleChange.memberEmail}</span>
+                  <span className="block mt-1">
+                    <span className="font-medium">{pendingRoleChange.currentRole}</span>
+                    {' → '}
+                    <span className="font-medium">{pendingRoleChange.newRole}</span>
+                  </span>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPendingRoleChange(null)}
+              disabled={updatingRoleMemberId !== null}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={confirmRoleChange}
+              disabled={updatingRoleMemberId !== null}
+            >
+              {updatingRoleMemberId !== null ? t('common.saving') : t('common.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

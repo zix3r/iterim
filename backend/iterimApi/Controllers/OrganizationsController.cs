@@ -93,6 +93,36 @@ public class OrganizationsController : ControllerBase
         }
     }
 
+    // PATCH /api/organizations/:id/members/:memberId/role
+    [HttpPatch("{id:int}/members/{memberId:int}/role")]
+    public async Task<ActionResult<OrganizationMemberDto>> UpdateMemberRole(
+        int id,
+        int memberId,
+        [FromBody] UpdateOrganizationMemberRoleDto dto)
+    {
+        try
+        {
+            var updated = await _organizationService.UpdateMemberRoleAsync(id, memberId, dto.Role, GetUserId());
+            return Ok(updated);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     // DELETE /api/organizations/:id/members/:memberId
     [HttpDelete("{id:int}/members/{memberId:int}")]
     public async Task<ActionResult> RemoveMember(int id, int memberId)

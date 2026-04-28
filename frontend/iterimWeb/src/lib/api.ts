@@ -498,6 +498,19 @@ export const removeOrganizationMember = (orgId: number, memberId: number): Promi
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
 
+export const updateOrganizationMemberRole = (
+  orgId: number,
+  memberId: number,
+  role: string
+): Promise<OrganizationMember> =>
+  fetchWithAuth(`/organizations/${orgId}/members/${memberId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
 export const getOrganizationAbsences = (
   orgId: number,
   filters: AbsenceFilters = {} // Naudojame naują filtrų objektą

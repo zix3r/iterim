@@ -391,6 +391,82 @@ public class OrganizationService : IOrganizationService
         return true;
     }
 
+    public async Task<OrganizationMemberDto> UpdateMemberRoleAsync(int organizationId, int memberId, string newRole, int requestingUserId)
+    {
+        // 1. Validate role string
+        if (!Enum.TryParse<OrgMemberRole>(newRole, true, out var parsedRole))
+            throw new ArgumentException($"Invalid role: {newRole}. Valid roles are: Admin, Member, Viewer");
+
+        // 2. Locate the member to update
+        var memberToUpdate = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Id == memberId);
+
+        if (memberToUpdate == null)
+            throw new KeyNotFoundException("Member not found in this organization.");
+
+        // 3. Verify the requester is an admin of this organization
+        var requester = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == requestingUserId);
+
+        if (requester == null)
+            throw new UnauthorizedAccessException("You are not a member of this organization.");
+
+        if (requester.Role != OrgMemberRole.Admin)
+            throw new UnauthorizedAccessException("Only organization admins can change member roles.");
+
+        // 4. Prevent admins from demoting themselves (use Leave Organization for that)
+        if (memberToUpdate.UserId == requestingUserId)
+            throw new InvalidOperationException("You cannot change your own role.");
+
+        // 5. Don't allow role changes on removed/declined members
+        if (memberToUpdate.Status == OrgMemberStatus.Removed || memberToUpdate.Status == OrgMemberStatus.Declined)
+            throw new InvalidOperationException("Cannot change the role of a removed or declined member.");
+
+        // 6. If demoting an active admin, ensure at least one admin remains
+        if (memberToUpdate.Role == OrgMemberRole.Admin
+            && parsedRole != OrgMemberRole.Admin
+            && memberToUpdate.Status == OrgMemberStatus.Active)
+        {
+            var adminCount = await _db.OrganizationMembers
+                .CountAsync(m => m.OrganizationId == organizationId
+                                 && m.Role == OrgMemberRole.Admin
+                                 && m.Status == OrgMemberStatus.Active);
+
+            if (adminCount <= 1)
+            {
+                throw new InvalidOperationException("Cannot demote the last administrator of the organization.");
+            }
+        }
+
+        // 7. No-op shortcut: nothing to do if role unchanged
+        if (memberToUpdate.Role == parsedRole)
+        {
+            return new OrganizationMemberDto
+            {
+                Id = memberToUpdate.Id,
+                UserId = memberToUpdate.UserId,
+                Email = memberToUpdate.Email,
+                Role = memberToUpdate.Role.ToString(),
+                Status = memberToUpdate.Status.ToString()
+            };
+        }
+
+        memberToUpdate.Role = parsedRole;
+        memberToUpdate.UpdatedAt = DateTime.UtcNow;
+        memberToUpdate.UpdatedByUserId = requestingUserId;
+
+        await _db.SaveChangesAsync();
+
+        return new OrganizationMemberDto
+        {
+            Id = memberToUpdate.Id,
+            UserId = memberToUpdate.UserId,
+            Email = memberToUpdate.Email,
+            Role = memberToUpdate.Role.ToString(),
+            Status = memberToUpdate.Status.ToString()
+        };
+    }
+
     // PATAISYTA: _context pakeistas į _db
     public async Task<IEnumerable<PendingInvitationDto>> GetPendingInvitationsAsync(int userId)
     {

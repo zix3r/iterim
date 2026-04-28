@@ -220,6 +220,9 @@ export type TranslationKey =
   | 'organizations.failedInvite'
   | 'organizations.memberRemoved'
   | 'organizations.memberInvited'
+  | 'organizations.roleUpdated'
+  | 'organizations.failedRoleUpdate'
+  | 'organizations.changeRoleConfirm'
 
   // Products
   | 'products.title'
@@ -709,6 +712,9 @@ export const translations: Record<Language, Translations> = {
     'organizations.failedInvite': 'Nepavyko išsiųsti pakvietimo.',
     'organizations.memberRemoved': 'Narys sėkmingai pašalintas',
     'organizations.memberInvited': 'Narys sėkmingai pakviestas',
+    'organizations.roleUpdated': 'Nario rolė sėkmingai atnaujinta',
+    'organizations.failedRoleUpdate': 'Nepavyko atnaujinti nario rolės.',
+    'organizations.changeRoleConfirm': 'Ar tikrai norite pakeisti šio nario rolę?',
 
     // Products
     'products.title': 'Produktai',
@@ -1195,6 +1201,9 @@ export const translations: Record<Language, Translations> = {
     'organizations.failedInvite': 'Failed to send invitation.',
     'organizations.memberRemoved': 'Member removed successfully',
     'organizations.memberInvited': 'Member invited successfully',
+    'organizations.roleUpdated': 'Member role updated successfully',
+    'organizations.failedRoleUpdate': 'Failed to update member role.',
+    'organizations.changeRoleConfirm': "Are you sure you want to change this member's role?",
 
     // Products
     'products.title': 'Products',

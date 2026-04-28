@@ -42,3 +42,10 @@ public class AddOrganizationMemberDto
 	[RegularExpression("^(Admin|Member|Viewer)$", ErrorMessage = "Role must be Admin, Member, or Viewer.")]
 	public string Role { get; set; } = "Member"; // Default to Member, can be Admin or Viewer
 }
+
+public class UpdateOrganizationMemberRoleDto
+{
+	[Required(ErrorMessage = "Role is required.")]
+	[RegularExpression("^(Admin|Member|Viewer)$", ErrorMessage = "Role must be Admin, Member, or Viewer.")]
+	public string Role { get; set; } = "Member";
+}

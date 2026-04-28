@@ -13,6 +13,7 @@ public interface IOrganizationService
     Task<AcceptInvitationResultDto> AcceptInvitationAsync(int organizationId, int userId);
     Task<DeclineInvitationResultDto> DeclineInvitationAsync(int organizationId, int userId);
     Task<bool> RemoveMemberAsync(int organizationId, int memberId, int requestingUserId);
+    Task<OrganizationMemberDto> UpdateMemberRoleAsync(int organizationId, int memberId, string newRole, int requestingUserId);
     Task<IEnumerable<PendingInvitationDto>> GetPendingInvitationsAsync(int userId);
     Task DeleteOrganizationAsync(int orgId, int userId);
     Task<IEnumerable<MemberAbsenceDto>> GetOrganizationAbsencesAsync(
