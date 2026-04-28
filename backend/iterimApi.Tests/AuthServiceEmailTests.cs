@@ -70,6 +70,7 @@ public class AuthServiceEmailTests
         var passwordHasher = new PasswordHasher<User>();
         var mockEmail = emailService ?? new Mock<IEmailService>().Object;
 
+        var emailSettings = Options.Create(new EmailSettings { SmtpServer = "localhost", SmtpPort = 25, SenderEmail = "test@example.com", SenderName = "Test" });
         return new AuthService(db, jwtService.Object, refreshTokenService.Object,
             mockEmail, jwtSettings, accessor, passwordHasher);
     }

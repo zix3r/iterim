@@ -9,6 +9,7 @@ public interface IWorkItemService
     Task<WorkItemDto?> GetWorkItemByIdAsync(int id, int userId);
     Task<WorkItemDto?> CreateWorkItemAsync(int teamId, CreateWorkItemDto dto, int userId);
     Task<WorkItemDto?> UpdateWorkItemAsync(int id, UpdateWorkItemDto dto, int userId);
+    Task<WorkItemDto?> TransferWorkItemAsync(int id, int targetTeamId, int userId);
     Task<bool> DeleteWorkItemAsync(int id, int userId);
     Task ReorderWorkItemsAsync(int teamId, ReorderWorkItemsDto dto, int userId);
 }

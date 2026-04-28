@@ -10,9 +10,10 @@ import { updateWorkItem, deleteWorkItem, assignWorkItemTags } from '@/lib/api';
 import type { WorkItem, TeamMember, Tag } from '@/lib/api';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
-import { Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Trash2 } from 'lucide-react';
 import { DependencySection } from './DependencySection';
 import { useLanguage } from '@/context/LanguageContext';
+import { TransferWorkItemModal } from './TransferWorkItemModal';
 
 const STATUS_OPTIONS = [
   { value: 0, label: 'Backlog' },
@@ -45,6 +46,7 @@ interface Props {
   item: WorkItem | null;
   orgId: number;
   members: TeamMember[];
+  canTransferWorkItem?: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onUpdated: () => void;
@@ -61,10 +63,11 @@ interface EditWorkItemFormValues {
   type: number;
 }
 
-export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, onUpdated }: Props) {
+export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = false, open, onOpenChange, onUpdated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [transferOpen, setTransferOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -173,9 +176,17 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
   const handleDialogChange = (isOpen: boolean) => {
     if (!isOpen) {
       setConfirmDelete(false);
+      setTransferOpen(false);
     }
 
     onOpenChange(isOpen);
+  };
+
+  const handleTransferred = () => {
+    setTransferOpen(false);
+    setConfirmDelete(false);
+    onOpenChange(false);
+    onUpdated();
   };
 
   return (
@@ -183,7 +194,7 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('backlog.editItemTitle')}</DialogTitle>
-          <DialogDescription>Update work item fields and save changes.</DialogDescription>
+          <DialogDescription>{t('backlog.editItemDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
@@ -300,6 +311,20 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
             </div>
           )}
 
+          {item && canTransferWorkItem && (
+            <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 space-y-2">
+              <div>
+                <p className="text-sm font-medium">{t('backlog.transferItemTitle')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('backlog.transferItemDescription')}
+                </p>
+              </div>
+              <Button type="button" variant="outline" onClick={() => setTransferOpen(true)}>
+                <ArrowRightLeft className="h-4 w-4 mr-2" /> {t('backlog.transferItem')}
+              </Button>
+            </div>
+          )}
+
           <DialogFooter className="flex justify-between sm:justify-between">
             <div>
               {confirmDelete ? (
@@ -325,6 +350,15 @@ export function EditWorkItemModal({ item, orgId, members, open, onOpenChange, on
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <TransferWorkItemModal
+        item={item}
+        orgId={orgId}
+        currentTeamId={item?.teamId ?? 0}
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+        onTransferred={handleTransferred}
+      />
     </Dialog>
   );
 }

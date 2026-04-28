@@ -229,6 +229,10 @@ export interface UpdateWorkItemRequest {
   iterationId?: number | null;
 }
 
+export interface TransferWorkItemRequest {
+  targetTeamId: number;
+}
+
 export interface WorkItemFilter {
   type?: string;
   status?: string;
@@ -801,6 +805,15 @@ export const updateWorkItem = (id: number, data: UpdateWorkItemRequest): Promise
     const result = await r.json();
     teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
     return result;
+  });
+
+export const transferWorkItem = (id: number, data: TransferWorkItemRequest): Promise<WorkItem> =>
+  fetchWithAuth(`/workitems/${id}/transfer`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
   });
 
 export const deleteWorkItem = (id: number): Promise<void> =>

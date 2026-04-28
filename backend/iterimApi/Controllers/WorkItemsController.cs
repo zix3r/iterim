@@ -198,6 +198,48 @@ public class WorkItemsController : ControllerBase
     }
 
     /// <summary>
+    /// Transfer a work item to another team within the same organization.
+    /// PATCH /api/workitems/:id/transfer
+    /// </summary>
+    [HttpPatch("api/workitems/{id}/transfer")]
+    public async Task<IActionResult> TransferWorkItem(int id, [FromBody] TransferWorkItemDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            var workItem = await _workItemService.TransferWorkItemAsync(id, dto.TargetTeamId, userId);
+
+            if (workItem == null)
+            {
+                return NotFound(new { message = "Work item not found" });
+            }
+
+            return Ok(workItem);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while transferring the work item", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Delete a work item.
     /// DELETE /api/workitems/:id
     /// </summary>

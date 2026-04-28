@@ -310,6 +310,9 @@ export function BacklogPage() {
   }
 
   const members = team.members;
+  const canTransferWorkItems = team.currentUserId === team.createdBy || team.members.some(
+    (member) => member.userId === team.currentUserId && member.role === 'Admin'
+  );
 
   const renderSection = (
     iteration: Iteration | null,
@@ -478,6 +481,7 @@ export function BacklogPage() {
         item={editItem}
         orgId={Number(orgId)}
         members={members}
+        canTransferWorkItem={canTransferWorkItems}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}
         onUpdated={loadData}

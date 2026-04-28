@@ -332,6 +332,22 @@ export type TranslationKey =
   | 'backlog.moveUnfinishedTo'
   | 'backlog.dependencyDetails'
   | 'backlog.removeDependency'
+  | 'backlog.transferItem'
+  | 'backlog.transferItemConfirm'
+  | 'backlog.transferItemTitle'
+  | 'backlog.transferItemDescription'
+  | 'backlog.transferItemTargetLabel'
+  | 'backlog.transferItemTargetPlaceholder'
+  | 'backlog.transferItemSelectedLabel'
+  | 'backlog.transferItemLoading'
+  | 'backlog.transferItemNoTeams'
+  | 'backlog.transferItemNoProductTeams'
+  | 'backlog.transferItemSubmitting'
+  | 'backlog.transferItemSuccess'
+  | 'backlog.transferItemUnauthorized'
+  | 'backlog.transferItemFailedLoad'
+  | 'backlog.transferItemFailed'
+  | 'backlog.editItemDescription'
 
   // Board
   | 'board.title'
@@ -805,6 +821,22 @@ export const translations: Record<Language, Translations> = {
     'backlog.moveUnfinishedTo': 'Perkelti nebaigtus elementus į',
     'backlog.dependencyDetails': 'Priklausomybės informacija',
     'backlog.removeDependency': 'Pašalinti priklausomybę',
+    'backlog.transferItem': 'Perkelti į kitą komandą',
+    'backlog.transferItemConfirm': 'Patvirtinti perkėlimą',
+    'backlog.transferItemTitle': 'Perkelti į kitą komandą',
+    'backlog.transferItemDescription': 'Darbo elementas bus pašalintas iš dabartinės iteracijos ir vykdytojas bus pašalintas. Priklausomybės bus išsaugotos.',
+    'backlog.transferItemTargetLabel': 'Pasirinkite tikslinę komandą',
+    'backlog.transferItemTargetPlaceholder': 'Pasirinkite komandą',
+    'backlog.transferItemSelectedLabel': 'Į komandą',
+    'backlog.transferItemLoading': 'Kraunamas komandų sąrašas...',
+    'backlog.transferItemNoTeams': 'Šioje organizacijoje nėra kitų komandų.',
+    'backlog.transferItemNoProductTeams': 'Šiame produkte nėra kitų komandų.',
+    'backlog.transferItemSubmitting': 'Perkeliama...',
+    'backlog.transferItemSuccess': 'Darbo elementas sėkmingai perkeltas.',
+    'backlog.transferItemUnauthorized': 'Neturite teisių perkelti šią užduotį',
+    'backlog.transferItemFailedLoad': 'Nepavyko įkelti komandų sąrašo.',
+    'backlog.transferItemFailed': 'Nepavyko perkelti darbo elemento.',
+    'backlog.editItemDescription': 'Atnaujinkite darbo elemento laukus ir išsaugokite pakeitimus.',
 
     // Board
     'board.title': 'Lenta',
@@ -1275,6 +1307,22 @@ export const translations: Record<Language, Translations> = {
     'backlog.moveUnfinishedTo': 'Move unfinished items to',
     'backlog.dependencyDetails': 'Dependency details',
     'backlog.removeDependency': 'Remove dependency',
+    'backlog.transferItem': 'Transfer to another team',
+    'backlog.transferItemConfirm': 'Confirm transfer',
+    'backlog.transferItemTitle': 'Transfer to another team',
+    'backlog.transferItemDescription': 'The work item will be removed from the current iteration and the assignee will be cleared. Dependencies will be preserved.',
+    'backlog.transferItemTargetLabel': 'Select target team',
+    'backlog.transferItemTargetPlaceholder': 'Choose a team',
+    'backlog.transferItemSelectedLabel': 'To team',
+    'backlog.transferItemLoading': 'Loading team list...',
+    'backlog.transferItemNoTeams': 'There are no other teams in this organization.',
+    'backlog.transferItemNoProductTeams': 'There are no other teams in this product.',
+    'backlog.transferItemSubmitting': 'Transferring...',
+    'backlog.transferItemSuccess': 'Work item transferred successfully.',
+    'backlog.transferItemUnauthorized': 'You do not have permission to transfer this work item',
+    'backlog.transferItemFailedLoad': 'Failed to load team list.',
+    'backlog.transferItemFailed': 'Failed to transfer work item.',
+    'backlog.editItemDescription': 'Update work item fields and save changes.',
 
     // Board
     'board.title': 'Board',

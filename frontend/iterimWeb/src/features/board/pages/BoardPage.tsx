@@ -118,6 +118,10 @@ export function BoardPage() {
     );
   }
 
+  const canTransferWorkItems = team.currentUserId === team.createdBy || team.members.some(
+    (member) => member.userId === team.currentUserId && member.role === 'Admin'
+  );
+
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="flex flex-col h-full p-6 max-w-[1600px] mx-auto space-y-6 overflow-hidden">
@@ -181,6 +185,7 @@ export function BoardPage() {
         item={editItem}
         orgId={Number(orgId)}
         members={team.members}
+        canTransferWorkItem={canTransferWorkItems}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}
         onUpdated={refreshSilent}

@@ -272,6 +272,104 @@ public class WorkItemService : IWorkItemService
         return MapToDto(workItem);
     }
 
+    public async Task<WorkItemDto?> TransferWorkItemAsync(int id, int targetTeamId, int userId)
+    {
+        var workItem = await _db.WorkItems
+            .Include(wi => wi.Team)
+                .ThenInclude(t => t.Product)
+                .ThenInclude(p => p.Organization)
+            .Include(wi => wi.CreatedByUser)
+            .Include(wi => wi.UpdatedByUser)
+            .Include(wi => wi.AssignedMember)
+                .ThenInclude(m => m!.OrgMember)
+                .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
+            .FirstOrDefaultAsync(wi => wi.Id == id);
+
+        if (workItem == null)
+            return null;
+
+        await EnsureTransferPermissionAsync(workItem.TeamId, userId);
+
+        var targetTeam = await _db.Teams
+            .Include(t => t.Product)
+                .ThenInclude(p => p.Organization)
+            .FirstOrDefaultAsync(t => t.Id == targetTeamId);
+
+        if (targetTeam == null)
+            throw new KeyNotFoundException("Target team not found");
+
+        if (targetTeam.Product.OrganizationId != workItem.Team.Product.OrganizationId)
+            throw new InvalidOperationException("Target team must belong to the same organization");
+
+        if (workItem.TeamId == targetTeamId)
+            throw new InvalidOperationException("Work item is already in this team");
+
+        var requesterMember = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(om =>
+                om.OrganizationId == workItem.Team.Product.OrganizationId &&
+                om.UserId == userId &&
+                om.Status == OrgMemberStatus.Active);
+
+        if (requesterMember == null)
+            throw new UnauthorizedAccessException("Only a team leader can transfer tasks");
+
+        var now = DateTime.UtcNow;
+        var nextPosition = await _db.WorkItems
+            .Where(wi => wi.TeamId == targetTeamId && wi.IterationId == null)
+            .MaxAsync(wi => (int?)wi.Position) ?? -1;
+
+        var historyEntries = new List<WorkItemHistory>
+        {
+            new()
+            {
+                WorkItemId = workItem.Id,
+                FieldName = "TeamId",
+                OldValue = workItem.TeamId.ToString(),
+                NewValue = targetTeamId.ToString(),
+                ChangedAt = now,
+                ChangedBy = requesterMember.Id
+            },
+            new()
+            {
+                WorkItemId = workItem.Id,
+                FieldName = "IterationId",
+                OldValue = workItem.IterationId?.ToString(),
+                NewValue = null,
+                ChangedAt = now,
+                ChangedBy = requesterMember.Id
+            },
+            new()
+            {
+                WorkItemId = workItem.Id,
+                FieldName = "AssignedTo",
+                OldValue = workItem.AssignedTo?.ToString(),
+                NewValue = null,
+                ChangedAt = now,
+                ChangedBy = requesterMember.Id
+            }
+        };
+
+        workItem.TeamId = targetTeamId;
+        workItem.Team = targetTeam;
+        workItem.IterationId = null;
+        workItem.Iteration = null;
+        workItem.AssignedTo = null;
+        workItem.AssignedMember = null;
+        workItem.Position = nextPosition + 1;
+        workItem.UpdatedBy = userId;
+        workItem.UpdatedAt = now;
+
+        _db.WorkItemHistories.AddRange(historyEntries);
+        await _db.SaveChangesAsync();
+        await _db.Entry(workItem).Reference(wi => wi.UpdatedByUser).LoadAsync();
+
+        return MapToDto(workItem);
+    }
+
     public async Task<bool> DeleteWorkItemAsync(int id, int userId)
     {
         var workItem = await _db.WorkItems
@@ -334,6 +432,30 @@ public class WorkItemService : IWorkItemService
 
         if (!isTeamMember)
             throw new UnauthorizedAccessException("User is not a member of this team");
+    }
+
+    private async Task EnsureTransferPermissionAsync(int teamId, int userId)
+    {
+        var team = await _db.Teams
+            .Include(t => t.Product)
+            .FirstOrDefaultAsync(t => t.Id == teamId)
+            ?? throw new KeyNotFoundException("Work item not found");
+
+        var requester = await _db.OrganizationMembers
+            .AnyAsync(om =>
+                om.OrganizationId == team.Product.OrganizationId &&
+                om.UserId == userId &&
+                om.Status == OrgMemberStatus.Active);
+
+        if (!requester)
+            throw new UnauthorizedAccessException("Only a team leader can transfer tasks");
+
+        var isTeamLeader = team.CreatedBy == userId;
+        var isTeamAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId && tm.OrgMember.UserId == userId && tm.Role == TeamMemberRole.Admin);
+
+        if (!isTeamLeader && !isTeamAdmin)
+            throw new UnauthorizedAccessException("Only a team leader can transfer tasks");
     }
 
     /// <summary>
