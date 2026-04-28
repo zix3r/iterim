@@ -80,7 +80,7 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync();
 
         // Fire-and-forget: el. laiško siuntimo klaida nesustabdo registracijos
-        _ = SendConfirmationEmailSafe(user, user.Email);
+        _ = SendConfirmationEmailSafe(user, user.Email, dto.Language);
 
         return (AuthResultDto.Ok(), MapToDto(user));
     }
@@ -206,7 +206,7 @@ public class AuthService : IAuthService
         return AuthResultDto.Ok();
     }
 
-    public async Task<AuthResultDto> ResendConfirmationAsync(string email)
+    public async Task<AuthResultDto> ResendConfirmationAsync(string email, string? language = null)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
 
@@ -219,13 +219,13 @@ public class AuthService : IAuthService
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        _ = SendConfirmationEmailSafe(user, user.PendingEmail ?? user.Email);
+        _ = SendConfirmationEmailSafe(user, user.PendingEmail ?? user.Email, language);
         return AuthResultDto.Ok();
     }
 
     // ── Password reset ────────────────────────────────────────
 
-    public async Task<AuthResultDto> ForgotPasswordAsync(string email)
+    public async Task<AuthResultDto> ForgotPasswordAsync(string email, string? language = null)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
 
@@ -239,7 +239,7 @@ public class AuthService : IAuthService
         user.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        _ = SendPasswordResetEmailSafe(user);
+        _ = SendPasswordResetEmailSafe(user, language);
         return AuthResultDto.Ok();
     }
 
@@ -296,7 +296,7 @@ public class AuthService : IAuthService
         CookieHelper.SetRefreshTokenCookie(response, refreshToken.Token, _jwtSettings.RefreshTokenExpirationDays);
     }
 
-    private async Task SendConfirmationEmailSafe(User user, string targetEmail)
+    private async Task SendConfirmationEmailSafe(User user, string targetEmail, string? language = null)
     {
         try
         {
@@ -304,31 +304,31 @@ public class AuthService : IAuthService
                 string.Equals(targetEmail, user.PendingEmail, StringComparison.OrdinalIgnoreCase))
             {
                 await _emailService.SendEmailChangeConfirmationAsync(
-                    targetEmail, user.Name, user.EmailConfirmationToken!);
+                    targetEmail, user.Name, user.EmailConfirmationToken!, language);
             }
             else
             {
                 await _emailService.SendEmailConfirmationAsync(
-                    targetEmail, user.Name, user.EmailConfirmationToken!);
+                    targetEmail, user.Name, user.EmailConfirmationToken!, language);
             }
         }
         catch (Exception ex)
         {
             // Loginti, bet neįkrėsti registracijos srauto
-            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {targetEmail}: {ex.Message}");
+            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {targetEmail} (lang={language ?? "null"}): {ex}");
         }
     }
 
-    private async Task SendPasswordResetEmailSafe(User user)
+    private async Task SendPasswordResetEmailSafe(User user, string? language = null)
     {
         try
         {
             await _emailService.SendPasswordResetAsync(
-                user.Email, user.Name, user.PasswordResetToken!);
+                user.Email, user.Name, user.PasswordResetToken!, language);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[EmailService] Failed to send password reset email to {user.Email}: {ex.Message}");
+            Console.Error.WriteLine($"[EmailService] Failed to send password reset email to {user.Email} (lang={language ?? "null"}): {ex}");
         }
     }
 

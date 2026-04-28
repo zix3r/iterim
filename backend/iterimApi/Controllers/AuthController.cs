@@ -129,7 +129,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        await _authService.ResendConfirmationAsync(dto.Email);
+        await _authService.ResendConfirmationAsync(dto.Email, dto.Language);
         return Ok(new { message = "If that email exists and is unconfirmed, a new confirmation link has been sent." });
     }
 
@@ -145,7 +145,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        await _authService.ForgotPasswordAsync(dto.Email);
+        await _authService.ForgotPasswordAsync(dto.Email, dto.Language);
         return Ok(new { message = "If that email is registered, a password reset link has been sent." });
     }
 

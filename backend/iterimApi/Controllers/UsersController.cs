@@ -57,15 +57,15 @@ public class UsersController : ControllerBase
         Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
             .Replace("+", "-").Replace("/", "_").Replace("=", "");
 
-    private async Task SendConfirmationEmailSafe(string toEmail, string toName, string confirmationToken)
+    private async Task SendConfirmationEmailSafe(string toEmail, string toName, string confirmationToken, string? language = null)
     {
         try
         {
-            await _emailService.SendEmailChangeConfirmationAsync(toEmail, toName, confirmationToken);
+            await _emailService.SendEmailChangeConfirmationAsync(toEmail, toName, confirmationToken, language);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {toEmail}: {ex.Message}");
+            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {toEmail} (lang={language ?? "null"}): {ex}");
         }
     }
 
@@ -163,7 +163,7 @@ public class UsersController : ControllerBase
             await _context.SaveChangesAsync();
 
             if (shouldQueueEmailChange && user.EmailConfirmationToken is not null)
-                _ = SendConfirmationEmailSafe(normalizedEmail, user.Name, user.EmailConfirmationToken);
+                _ = SendConfirmationEmailSafe(normalizedEmail, user.Name, user.EmailConfirmationToken, dto.Language);
 
             return Ok(MapCurrentUserProfile(user));
         }

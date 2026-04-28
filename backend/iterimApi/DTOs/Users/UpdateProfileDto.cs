@@ -16,4 +16,10 @@ public class UpdateProfileDto
 
     [RegularExpression("^(?i:light|dark)$", ErrorMessage = "Theme must be one of: light, dark.")]
     public string? Theme { get; set; }
+
+    /// <summary>
+    /// Pasirinkta UI kalba (pvz., "lt", "en"). Naudojama el. laiškų lokalizacijai
+    /// (kai keičiamas el. paštas — siunčiamas patvirtinimo laiškas).
+    /// </summary>
+    public string? Language { get; set; }
 }

@@ -95,7 +95,7 @@ function createInitialsAvatar(name: string, color: string): string {
 
 export function ProfilePage() {
   const { refreshUser } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { toast } = useToast();
 
   const [profile, setProfile] = useState<CurrentUserProfile | null>(null);
@@ -177,7 +177,7 @@ export function ProfilePage() {
     try {
       setIsSavingProfile(true);
       const requestedEmail = email.trim().toLowerCase();
-      const updated = await updateMyProfile({ name: name.trim(), email: email.trim() });
+      const updated = await updateMyProfile({ name: name.trim(), email: email.trim(), language });
       setProfile(updated);
       setName(updated.name);
       setEmail(updated.email);

@@ -301,6 +301,8 @@ export interface UpdateProfileRequest {
   name: string;
   email: string;
   theme?: UserTheme;
+  /** UI language code ("lt" | "en") used for localizing email-change confirmation emails. */
+  language?: string;
 }
 
 export interface UpdateThemeRequest {

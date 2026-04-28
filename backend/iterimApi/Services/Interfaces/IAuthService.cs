@@ -12,9 +12,9 @@ public interface IAuthService
 
     // ── Email confirmation ───────────────────────────────
     Task<AuthResultDto> ConfirmEmailAsync(string token);
-    Task<AuthResultDto> ResendConfirmationAsync(string email);
+    Task<AuthResultDto> ResendConfirmationAsync(string email, string? language = null);
 
     // ── Password reset ───────────────────────────────────
-    Task<AuthResultDto> ForgotPasswordAsync(string email);
+    Task<AuthResultDto> ForgotPasswordAsync(string email, string? language = null);
     Task<AuthResultDto> ResetPasswordAsync(ResetPasswordRequestDto dto);
 }
