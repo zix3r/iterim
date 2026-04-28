@@ -12,10 +12,17 @@ namespace iterimApi.Services.Implementations;
 public class OrganizationService : IOrganizationService
 {
     private readonly AppDbContext _db;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<OrganizationService> _logger;
 
-    public OrganizationService(AppDbContext db)
+    public OrganizationService(
+        AppDbContext db,
+        IEmailService emailService,
+        ILogger<OrganizationService> logger)
     {
         _db = db;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<OrganizationDto>> GetUserOrganizationsAsync(int userId)
@@ -197,17 +204,29 @@ public class OrganizationService : IOrganizationService
         if (!Enum.TryParse<OrgMemberRole>(dto.Role, true, out var role))
             throw new ArgumentException($"Invalid role: {dto.Role}. Valid roles are: Admin, Member, Viewer");
 
+        // Inviter info reikalingas tiek išsaugojant DB, tiek formuojant el. laišką.
+        var inviter = await _db.Users.FindAsync(currentUserId);
+        var inviterName = !string.IsNullOrWhiteSpace(inviter?.Name)
+            ? inviter!.Name
+            : (inviter?.Email ?? "Iterim");
+
         if (existingMember != null)
         {
              existingMember.Status = OrgMemberStatus.Invited;
              existingMember.Role = role;
              existingMember.InvitedAt = DateTime.UtcNow;
              existingMember.InvitedBy = currentUserId;
-             existingMember.JoinedAt = null; 
+             existingMember.JoinedAt = null;
              existingMember.UpdatedAt = DateTime.UtcNow;
              existingMember.UpdatedByUserId = currentUserId;
-             
+
              await _db.SaveChangesAsync();
+
+             await SendInvitationEmailSafeAsync(
+                 userToAdd,
+                 organization.Name,
+                 inviterName,
+                 existingMember.Role.ToString());
 
              return new OrganizationMemberDto
              {
@@ -233,6 +252,12 @@ public class OrganizationService : IOrganizationService
         _db.OrganizationMembers.Add(newMember);
         await _db.SaveChangesAsync();
 
+        await SendInvitationEmailSafeAsync(
+            userToAdd,
+            organization.Name,
+            inviterName,
+            newMember.Role.ToString());
+
         return new OrganizationMemberDto
         {
             Id = newMember.Id,
@@ -241,6 +266,28 @@ public class OrganizationService : IOrganizationService
             Role = newMember.Role.ToString(),
             Status = newMember.Status.ToString()
         };
+    }
+
+    // Saugus el. laiško siuntimas: nesugriaus pakvietimo, jei SMTP/Resend laikinai neveikia.
+    private async Task SendInvitationEmailSafeAsync(User recipient, string organizationName, string inviterName, string role)
+    {
+        try
+        {
+            var displayName = !string.IsNullOrWhiteSpace(recipient.Name) ? recipient.Name : recipient.Email;
+            await _emailService.SendOrganizationInvitationAsync(
+                recipient.Email,
+                displayName,
+                organizationName,
+                inviterName,
+                role);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Nepavyko išsiųsti pakvietimo laiško vartotojui {Email} į organizaciją {Organization}",
+                recipient.Email,
+                organizationName);
+        }
     }
 
     public async Task<AcceptInvitationResultDto> AcceptInvitationAsync(int organizationId, int userId)

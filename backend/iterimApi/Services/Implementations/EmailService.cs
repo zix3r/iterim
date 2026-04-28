@@ -51,6 +51,15 @@ public class EmailService : IEmailService
         await SendAsync(toEmail, toName, subject, body);
     }
 
+    public async Task SendOrganizationInvitationAsync(string toEmail, string toName, string organizationName, string inviterName, string role, string? language = null)
+    {
+        // Po prisijungimo vartotojas pamatys laukiančius pakvietimus puslapyje "/invitations".
+        var url = $"{_settings.FrontendBaseUrl}/invitations";
+        var subject = EmailTemplates.OrganizationInvitationSubject(organizationName, language);
+        var body = EmailTemplates.OrganizationInvitation(toName, organizationName, inviterName, role, url, language);
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
     // ── Internal dispatch ────────────────────────────────────
 
     private Task SendAsync(string toEmail, string toName, string subject, string htmlBody) =>
