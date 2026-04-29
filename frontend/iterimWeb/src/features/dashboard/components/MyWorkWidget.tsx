@@ -26,7 +26,7 @@ export function MyWorkWidget({ workItems }: { workItems: DashboardWorkItem[] }) 
             {workItems.map(item => (
               <Link 
                 key={item.id} 
-                to={`/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}`}
+                to={`/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}/backlog?item=${item.id}`}
                 className="flex items-start gap-3 group p-3 rounded-lg bg-card border hover:border-primary/50 hover:shadow-sm transition-all block text-foreground"
               >
                 <div className="flex-1 min-w-0">

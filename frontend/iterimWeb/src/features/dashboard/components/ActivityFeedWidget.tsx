@@ -46,7 +46,7 @@ export function ActivityFeedWidget({ activities }: { activities: DashboardActivi
                 <div className="absolute left-1 top-2 w-2.5 h-2.5 rounded-full bg-background border-[2px] border-primary/50 group-hover:border-primary group-hover:scale-110 transition-all shadow-sm" />
                 
                 <Link 
-                  to={item.organizationId ? `/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}/backlog` : '#'}
+                  to={item.organizationId ? `/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}/backlog?item=${item.workItemId}` : '#'}
                   className="flex flex-col gap-1.5 p-3 rounded-lg hover:bg-muted/40 transition-colors -mt-2 -ml-2 block text-foreground"
                 >
                    <div className="text-sm text-foreground/80 leading-snug">

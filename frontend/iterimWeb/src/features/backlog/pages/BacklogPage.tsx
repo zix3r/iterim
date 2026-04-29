@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import {
   DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent,
@@ -35,6 +35,8 @@ export function BacklogPage() {
   const { orgId, productId, teamId } = useParams();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const itemId = searchParams.get('item');
 
   // Data
   const [groups, setGroups] = useState<BacklogGroup[]>([]);
@@ -97,6 +99,30 @@ export function BacklogPage() {
   useEffect(() => {
     if (teamId && orgId) loadData();
   }, [teamId, orgId, loadData]);
+
+  // Handle auto-opening task from URL
+  useEffect(() => {
+    if (itemId && groups.length > 0) {
+      const id = Number(itemId);
+      let foundItem: WorkItem | null = null;
+      
+      for (const group of groups) {
+        const item = group.workItems.find(wi => wi.id === id);
+        if (item) {
+          foundItem = item;
+          break;
+        }
+      }
+
+      if (foundItem) {
+        setEditItem(foundItem);
+        // Clear the param so it doesn't reopen on every render/navigation
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('item');
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [itemId, groups, setSearchParams, searchParams]);
 
   useEffect(() => {
     if (team && orgId && productId && teamId) {
