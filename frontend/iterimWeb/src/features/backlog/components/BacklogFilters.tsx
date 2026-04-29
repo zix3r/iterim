@@ -29,23 +29,23 @@ export function BacklogFilters({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <select value={typeFilter} onChange={(e) => onTypeChange(e.target.value)} className={selectClass}>
-        <option value="">{t('common.all')} Types</option>
+        <option value="">{t('backlog.allTypes')}</option>
         <option value="Story">{t('backlog.typeStory')}</option>
         <option value="Task">{t('backlog.typeTask')}</option>
         <option value="Bug">{t('backlog.typeBug')}</option>
       </select>
 
       <select value={statusFilter} onChange={(e) => onStatusChange(e.target.value)} className={selectClass}>
-        <option value="">{t('common.all')} Statuses</option>
-        <option value="Backlog">Backlog</option>
-        <option value="Todo">To Do</option>
+        <option value="">{t('backlog.allStatuses')}</option>
+        <option value="Backlog">{t('backlog.statusBacklog')}</option>
+        <option value="Todo">{t('backlog.statusTodo')}</option>
         <option value="InProgress">{t('backlog.statusInProgress')}</option>
         <option value="Review">{t('backlog.statusReview')}</option>
         <option value="Done">{t('backlog.statusDone')}</option>
       </select>
 
       <select value={assigneeFilter} onChange={(e) => onAssigneeChange(e.target.value)} className={selectClass}>
-        <option value="">{t('common.all')} Assignees</option>
+        <option value="">{t('backlog.allAssignees')}</option>
         <option value="unassigned">{t('backlog.unassigned')}</option>
         {members.map((m) => (
           <option key={m.id} value={m.id.toString()}>{m.userName}</option>
@@ -54,9 +54,9 @@ export function BacklogFilters({
 
       {orgTags.length > 0 && (
         <select value={tagFilter} onChange={(e) => onTagChange(e.target.value)} className={selectClass}>
-          <option value="">{t('common.all')} Tags</option>
-          {orgTags.map((t) => (
-            <option key={t.id} value={t.id.toString()}>{t.name}</option>
+          <option value="">{t('backlog.allTags')}</option>
+          {orgTags.map((tag) => (
+            <option key={tag.id} value={tag.id.toString()}>{tag.name}</option>
           ))}
         </select>
       )}

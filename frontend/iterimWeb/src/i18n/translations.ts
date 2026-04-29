@@ -178,6 +178,16 @@ export type TranslationKey =
   | 'dashboard.greetingMorning'
   | 'dashboard.greetingAfternoon'
   | 'dashboard.greetingEvening'
+  | 'dashboard.sectionWork'
+  | 'dashboard.sectionWorkspace'
+  | 'dashboard.sectionQuickAccess'
+  | 'dashboard.noPinnedTeams'
+  | 'dashboard.noProducts'
+  | 'dashboard.noTeamsInProduct'
+  | 'dashboard.noRecentActivity'
+  | 'dashboard.activity.createdItem'
+  | 'dashboard.activity.updatedItem'
+  | 'dashboard.activity.commented'
 
   // Organizations
   | 'organizations.title'
@@ -223,6 +233,22 @@ export type TranslationKey =
   | 'organizations.roleUpdated'
   | 'organizations.failedRoleUpdate'
   | 'organizations.changeRoleConfirm'
+  | 'organizations.email'
+  | 'organizations.absence'
+  | 'organizations.activeMembers'
+  | 'organizations.manageAbsences'
+  | 'organizations.registerAbsence'
+  | 'organizations.noAccess'
+  | 'organizations.tags'
+  | 'organizations.addTag'
+  | 'organizations.tagNamePlaceholder'
+  | 'organizations.noTags'
+  | 'organizations.tagCreated'
+  | 'organizations.tagDeleted'
+  | 'organizations.failedCreateTag'
+  | 'organizations.failedDeleteTag'
+  | 'organizations.roleViewer'
+  | 'organizations.slug'
 
   // Products
   | 'products.title'
@@ -250,6 +276,10 @@ export type TranslationKey =
   | 'products.team'
   | 'products.iterations'
   | 'products.overview'
+  | 'products.details'
+  | 'products.productId'
+  | 'products.createdBy'
+  | 'products.updatedBy'
 
   // Teams
   | 'teams.title'
@@ -276,6 +306,14 @@ export type TranslationKey =
   | 'teams.role'
   | 'teams.roleLead'
   | 'teams.roleMember'
+  | 'teams.roleAdmin'
+  | 'teams.roleViewer'
+  | 'teams.information'
+  | 'teams.teamId'
+  | 'teams.created'
+  | 'teams.lastUpdated'
+  | 'teams.createdBy'
+  | 'teams.noMembers'
 
   // Backlog
   | 'backlog.title'
@@ -351,6 +389,16 @@ export type TranslationKey =
   | 'backlog.transferItemFailedLoad'
   | 'backlog.transferItemFailed'
   | 'backlog.editItemDescription'
+  | 'backlog.allTypes'
+  | 'backlog.allStatuses'
+  | 'backlog.allAssignees'
+  | 'backlog.allTags'
+  | 'backlog.statusBacklog'
+  | 'backlog.statusTodo'
+  | 'backlog.dragHelp'
+  | 'backlog.dragHere'
+  | 'backlog.showCompleted'
+  | 'backlog.completedCount'
 
   // Board
   | 'board.title'
@@ -422,6 +470,16 @@ export type TranslationKey =
   | 'absences.failedCreate'
   | 'absences.failedUpdate'
   | 'absences.failedDelete'
+  | 'absences.registerAbsence'
+  | 'absences.searchMember'
+  | 'absences.clear'
+  | 'absences.allTypes'
+  | 'absences.typeFilterPlaceholder'
+  | 'absences.typeAbsent'
+  | 'absences.typeLate'
+  | 'absences.subtitle'
+  | 'absences.noResults'
+  | 'absences.noActiveMembership'
 
   // Profile
   | 'profile.title'
@@ -671,6 +729,16 @@ export const translations: Record<Language, Translations> = {
     'dashboard.greetingMorning': 'Labas rytas',
     'dashboard.greetingAfternoon': 'Laba diena',
     'dashboard.greetingEvening': 'Labas vakaras',
+    'dashboard.sectionWork': 'Darbas',
+    'dashboard.sectionWorkspace': 'Darbo erdvė',
+    'dashboard.sectionQuickAccess': 'Greita prieiga',
+    'dashboard.noPinnedTeams': 'Įsegtų komandų dar nėra. Įsekite komandą iš šoninės juostos.',
+    'dashboard.noProducts': 'Produktų nėra',
+    'dashboard.noTeamsInProduct': 'Komandų nėra',
+    'dashboard.noRecentActivity': 'Naujausių veiksmų nėra.',
+    'dashboard.activity.createdItem': 'sukūrė naują elementą',
+    'dashboard.activity.updatedItem': 'atnaujino elementą',
+    'dashboard.activity.commented': 'paliko komentarą',
 
     // Organizations
     'organizations.title': 'Organizacijos',
@@ -716,6 +784,22 @@ export const translations: Record<Language, Translations> = {
     'organizations.roleUpdated': 'Nario rolė sėkmingai atnaujinta',
     'organizations.failedRoleUpdate': 'Nepavyko atnaujinti nario rolės.',
     'organizations.changeRoleConfirm': 'Ar tikrai norite pakeisti šio nario rolę?',
+    'organizations.email': 'El. paštas',
+    'organizations.absence': 'Pravaikšta',
+    'organizations.activeMembers': 'Aktyvūs nariai',
+    'organizations.manageAbsences': 'Tvarkyti pravaikštas',
+    'organizations.registerAbsence': 'Registruoti',
+    'organizations.noAccess': 'Nėra prieigos',
+    'organizations.tags': 'Žymės',
+    'organizations.addTag': 'Pridėti žymę',
+    'organizations.tagNamePlaceholder': 'Žymės pavadinimas (pvz., frontend)',
+    'organizations.noTags': 'Žymių dar nėra. Sukurkite žymes, kad galėtumėte jas naudoti darbo elementuose ir priskirti komandų nariams.',
+    'organizations.tagCreated': 'Žymė sukurta',
+    'organizations.tagDeleted': 'Žymė ištrinta',
+    'organizations.failedCreateTag': 'Nepavyko sukurti žymės',
+    'organizations.failedDeleteTag': 'Nepavyko ištrinti žymės',
+    'organizations.roleViewer': 'Stebėtojas',
+    'organizations.slug': 'Trumpasis pavadinimas',
 
     // Products
     'products.title': 'Produktai',
@@ -743,6 +827,10 @@ export const translations: Record<Language, Translations> = {
     'products.team': 'Komanda',
     'products.iterations': 'Iteracijos',
     'products.overview': 'Apžvalga',
+    'products.details': 'Produkto informacija',
+    'products.productId': 'Produkto ID',
+    'products.createdBy': 'Sukūrė',
+    'products.updatedBy': 'Atnaujino',
 
     // Teams
     'teams.title': 'Komandos',
@@ -769,6 +857,14 @@ export const translations: Record<Language, Translations> = {
     'teams.role': 'Rolė',
     'teams.roleLead': 'Vadovas',
     'teams.roleMember': 'Narys',
+    'teams.roleAdmin': 'Administratorius',
+    'teams.roleViewer': 'Stebėtojas',
+    'teams.information': 'Komandos informacija',
+    'teams.teamId': 'Komandos ID',
+    'teams.created': 'Sukurta',
+    'teams.lastUpdated': 'Paskutinį kartą atnaujinta',
+    'teams.createdBy': 'pateikė',
+    'teams.noMembers': 'Šioje komandoje narių dar nėra.',
 
     // Backlog
     'backlog.title': 'Darbų sąrašas',
@@ -844,6 +940,16 @@ export const translations: Record<Language, Translations> = {
     'backlog.transferItemFailedLoad': 'Nepavyko įkelti komandų sąrašo.',
     'backlog.transferItemFailed': 'Nepavyko perkelti darbo elemento.',
     'backlog.editItemDescription': 'Atnaujinkite darbo elemento laukus ir išsaugokite pakeitimus.',
+    'backlog.allTypes': 'Visi tipai',
+    'backlog.allStatuses': 'Visos būsenos',
+    'backlog.allAssignees': 'Visi vykdytojai',
+    'backlog.allTags': 'Visos žymės',
+    'backlog.statusBacklog': 'Atsargos',
+    'backlog.statusTodo': 'Reikia atlikti',
+    'backlog.dragHelp': 'Tempkite elementus tarp sekcijų, kad suplanuotumėte iteracijas',
+    'backlog.dragHere': 'Tempkite elementus čia, kad suplanuotumėte šią iteraciją',
+    'backlog.showCompleted': 'Rodyti užbaigtas',
+    'backlog.completedCount': 'užbaigtos',
 
     // Board
     'board.title': 'Lenta',
@@ -915,6 +1021,16 @@ export const translations: Record<Language, Translations> = {
     'absences.failedCreate': 'Nepavyko sukurti pravaikštos.',
     'absences.failedUpdate': 'Nepavyko atnaujinti pravaikštos.',
     'absences.failedDelete': 'Nepavyko ištrinti pravaikštos.',
+    'absences.registerAbsence': 'Registruoti pravaikštą',
+    'absences.searchMember': 'Ieškoti nario pagal vardą...',
+    'absences.clear': 'Išvalyti',
+    'absences.allTypes': 'Visi tipai',
+    'absences.typeFilterPlaceholder': 'Tipas',
+    'absences.typeAbsent': 'Neatvykimas',
+    'absences.typeLate': 'Vėlavimas',
+    'absences.subtitle': 'Artimiausios pravaikštos',
+    'absences.noResults': 'Pagal pasirinktus filtrus rezultatų nerasta.',
+    'absences.noActiveMembership': 'Aktyvios narystės nerasta',
 
     // Profile
     'profile.title': 'Profilis',
@@ -1161,6 +1277,16 @@ export const translations: Record<Language, Translations> = {
     'dashboard.greetingMorning': 'Good morning',
     'dashboard.greetingAfternoon': 'Good afternoon',
     'dashboard.greetingEvening': 'Good evening',
+    'dashboard.sectionWork': 'Work',
+    'dashboard.sectionWorkspace': 'Workspace',
+    'dashboard.sectionQuickAccess': 'Quick Access',
+    'dashboard.noPinnedTeams': 'No pinned teams yet. Pin a team from the sidebar.',
+    'dashboard.noProducts': 'No products',
+    'dashboard.noTeamsInProduct': 'No teams',
+    'dashboard.noRecentActivity': 'No recent activity.',
+    'dashboard.activity.createdItem': 'created a new item',
+    'dashboard.activity.updatedItem': 'updated an item',
+    'dashboard.activity.commented': 'commented',
 
     // Organizations
     'organizations.title': 'Organizations',
@@ -1206,6 +1332,22 @@ export const translations: Record<Language, Translations> = {
     'organizations.roleUpdated': 'Member role updated successfully',
     'organizations.failedRoleUpdate': 'Failed to update member role.',
     'organizations.changeRoleConfirm': "Are you sure you want to change this member's role?",
+    'organizations.email': 'Email',
+    'organizations.absence': 'Absence',
+    'organizations.activeMembers': 'Active Members',
+    'organizations.manageAbsences': 'Manage Absences',
+    'organizations.registerAbsence': 'Register',
+    'organizations.noAccess': 'No access',
+    'organizations.tags': 'Tags',
+    'organizations.addTag': 'Add Tag',
+    'organizations.tagNamePlaceholder': 'Tag name (e.g. frontend)',
+    'organizations.noTags': 'No tags yet. Create tags to use them in work items and assign them to team members.',
+    'organizations.tagCreated': 'Tag created',
+    'organizations.tagDeleted': 'Tag deleted',
+    'organizations.failedCreateTag': 'Failed to create tag',
+    'organizations.failedDeleteTag': 'Failed to delete tag',
+    'organizations.roleViewer': 'Viewer',
+    'organizations.slug': 'Slug',
 
     // Products
     'products.title': 'Products',
@@ -1233,6 +1375,10 @@ export const translations: Record<Language, Translations> = {
     'products.team': 'Team',
     'products.iterations': 'Iterations',
     'products.overview': 'Overview',
+    'products.details': 'Product Details',
+    'products.productId': 'Product ID',
+    'products.createdBy': 'Created By',
+    'products.updatedBy': 'Updated By',
 
     // Teams
     'teams.title': 'Teams',
@@ -1259,6 +1405,14 @@ export const translations: Record<Language, Translations> = {
     'teams.role': 'Role',
     'teams.roleLead': 'Lead',
     'teams.roleMember': 'Member',
+    'teams.roleAdmin': 'Admin',
+    'teams.roleViewer': 'Viewer',
+    'teams.information': 'Team Information',
+    'teams.teamId': 'Team ID',
+    'teams.created': 'Created',
+    'teams.lastUpdated': 'Last Updated',
+    'teams.createdBy': 'by',
+    'teams.noMembers': 'No members in this team yet.',
 
     // Backlog
     'backlog.title': 'Backlog',
@@ -1334,6 +1488,16 @@ export const translations: Record<Language, Translations> = {
     'backlog.transferItemFailedLoad': 'Failed to load team list.',
     'backlog.transferItemFailed': 'Failed to transfer work item.',
     'backlog.editItemDescription': 'Update work item fields and save changes.',
+    'backlog.allTypes': 'All Types',
+    'backlog.allStatuses': 'All Statuses',
+    'backlog.allAssignees': 'All Assignees',
+    'backlog.allTags': 'All Tags',
+    'backlog.statusBacklog': 'Backlog',
+    'backlog.statusTodo': 'To Do',
+    'backlog.dragHelp': 'Drag items between sections to plan iterations',
+    'backlog.dragHere': 'Drag items here to plan this iteration',
+    'backlog.showCompleted': 'Show completed',
+    'backlog.completedCount': 'completed',
 
     // Board
     'board.title': 'Board',
@@ -1405,6 +1569,16 @@ export const translations: Record<Language, Translations> = {
     'absences.failedCreate': 'Failed to create absence.',
     'absences.failedUpdate': 'Failed to update absence.',
     'absences.failedDelete': 'Failed to delete absence.',
+    'absences.registerAbsence': 'Register Absence',
+    'absences.searchMember': 'Search member name...',
+    'absences.clear': 'Clear',
+    'absences.allTypes': 'All Types',
+    'absences.typeFilterPlaceholder': 'Type',
+    'absences.typeAbsent': 'Absent',
+    'absences.typeLate': 'Late',
+    'absences.subtitle': 'Upcoming Absences',
+    'absences.noResults': 'No results found for the current filters.',
+    'absences.noActiveMembership': 'No active membership found',
 
     // Profile
     'profile.title': 'Profile',

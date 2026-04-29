@@ -49,7 +49,7 @@ export function MyTeamsByOrgCard() {
                   {org.name}
                 </button>
                 {org.products.length === 0 ? (
-                  <p className="text-sm text-zinc-500 italic">No products</p>
+                  <p className="text-sm text-zinc-500 italic">{t('dashboard.noProducts')}</p>
                 ) : (
                   <div className="space-y-3">
                     {org.products.map((product) => (
@@ -61,7 +61,7 @@ export function MyTeamsByOrgCard() {
                           {product.name}
                         </button>
                         {product.teams.length === 0 ? (
-                          <p className="text-sm text-zinc-500 italic">No teams</p>
+                          <p className="text-sm text-zinc-500 italic">{t('dashboard.noTeamsInProduct')}</p>
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {product.teams.map((team) => (

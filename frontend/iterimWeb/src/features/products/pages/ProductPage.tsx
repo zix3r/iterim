@@ -204,26 +204,26 @@ export function ProductPage() {
 
       {/* Product Content Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Overview</h2>
+        <h2 className="text-xl font-semibold">{t('products.overview')}</h2>
         <Card>
           <CardHeader>
-            <CardTitle>Product Details</CardTitle>
+            <CardTitle>{t('products.details')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div>
-              <span className="font-medium">Product ID:</span> {product.id}
+              <span className="font-medium">{t('products.productId')}:</span> {product.id}
             </div>
             <div>
-              <span className="font-medium">Organization:</span> {product.organizationName}
+              <span className="font-medium">{t('products.organization')}:</span> {product.organizationName}
             </div>
             <div>
-              <span className="font-medium">Created By:</span> {product.createdByName}
+              <span className="font-medium">{t('products.createdBy')}:</span> {product.createdByName}
               <span className="text-muted-foreground text-sm ml-2">
                 ({formatDate(product.createdAt)})
               </span>
             </div>
             <div>
-              <span className="font-medium">Updated By:</span> {product.updatedByName}
+              <span className="font-medium">{t('products.updatedBy')}:</span> {product.updatedByName}
               <span className="text-muted-foreground text-sm ml-2">
                 ({formatDate(product.updatedAt)})
               </span>

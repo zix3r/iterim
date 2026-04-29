@@ -216,6 +216,16 @@ export function OrganizationPage() {
   const canManageAllAbsences = organization.userRole === 'Admin';
   const isAdmin = organization.userRole === 'Admin';
 
+  const translateOrgRole = (role: string) => {
+    switch (role) {
+      case 'Admin': return t('organizations.roleAdmin');
+      case 'Member': return t('organizations.roleMember');
+      case 'Viewer': return t('organizations.roleViewer');
+      case 'Owner': return t('organizations.roleOwner');
+      default: return role;
+    }
+  };
+
   const handleCreateTag = async () => {
     const name = newTagName.trim();
     if (!name || !orgId) return;
@@ -226,9 +236,9 @@ export function OrganizationPage() {
       setNewTagName('');
       setNewTagColor('#6366f1');
       setShowNewTagForm(false);
-      toast({ variant: 'success', title: 'Tag created' });
+      toast({ variant: 'success', title: t('organizations.tagCreated') });
     } catch (err) {
-      toast({ variant: 'error', title: 'Error', description: err instanceof Error ? err.message : 'Failed to create tag' });
+      toast({ variant: 'error', title: t('common.error'), description: err instanceof Error ? err.message : t('organizations.failedCreateTag') });
     } finally {
       setIsCreatingTag(false);
     }
@@ -239,9 +249,9 @@ export function OrganizationPage() {
     try {
       await deleteOrgTag(Number(orgId), tagId);
       setOrgTags(prev => prev.filter(t => t.id !== tagId));
-      toast({ variant: 'success', title: 'Tag deleted' });
+      toast({ variant: 'success', title: t('organizations.tagDeleted') });
     } catch (err) {
-      toast({ variant: 'error', title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete tag' });
+      toast({ variant: 'error', title: t('common.error'), description: err instanceof Error ? err.message : t('organizations.failedDeleteTag') });
     }
   };
 
@@ -258,7 +268,7 @@ export function OrganizationPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{organization.name}</h1>
-          <p className="text-muted-foreground">Slug: {organization.slug}</p>
+          <p className="text-muted-foreground">{t('organizations.slug')}: {organization.slug}</p>
         </div>
         <div className="flex gap-2">
           {organization.userRole === 'Admin' && (
@@ -272,7 +282,7 @@ export function OrganizationPage() {
           )}
 
           <Link to={`/org/${orgId}/absences`}>
-            <Button variant="outline">Manage Absences</Button>
+            <Button variant="outline">{t('organizations.manageAbsences')}</Button>
           </Link>
           <Link to={`/org/${orgId}/products`}>
             <Button>{t('organizations.products')}</Button>
@@ -302,7 +312,7 @@ export function OrganizationPage() {
         </Link>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Active Members</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('organizations.activeMembers')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -327,10 +337,10 @@ export function OrganizationPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
+                <TableHead>{t('organizations.email')}</TableHead>
                 <TableHead>{t('organizations.role')}</TableHead>
                 <TableHead>{t('common.status')}</TableHead>
-                <TableHead className="w-[150px]">Absence</TableHead>
+                <TableHead className="w-[150px]">{t('organizations.absence')}</TableHead>
                 {organization.userRole === 'Admin' && <TableHead className="w-[80px]"></TableHead>}
               </TableRow>
             </TableHeader>
@@ -347,12 +357,12 @@ export function OrganizationPage() {
                         className="px-2 py-1 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                         aria-label={`Change role for ${member.email}`}
                       >
-                        <option value="Admin">Admin</option>
-                        <option value="Member">Member</option>
-                        <option value="Viewer">Viewer</option>
+                        <option value="Admin">{t('organizations.roleAdmin')}</option>
+                        <option value="Member">{t('organizations.roleMember')}</option>
+                        <option value="Viewer">{t('organizations.roleViewer')}</option>
                       </select>
                     ) : (
-                      <span>{member.role}</span>
+                      <span>{translateOrgRole(member.role)}</span>
                     )}
                   </TableCell>
                   <TableCell>{member.status}</TableCell>
@@ -364,14 +374,14 @@ export function OrganizationPage() {
                         canManageAllAbsences={canManageAllAbsences}
                         currentUserId={organization.currentUserId}
                         initialOrgMemberId={member.id}
-                        triggerLabel="Register"
+                        triggerLabel={t('organizations.registerAbsence')}
                         triggerSize="sm"
                         triggerVariant="outline"
                         triggerDisabled={member.status !== 'Active'}
                         onCreated={loadData}
                       />
                     ) : (
-                      <span className="text-sm text-muted-foreground">No access</span>
+                      <span className="text-sm text-muted-foreground">{t('organizations.noAccess')}</span>
                     )}
                   </TableCell>
                   {organization.userRole === 'Admin' && (
@@ -400,9 +410,9 @@ export function OrganizationPage() {
       {isAdmin && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Tags</h2>
+            <h2 className="text-xl font-semibold">{t('organizations.tags')}</h2>
             <Button variant="outline" size="sm" onClick={() => setShowNewTagForm(v => !v)}>
-              <PlusIcon className="h-4 w-4 mr-1" /> {t('common.add')} Tag
+              <PlusIcon className="h-4 w-4 mr-1" /> {t('organizations.addTag')}
             </Button>
           </div>
 
@@ -421,7 +431,7 @@ export function OrganizationPage() {
                     value={newTagName}
                     onChange={e => setNewTagName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleCreateTag(); if (e.key === 'Escape') setShowNewTagForm(false); }}
-                    placeholder="Tag name (e.g. frontend)"
+                    placeholder={t('organizations.tagNamePlaceholder')}
                     className="flex-1 text-sm border rounded-md px-3 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
                     autoFocus
                   />
@@ -437,7 +447,7 @@ export function OrganizationPage() {
           <Card>
             <CardContent className="py-4">
               {orgTags.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tags yet. Create tags to use them in work items and assign them to team members.</p>
+                <p className="text-sm text-muted-foreground">{t('organizations.noTags')}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {orgTags.map(tag => (

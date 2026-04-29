@@ -34,6 +34,14 @@ interface Props {
   triggerDisabled?: boolean;
 }
 
+const REASON_LABEL_KEYS = {
+  Vacation: 'absences.typeVacation',
+  Sick: 'absences.typeSick',
+  Late: 'absences.typeLate',
+  Absent: 'absences.typeAbsent',
+  Other: 'absences.typeOther',
+} as const;
+
 export function CreateAbsenceModal({
   orgId,
   members,
@@ -41,12 +49,13 @@ export function CreateAbsenceModal({
   canManageAllAbsences,
   currentUserId,
   initialOrgMemberId,
-  triggerLabel = 'Register Absence',
+  triggerLabel,
   triggerVariant = 'default',
   triggerSize = 'default',
   triggerDisabled = false,
 }: Props) {
   const { t } = useLanguage();
+  const resolvedTriggerLabel = triggerLabel ?? t('absences.registerAbsence');
   const activeMembers = useMemo(
     () => members.filter((member) => member.status === 'Active'),
     [members],
@@ -152,7 +161,7 @@ export function CreateAbsenceModal({
       <DialogTrigger asChild>
         <Button variant={triggerVariant} size={triggerSize} disabled={triggerDisabled}>
           <PlusIcon className="h-4 w-4 mr-2" />
-          {triggerLabel}
+          {resolvedTriggerLabel}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -171,7 +180,7 @@ export function CreateAbsenceModal({
             {shouldLockMemberSelection ? (
               <Input
                 id="create-absence-member"
-                value={selectedMember?.email ?? 'No active membership found'}
+                value={selectedMember?.email ?? t('absences.noActiveMembership')}
                 disabled
                 readOnly
               />
@@ -248,7 +257,7 @@ export function CreateAbsenceModal({
             >
               {REASON_OPTIONS.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {t(REASON_LABEL_KEYS[option])}
                 </option>
               ))}
             </select>

@@ -4,9 +4,18 @@ import type { DashboardActivity } from '@/lib/api';
 import { WorkItemBadge } from '@/components/shared/WorkItemBadge';
 import { Link } from 'react-router';
 import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/i18n/translations';
+
+const ACTIVITY_DESCRIPTION_KEYS: Record<string, TranslationKey> = {
+  'created a new item': 'dashboard.activity.createdItem',
+  'created new item': 'dashboard.activity.createdItem',
+  'updated an item': 'dashboard.activity.updatedItem',
+  'commented': 'dashboard.activity.commented',
+};
 
 export function ActivityFeedWidget({ activities }: { activities: DashboardActivity[] }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const activityLocale = language === 'lt' ? 'lt-LT' : 'en-US';
   return (
     <Card className="h-full border-none shadow-none bg-transparent lg:bg-card lg:border lg:shadow-sm">
       <CardHeader className="pb-3 px-0 lg:px-6 border-b-0">
@@ -19,14 +28,19 @@ export function ActivityFeedWidget({ activities }: { activities: DashboardActivi
         {activities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-xl bg-muted/30">
             <Clock className="h-8 w-8 mb-2 text-muted-foreground/30" />
-            <p>No recent activity.</p>
+            <p>{t('dashboard.noRecentActivity')}</p>
           </div>
         ) : (
           <div className="space-y-6 relative list-none m-0 p-0 pl-3">
              {/* Feed Line */}
              <div className="absolute left-[13px] top-2 bottom-2 w-[2px] bg-border/50 z-0 rounded-full" />
 
-             {activities.map(item => (
+             {activities.map(item => {
+              const descriptionKey = item.description
+                ? ACTIVITY_DESCRIPTION_KEYS[item.description.trim()]
+                : 'dashboard.activity.createdItem';
+              const descriptionText = descriptionKey ? t(descriptionKey) : item.description;
+              return (
               <div key={item.id} className="relative pl-6 z-10 group pb-1">
                 {/* Dot */}
                 <div className="absolute left-1 top-2 w-2.5 h-2.5 rounded-full bg-background border-[2px] border-primary/50 group-hover:border-primary group-hover:scale-110 transition-all shadow-sm" />
@@ -38,7 +52,7 @@ export function ActivityFeedWidget({ activities }: { activities: DashboardActivi
                    <div className="text-sm text-foreground/80 leading-snug">
                      <span className="font-semibold text-foreground">{item.actorName}</span>
                      <span className="text-muted-foreground mx-1">
-                        {item.description || 'created new item'}
+                        {descriptionText}
                      </span>
                      
                      {/* If we have work item details, show badge and title */}
@@ -52,13 +66,14 @@ export function ActivityFeedWidget({ activities }: { activities: DashboardActivi
                    </div>
                    <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium mt-1">
                       <Clock className="h-3 w-3 opacity-70" />
-                      {new Date(item.timestamp).toLocaleString(undefined, {
+                      {new Date(item.timestamp).toLocaleString(activityLocale, {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                    </div>
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

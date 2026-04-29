@@ -70,7 +70,7 @@ export function PinnedTeamsCard() {
             ))}
           </div>
         ) : resolved.length === 0 ? (
-          <p className="text-sm text-zinc-500">No pinned teams yet. Pin a team from the sidebar.</p>
+          <p className="text-sm text-zinc-500">{t('dashboard.noPinnedTeams')}</p>
         ) : (
           <div className="space-y-3">
             {resolved.map((team) => (

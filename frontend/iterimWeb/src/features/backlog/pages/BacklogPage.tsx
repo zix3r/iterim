@@ -391,11 +391,11 @@ export function BacklogPage() {
           />
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>🟦 Story</span>
-            <span>🟨 Task</span>
-            <span>🟥 Bug</span>
+            <span>🟦 {t('backlog.typeStory')}</span>
+            <span>🟨 {t('backlog.typeTask')}</span>
+            <span>🟥 {t('backlog.typeBug')}</span>
             <span className="ml-auto flex items-center gap-3">
-              <span>💡 Drag items between sections to plan iterations</span>
+              <span>💡 {t('backlog.dragHelp')}</span>
               {completedGroups.length > 0 && (
                 <Button
                   variant={showCompleted ? "secondary" : "ghost"}
@@ -404,7 +404,7 @@ export function BacklogPage() {
                   onClick={() => setShowCompleted(!showCompleted)}
                 >
                   <History className="h-3 w-3 mr-1" />
-                  {showCompleted ? t('common.close') : 'Show'} completed ({completedGroups.length})
+                  {showCompleted ? t('common.close') : t('backlog.showCompleted')} ({completedGroups.length})
                 </Button>
               )}
             </span>

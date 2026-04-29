@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Search } from "lucide-react";
 import type { AbsenceFilters } from "@/lib/api";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface Props {
   filters: AbsenceFilters;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function AbsenceFilterBar({ filters, onFilterChange, onClear }: Props) {
+  const { t } = useLanguage();
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
@@ -18,7 +20,7 @@ export function AbsenceFilterBar({ filters, onFilterChange, onClear }: Props) {
       <div className="relative min-w-[200px] flex-1">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search member name..."
+          placeholder={t('absences.searchMember')}
           className="pl-9"
           value={filters.memberName || ""}
           onChange={(e) => onFilterChange({ ...filters, memberName: e.target.value })}
@@ -41,27 +43,27 @@ export function AbsenceFilterBar({ filters, onFilterChange, onClear }: Props) {
         />
       </div>
 
-      <Select 
-        value={filters.type || "all"} 
+      <Select
+        value={filters.type || "all"}
         onValueChange={(val: string) => onFilterChange({ ...filters, type: val === "all" ? undefined : val })}
       >
         <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Type" />
+          <SelectValue placeholder={t('absences.typeFilterPlaceholder')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value="Sick">Sick</SelectItem>
-          <SelectItem value="Vacation">Vacation</SelectItem>
-          <SelectItem value="Absent">Absent</SelectItem>
-          <SelectItem value="Late">Late</SelectItem>
-          <SelectItem value="Other">Other</SelectItem>
+          <SelectItem value="all">{t('absences.allTypes')}</SelectItem>
+          <SelectItem value="Sick">{t('absences.typeSick')}</SelectItem>
+          <SelectItem value="Vacation">{t('absences.typeVacation')}</SelectItem>
+          <SelectItem value="Absent">{t('absences.typeAbsent')}</SelectItem>
+          <SelectItem value="Late">{t('absences.typeLate')}</SelectItem>
+          <SelectItem value="Other">{t('absences.typeOther')}</SelectItem>
         </SelectContent>
       </Select>
 
       {activeFiltersCount > 0 && (
         <Button variant="ghost" size="sm" onClick={onClear} className="h-10 px-3">
           <X className="h-4 w-4 mr-2" />
-          Clear ({activeFiltersCount})
+          {t('absences.clear')} ({activeFiltersCount})
         </Button>
       )}
     </div>

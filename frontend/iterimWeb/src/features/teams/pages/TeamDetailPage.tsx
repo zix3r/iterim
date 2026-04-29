@@ -324,20 +324,20 @@ export function TeamDetailPage() {
       {/* Team Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Team Information</CardTitle>
+          <CardTitle>{t('teams.information')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <div>
-            <span className="font-medium">Team ID:</span> {team.id}
+            <span className="font-medium">{t('teams.teamId')}:</span> {team.id}
           </div>
           <div>
             <span className="font-medium">{t('products.title')}:</span> {team.productName}
           </div>
           <div>
-            <span className="font-medium">Created:</span> {formatDate(team.createdAt)} by {team.createdByName}
+            <span className="font-medium">{t('teams.created')}:</span> {formatDate(team.createdAt)} {t('teams.createdBy')} {team.createdByName}
           </div>
           <div>
-            <span className="font-medium">Last Updated:</span> {formatDate(team.updatedAt)} by {team.updatedByName}
+            <span className="font-medium">{t('teams.lastUpdated')}:</span> {formatDate(team.updatedAt)} {t('teams.createdBy')} {team.updatedByName}
           </div>
         </CardContent>
       </Card>
@@ -362,7 +362,7 @@ export function TeamDetailPage() {
         {team.members.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              No members in this team yet.
+              {t('teams.noMembers')}
             </CardContent>
           </Card>
         ) : (
@@ -403,8 +403,8 @@ export function TeamDetailPage() {
                           onChange={(e) => handleRoleChange(member.userId, e.target.value)}
                           className="px-3 py-1.5 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                         >
-                          <option value="0">Admin</option>
-                          <option value="1">Member</option>
+                          <option value="0">{t('teams.roleAdmin')}</option>
+                          <option value="1">{t('teams.roleMember')}</option>
                         </select>
                       ) : (
                         <span className={`inline-flex items-center px-3 py-1 rounded-md text-sm ${
@@ -413,7 +413,7 @@ export function TeamDetailPage() {
                             : 'bg-secondary text-secondary-foreground'
                         }`}>
                           {member.role === 'Admin' && <ShieldIcon className="h-3 w-3 mr-1" />}
-                          {member.role}
+                          {member.role === 'Admin' ? t('teams.roleAdmin') : member.role === 'Member' ? t('teams.roleMember') : member.role === 'Viewer' ? t('teams.roleViewer') : member.role}
                         </span>
                       )}
                       

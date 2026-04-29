@@ -128,16 +128,16 @@ export function AbsencesPage() {
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: t('dashboard.title'), href: '/dashboard' },
           { label: organization.name, href: `/org/${orgId}` },
-          { label: 'Absences' },
+          { label: t('absences.title') },
         ]}
       />
 
       <div className="flex justify-between items-start gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold">{t('absences.title')}</h1>
-          <p className="text-muted-foreground">{t('dashboard.upcomingAbsences')}</p>
+          <p className="text-muted-foreground">{t('absences.subtitle')}</p>
         </div>
         <CreateAbsenceModal
           orgId={organization.id}
@@ -158,7 +158,7 @@ export function AbsencesPage() {
       {absences.length === 0 ? (
         <EmptyState
           title={t('absences.noAbsences')}
-          description="No results found for the current filters."
+          description={t('absences.noResults')}
           icon={<CalendarOff className="h-8 w-8" />}
           action={
             <CreateAbsenceModal

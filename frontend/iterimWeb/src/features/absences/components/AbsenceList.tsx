@@ -9,6 +9,15 @@ import { EditAbsenceModal } from './EditAbsenceModal';
 import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/i18n/translations';
+
+const REASON_LABEL_KEYS: Record<string, TranslationKey> = {
+  Vacation: 'absences.typeVacation',
+  Sick: 'absences.typeSick',
+  Late: 'absences.typeLate',
+  Absent: 'absences.typeAbsent',
+  Other: 'absences.typeOther',
+};
 
 const getMessageFromError = (error: unknown, fallback: string) => {
   if (error instanceof Error) return error.message;
@@ -98,7 +107,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
               <TableCell>{formatDateOnly(absence.fromDate)}</TableCell>
               <TableCell>{formatDateOnly(absence.toDate)}</TableCell>
               <TableCell>
-                <div>{absence.reason}</div>
+                <div>{REASON_LABEL_KEYS[absence.reason] ? t(REASON_LABEL_KEYS[absence.reason]) : absence.reason}</div>
                 {absence.reasonDetails && (
                   <div
                     className="text-xs text-muted-foreground mt-1 break-all"

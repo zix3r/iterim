@@ -169,7 +169,7 @@ export function IterationSection({
           <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
             {workItems.length === 0 ? (
               <p className="text-xs text-muted-foreground/60 py-4">
-                {isBacklog ? t('backlog.noItems') : 'Drag items here to plan this iteration'}
+                {isBacklog ? t('backlog.noItems') : t('backlog.dragHere')}
               </p>
             ) : (
               workItems.map((item) => (

@@ -14,6 +14,14 @@ import { useLanguage } from '@/context/LanguageContext';
 
 const REASON_OPTIONS: AbsenceReason[] = ['Vacation', 'Sick', 'Late', 'Absent', 'Other'];
 
+const REASON_LABEL_KEYS = {
+  Vacation: 'absences.typeVacation',
+  Sick: 'absences.typeSick',
+  Late: 'absences.typeLate',
+  Absent: 'absences.typeAbsent',
+  Other: 'absences.typeOther',
+} as const;
+
 const getMessageFromError = (error: unknown, fallback: string) => {
   if (error instanceof Error) return error.message;
   return fallback;
@@ -208,7 +216,7 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
             >
               {REASON_OPTIONS.map((option) => (
                 <option key={option} value={option}>
-                  {option}
+                  {t(REASON_LABEL_KEYS[option])}
                 </option>
               ))}
             </select>
