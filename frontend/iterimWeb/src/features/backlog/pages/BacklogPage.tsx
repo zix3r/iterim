@@ -8,7 +8,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
-import { Plus, History, AlertCircle, ListTodo } from 'lucide-react';
+import { Plus, History, AlertCircle, ListTodo, Sparkles } from 'lucide-react';
 import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
   updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
@@ -17,6 +17,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 import { IterationSection } from '../components/IterationSection';
 import { BacklogFilters } from '../components/BacklogFilters';
+import { SuggestionsPanel } from '../components/SuggestionsPanel';
 import { CreateIterationModal } from '../components/CreateIterationModal';
 import { EditIterationModal } from '../components/EditIterationModal';
 import { CompleteIterationModal } from '../components/CompleteIterationModal';
@@ -60,6 +61,7 @@ export function BacklogPage() {
   const [editItem, setEditItem] = useState<WorkItem | null>(null);
   const [editIteration, setEditIteration] = useState<Iteration | null>(null);
   const [completeIteration, setCompleteIteration] = useState<Iteration | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   // DnD
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null);
@@ -340,6 +342,14 @@ export function BacklogPage() {
     (member) => member.userId === team.currentUserId && member.role === 'Admin'
   );
 
+  // ATPA tikslo iteracija: prioritetas Active, tada pirma Planning.
+  // Naudoja jau gautus duomenis, todėl SuggestionsPanel niekad neatsidaro
+  // su `null` iteracija.
+  const suggestionsTarget: Iteration | null =
+    iterations.find((i) => i.status === 'Active') ??
+    iterations.find((i) => i.status === 'Planning') ??
+    null;
+
   const renderSection = (
     iteration: Iteration | null,
     items: WorkItem[],
@@ -380,6 +390,19 @@ export function BacklogPage() {
           <p className="text-muted-foreground">{team.name}</p>
         </div>
         <div className="flex items-center gap-2">
+          {/*
+            ATPA siūlymai aktualūs tik kai yra Planning ar Active iteracija — kitaip
+            mygtukas išjungiamas su tooltip'u, paaiškinančiu kodėl.
+          */}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!suggestionsTarget}
+            title={suggestionsTarget ? undefined : t('atpa.noActiveIteration')}
+            onClick={() => setSuggestionsOpen(true)}
+          >
+            <Sparkles className="h-4 w-4 mr-2" /> {t('atpa.suggestButton')}
+          </Button>
           <CreateIterationModal teamId={tid} onCreated={loadData} />
           <Button size="sm" onClick={() => setCreateItemOpen(true)}>
             <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
@@ -526,6 +549,13 @@ export function BacklogPage() {
         open={!!completeIteration}
         onOpenChange={(v) => { if (!v) setCompleteIteration(null); }}
         onCompleted={loadData}
+      />
+
+      <SuggestionsPanel
+        iteration={suggestionsTarget}
+        open={suggestionsOpen}
+        onOpenChange={setSuggestionsOpen}
+        onApplied={() => loadData()}
       />
     </div>
   );

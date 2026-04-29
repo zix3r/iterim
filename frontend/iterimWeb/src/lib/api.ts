@@ -1416,3 +1416,161 @@ export const updateTeamMemberSchedule = (teamId: number, memberId: number, data:
   }).then(async r => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
+
+// ── ATPA (Automatinis Task'ų Priskyrimo Algoritmas) Types ─────
+//
+// Tipai 1:1 atitinka backend DTO (iterimApi/DTOs/Atpa/*.cs). Endpoint:
+// GET /api/atpa/suggestions?iterationId=X (kontroleris taip pat priima
+// POST /api/teams/:teamId/iterations/:iterationId/suggest-assignments).
+
+/** Backend grąžina "warning" arba "info". */
+export type AtpaWarningSeverity = 'warning' | 'info';
+
+/** Žinomi įspėjimų kodai iš `AtpaService.cs`. */
+export type AtpaWarningCode =
+  | 'NO_TEAM_MEMBERS'
+  | 'NO_TAG_MATCH'
+  | 'SP_EXCEEDS_CAPACITY'
+  | 'ALL_MEMBERS_OVERLOADED'
+  | 'MEMBER_OVERLOADED'
+  | (string & {}); // future-proof — leidžia naujus kodus be type'o lūžio
+
+export interface AtpaWarning {
+  severity: AtpaWarningSeverity;
+  /** Stable code — naudojamas kaip i18n raktas. */
+  code: AtpaWarningCode;
+  /** Tekstinis fallback (anglų k.) — naudojamas, jei FE neturi vertimo. */
+  message: string;
+  /** Interpolation parametrai šablonams (pvz. `{ title: "X", sp: "5" }`). */
+  messageParams?: Record<string, string>;
+  /** Susietas work item.id arba member.id, priklausomai nuo kodo. */
+  relatedEntityId: number | null;
+}
+
+export interface AtpaCapacityMember {
+  memberId: number;
+  memberName: string;
+  avatarUrl: string | null;
+  /** "FullTime" | "PartTime" | "Custom". */
+  scheduleType: 'FullTime' | 'PartTime' | 'Custom' | string;
+  weeklyHours: number;
+  baseCapacityHours: number;
+  absenceHours: number;
+  alreadyAssignedHours: number;
+  /** Likusi laisva capacity dabar (live algoritmui dirbant — atimama). */
+  availableCapacityHours: number;
+  velocityAvgPoints: number;
+  /** Eksplicitiškai priskirtos žymės (Team settings). */
+  tags: string[];
+  /**
+   * Iš nario darbų istorijos numanomos žymės — tos, kurias jis ne kartą
+   * užbaigė per paskutinius sprintus, bet jam dar nepriskirtos eksplicitiškai.
+   * Disjoint su `tags`. UI renderina kitokiu stiliumi.
+   */
+  inferredTags: string[];
+}
+
+export interface AtpaSuggestion {
+  workItemId: number;
+  workItemTitle: string;
+  /** "Story" | "Task" | "Bug". */
+  workItemType: string;
+  workItemPoints: number;
+  workItemTags: string[];
+
+  suggestedMemberId: number;
+  memberName: string;
+  memberAvatarUrl: string | null;
+  /** Eksplicitiškos nario žymės. */
+  memberTags: string[];
+  /** Numanomos žymės iš istorijos — disjoint su `memberTags`. */
+  memberInferredTags: string[];
+  /** Eksplicitiškai sutampančios žymės — pilna spalva paryškinamos UI. */
+  matchingTags: string[];
+  /**
+   * Sutampa per istoriją (inferred). Disjoint su `matchingTags`. UI
+   * paprastai renderina švelniau (dashed border / mažesnis kontrastas).
+   */
+  matchingInferredTags: string[];
+
+  /** 0–100 confidence (procentai). */
+  confidence: number;
+  /** Tekstinis fallback (anglų k.) — naudojamas, jei FE neturi vertimo. */
+  reason: string;
+  /**
+   * Reason kaip stable code'ų masyvas (pvz. `["REASON_TAG_FULL_MATCH",
+   * "REASON_CAPACITY_HIGH"]`). Frontend juos verčia per i18n ir sujungia.
+   */
+  reasonCodes?: string[];
+  /** Optional interpolation parametrai reason kodams. */
+  reasonParams?: Record<string, string>;
+}
+
+export interface AtpaUnassignedItem {
+  workItemId: number;
+  workItemTitle: string;
+  workItemPoints: number;
+  workItemTags: string[];
+  /** Tekstinis fallback (anglų k.) — naudojamas, jei FE neturi vertimo. */
+  reason: string;
+  /** Stable code — i18n raktas (pvz. `UNASSIGNED_OVERSIZED`). */
+  reasonCode?: string;
+  reasonParams?: Record<string, string>;
+}
+
+export interface AtpaSuggestionsResponse {
+  iterationId: number;
+  teamId: number;
+  suggestions: AtpaSuggestion[];
+  warnings: AtpaWarning[];
+  unassigned: AtpaUnassignedItem[];
+  memberCapacities: AtpaCapacityMember[];
+}
+
+// ── ATPA API ──────────────────────────────────────────────────
+
+export const getAtpaSuggestions = (iterationId: number): Promise<AtpaSuggestionsResponse> =>
+  fetchWithAuth(`/atpa/suggestions?iterationId=${iterationId}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+/** Priskiria narį work item'ui (PATCH `/workitems/:id` su {assignedTo}). */
+export const patchWorkItemAssignee = (
+  workItemId: number,
+  assignedTo: number | null,
+): Promise<WorkItem> =>
+  fetchWithAuth(`/workitems/${workItemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ assignedTo }),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    const result = await r.json();
+    teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+    return result;
+  });
+
+export interface ApplyAtpaResult {
+  applied: { workItemId: number }[];
+  failed: { workItemId: number; error: string }[];
+}
+
+/**
+ * Iš eilės pritaiko siūlymus, batch'ina PATCH'us.
+ * Grąžina, kurie pavyko ir kurie nepavyko — UI tada gali rodyti toast su failed sąrašu.
+ */
+export const applyAtpaSuggestions = async (
+  picks: { workItemId: number; assignedTo: number }[],
+): Promise<ApplyAtpaResult> => {
+  const settled = await Promise.allSettled(
+    picks.map((p) => patchWorkItemAssignee(p.workItemId, p.assignedTo)),
+  );
+  const applied: ApplyAtpaResult['applied'] = [];
+  const failed: ApplyAtpaResult['failed'] = [];
+  settled.forEach((res, i) => {
+    const wid = picks[i].workItemId;
+    if (res.status === 'fulfilled') applied.push({ workItemId: wid });
+    else failed.push({ workItemId: wid, error: (res.reason as Error)?.message ?? 'Unknown error' });
+  });
+  return { applied, failed };
+};

@@ -400,6 +400,65 @@ export type TranslationKey =
   | 'backlog.showCompleted'
   | 'backlog.completedCount'
 
+  // ATPA – Automatinis Task'ų Priskyrimo Algoritmas
+  | 'atpa.suggestButton'
+  | 'atpa.title'
+  | 'atpa.subtitle'
+  | 'atpa.loading'
+  | 'atpa.empty'
+  | 'atpa.allAssigned'
+  | 'atpa.applyAll'
+  | 'atpa.applyingAll'
+  | 'atpa.apply'
+  | 'atpa.applying'
+  | 'atpa.reject'
+  | 'atpa.confidence'
+  | 'atpa.matchingTags'
+  | 'atpa.reason'
+  | 'atpa.warnings'
+  | 'atpa.warningOverloaded'
+  | 'atpa.warningOversized'
+  | 'atpa.warningUnmatched'
+  | 'atpa.warningNoCapacity'
+  | 'atpa.unassigned'
+  | 'atpa.unassignedHint'
+  | 'atpa.capacity'
+  | 'atpa.capacityBefore'
+  | 'atpa.capacityAfter'
+  | 'atpa.scheduleFullTime'
+  | 'atpa.schedulePartTime'
+  | 'atpa.scheduleCustom'
+  | 'atpa.suggestedFor'
+  | 'atpa.failedLoad'
+  | 'atpa.appliedToast'
+  | 'atpa.partialAppliedToast'
+  | 'atpa.failedApply'
+  | 'atpa.noActiveIteration'
+
+  // ATPA — backend warning codes (stable, used as i18n keys)
+  | 'atpa.code.NO_TEAM_MEMBERS'
+  | 'atpa.code.NO_TAG_MATCH'
+  | 'atpa.code.SP_EXCEEDS_CAPACITY'
+  | 'atpa.code.ALL_MEMBERS_OVERLOADED'
+  | 'atpa.code.MEMBER_OVERLOADED'
+
+  // ATPA — backend reason codes (joined into the suggestion's reason line)
+  | 'atpa.reason.NO_TAGS_CAPACITY_BASED'
+  | 'atpa.reason.TAG_FULL_MATCH'
+  | 'atpa.reason.TAG_PARTIAL_MATCH'
+  | 'atpa.reason.TAG_INFERRED_FULL'
+  | 'atpa.reason.TAG_INFERRED_PARTIAL'
+  | 'atpa.reason.TAG_MIXED_MATCH'
+  | 'atpa.reason.TAG_NO_MATCH'
+  | 'atpa.reason.CAPACITY_HIGH'
+  | 'atpa.reason.CAPACITY_MEDIUM'
+  | 'atpa.reason.CAPACITY_LOW'
+
+  // ATPA — unassigned reason codes
+  | 'atpa.unassignedReason.OVERSIZED'
+  | 'atpa.unassignedReason.ALL_FULL'
+  | 'atpa.unassignedReason.ALL_FULL_NO_SP'
+
   // Board
   | 'board.title'
   | 'board.todo'
@@ -951,6 +1010,65 @@ export const translations: Record<Language, Translations> = {
     'backlog.showCompleted': 'Rodyti užbaigtas',
     'backlog.completedCount': 'užbaigtos',
 
+    // ATPA
+    'atpa.suggestButton': 'Siūlyti priskyrimus',
+    'atpa.title': 'ATPA siūlymai',
+    'atpa.subtitle': 'Automatinio užduočių priskyrimo algoritmas pasiūlė šiuos priskyrimus pagal žymes ir nario pajėgumą.',
+    'atpa.loading': 'Skaičiuojami siūlymai…',
+    'atpa.empty': 'Nėra naujų siūlymų.',
+    'atpa.allAssigned': 'Visi šios iteracijos elementai jau priskirti nariams.',
+    'atpa.applyAll': 'Priimti visus',
+    'atpa.applyingAll': 'Priimama…',
+    'atpa.apply': 'Priimti',
+    'atpa.applying': 'Priimama…',
+    'atpa.reject': 'Atmesti',
+    'atpa.confidence': 'Patikimumas',
+    'atpa.matchingTags': 'Sutampančios žymės',
+    'atpa.reason': 'Pagrindimas',
+    'atpa.warnings': 'Įspėjimai',
+    'atpa.warningOverloaded': 'Per didelis krūvis',
+    'atpa.warningOversized': 'Per didelis darbo elementas',
+    'atpa.warningUnmatched': 'Nesutampa žymės',
+    'atpa.warningNoCapacity': 'Nėra laisvo pajėgumo',
+    'atpa.unassigned': 'Nepriskirti',
+    'atpa.unassignedHint': 'Šiems elementams algoritmas nerado tinkamo nario.',
+    'atpa.capacity': 'Komandos pajėgumas',
+    'atpa.capacityBefore': 'Prieš',
+    'atpa.capacityAfter': 'Po pritaikymo',
+    'atpa.scheduleFullTime': 'Pilnas etatas',
+    'atpa.schedulePartTime': 'Dalinis etatas',
+    'atpa.scheduleCustom': 'Individualus',
+    'atpa.suggestedFor': 'Siūlomas',
+    'atpa.failedLoad': 'Nepavyko gauti ATPA siūlymų.',
+    'atpa.appliedToast': 'Pritaikyti siūlymai',
+    'atpa.partialAppliedToast': 'Dalis siūlymų nepavyko pritaikyti.',
+    'atpa.failedApply': 'Nepavyko pritaikyti siūlymo.',
+    'atpa.noActiveIteration': 'Pasirinkite planuojamą arba aktyvią iteraciją.',
+
+    // ATPA – warning code translations ({title}, {sp}, {name} – placeholderiai iš messageParams)
+    'atpa.code.NO_TEAM_MEMBERS': 'Komanda neturi narių, todėl priskyrimų pasiūlyti negalima.',
+    'atpa.code.NO_TAG_MATCH': '„{title}" turi žymes, kurių nė vienas narys neturi (nei eksplicitiškai, nei pagal istoriją) — priskirta pagal capacity.',
+    'atpa.code.SP_EXCEEDS_CAPACITY': '„{title}" SP ({sp}) yra didesnis nei bet kurio nario capacity — apsvarstykite suskaidymą.',
+    'atpa.code.ALL_MEMBERS_OVERLOADED': 'Nepavyko priskirti „{title}" — visi nariai jau perpildyti.',
+    'atpa.code.MEMBER_OVERLOADED': '{name} pasiekė capacity ribą — naujų work items priskirti nebegalima.',
+
+    // ATPA – reason code translations (žymių dalis + capacity dalis)
+    'atpa.reason.NO_TAGS_CAPACITY_BASED': 'nėra žymių, sprendimas pagal capacity',
+    'atpa.reason.TAG_FULL_MATCH': 'visiškai sutampa žymės',
+    'atpa.reason.TAG_PARTIAL_MATCH': 'dalinis žymių sutapimas',
+    'atpa.reason.TAG_INFERRED_FULL': 'atitikimas pagal nario darbų istoriją',
+    'atpa.reason.TAG_INFERRED_PARTIAL': 'dalinis atitikimas pagal nario darbų istoriją',
+    'atpa.reason.TAG_MIXED_MATCH': 'sutapimas pagal žymes ir istoriją ({explicitMatchCount} expl. + {inferredMatchCount} infer.)',
+    'atpa.reason.TAG_NO_MATCH': 'žymių sutapimo nėra',
+    'atpa.reason.CAPACITY_HIGH': 'daugiausia laisvos capacity',
+    'atpa.reason.CAPACITY_MEDIUM': 'pakankama laisva capacity',
+    'atpa.reason.CAPACITY_LOW': 'ribota laisva capacity',
+
+    // ATPA – unassigned reason codes
+    'atpa.unassignedReason.OVERSIZED': '„{title}" SP ({sp}) viršija bet kurio nario didžiausią capacity.',
+    'atpa.unassignedReason.ALL_FULL': 'Visi nariai pilni arba SP ({sp}) viršija bet kurio nario likusią capacity.',
+    'atpa.unassignedReason.ALL_FULL_NO_SP': 'Visi nariai pilni — laisvos capacity nepakanka.',
+
     // Board
     'board.title': 'Lenta',
     'board.todo': 'Reikia atlikti',
@@ -1499,6 +1617,65 @@ export const translations: Record<Language, Translations> = {
     'backlog.showCompleted': 'Show completed',
     'backlog.completedCount': 'completed',
 
+    // ATPA
+    'atpa.suggestButton': 'Suggest assignments',
+    'atpa.title': 'ATPA suggestions',
+    'atpa.subtitle': 'The automatic task-assignment algorithm proposed these assignments based on tags and member capacity.',
+    'atpa.loading': 'Computing suggestions…',
+    'atpa.empty': 'No new suggestions.',
+    'atpa.allAssigned': 'All work items in this iteration are already assigned.',
+    'atpa.applyAll': 'Apply all',
+    'atpa.applyingAll': 'Applying…',
+    'atpa.apply': 'Accept',
+    'atpa.applying': 'Applying…',
+    'atpa.reject': 'Reject',
+    'atpa.confidence': 'Confidence',
+    'atpa.matchingTags': 'Matching tags',
+    'atpa.reason': 'Reason',
+    'atpa.warnings': 'Warnings',
+    'atpa.warningOverloaded': 'Overloaded',
+    'atpa.warningOversized': 'Oversized work item',
+    'atpa.warningUnmatched': 'Tags don’t match',
+    'atpa.warningNoCapacity': 'No free capacity',
+    'atpa.unassigned': 'Unassigned',
+    'atpa.unassignedHint': 'No matching member found by the algorithm.',
+    'atpa.capacity': 'Team capacity',
+    'atpa.capacityBefore': 'Before',
+    'atpa.capacityAfter': 'After applying',
+    'atpa.scheduleFullTime': 'Full-time',
+    'atpa.schedulePartTime': 'Part-time',
+    'atpa.scheduleCustom': 'Custom',
+    'atpa.suggestedFor': 'Suggested',
+    'atpa.failedLoad': 'Failed to load ATPA suggestions.',
+    'atpa.appliedToast': 'Suggestions applied',
+    'atpa.partialAppliedToast': 'Some suggestions could not be applied.',
+    'atpa.failedApply': 'Failed to apply suggestion.',
+    'atpa.noActiveIteration': 'Select a planning or active iteration.',
+
+    // ATPA – warning code translations ({title}, {sp}, {name} are placeholders from messageParams)
+    'atpa.code.NO_TEAM_MEMBERS': 'Team has no members; cannot suggest assignments.',
+    'atpa.code.NO_TAG_MATCH': '"{title}" has tags no member shares (neither explicit nor inferred); assigned by capacity only.',
+    'atpa.code.SP_EXCEEDS_CAPACITY': '"{title}" SP ({sp}) exceeds every member’s capacity — consider splitting.',
+    'atpa.code.ALL_MEMBERS_OVERLOADED': 'Couldn’t assign "{title}" — all members are at capacity.',
+    'atpa.code.MEMBER_OVERLOADED': '{name} reached capacity — no further items can be assigned.',
+
+    // ATPA – reason code translations (tag part + capacity part)
+    'atpa.reason.NO_TAGS_CAPACITY_BASED': 'no tags, decision based on capacity',
+    'atpa.reason.TAG_FULL_MATCH': 'all tags match',
+    'atpa.reason.TAG_PARTIAL_MATCH': 'partial tag match',
+    'atpa.reason.TAG_INFERRED_FULL': 'all tags match via member history',
+    'atpa.reason.TAG_INFERRED_PARTIAL': 'partial match via member history',
+    'atpa.reason.TAG_MIXED_MATCH': 'matches via tags and history ({explicitMatchCount} expl. + {inferredMatchCount} infer.)',
+    'atpa.reason.TAG_NO_MATCH': 'no tag overlap',
+    'atpa.reason.CAPACITY_HIGH': 'most available capacity',
+    'atpa.reason.CAPACITY_MEDIUM': 'decent free capacity',
+    'atpa.reason.CAPACITY_LOW': 'limited free capacity',
+
+    // ATPA – unassigned reason codes
+    'atpa.unassignedReason.OVERSIZED': '"{title}" SP ({sp}) exceeds every member’s full capacity.',
+    'atpa.unassignedReason.ALL_FULL': 'All members full or SP ({sp}) exceeds every member’s remaining capacity.',
+    'atpa.unassignedReason.ALL_FULL_NO_SP': 'All members are full — no remaining capacity.',
+
     // Board
     'board.title': 'Board',
     'board.todo': 'To do',
@@ -1569,28 +1746,28 @@ export const translations: Record<Language, Translations> = {
     'absences.failedCreate': 'Failed to create absence.',
     'absences.failedUpdate': 'Failed to update absence.',
     'absences.failedDelete': 'Failed to delete absence.',
-    'absences.registerAbsence': 'Register Absence',
-    'absences.searchMember': 'Search member name...',
+    'absences.registerAbsence': 'Register absence',
+    'absences.searchMember': 'Search member by name...',
     'absences.clear': 'Clear',
-    'absences.allTypes': 'All Types',
+    'absences.allTypes': 'All types',
     'absences.typeFilterPlaceholder': 'Type',
     'absences.typeAbsent': 'Absent',
     'absences.typeLate': 'Late',
-    'absences.subtitle': 'Upcoming Absences',
-    'absences.noResults': 'No results found for the current filters.',
+    'absences.subtitle': 'Upcoming absences',
+    'absences.noResults': 'No results match the selected filters.',
     'absences.noActiveMembership': 'No active membership found',
 
     // Profile
     'profile.title': 'Profile',
-    'profile.personalInfo': 'Personal info',
+    'profile.personalInfo': 'Personal information',
     'profile.preferences': 'Preferences',
     'profile.security': 'Security',
     'profile.fullName': 'Full name',
     'profile.email': 'Email',
     'profile.role': 'Role',
-    'profile.avatar': 'Avatar',
-    'profile.changeAvatar': 'Change avatar',
-    'profile.removeAvatar': 'Remove avatar',
+    'profile.avatar': 'Profile picture',
+    'profile.changeAvatar': 'Change picture',
+    'profile.removeAvatar': 'Remove picture',
     'profile.language': 'Language',
     'profile.theme': 'Theme',
     'profile.notifications': 'Notifications',
@@ -1604,8 +1781,8 @@ export const translations: Record<Language, Translations> = {
     'profile.deleteAccountConfirm': 'Are you sure you want to delete your account? This action is irreversible.',
 
     // Admin
-    'admin.usersTitle': 'User Management',
-    'admin.systemTitle': 'System Information',
+    'admin.usersTitle': 'User management',
+    'admin.systemTitle': 'System information',
     'admin.sidebarUsers': 'Users',
     'admin.sidebarSystem': 'System',
     'admin.allUsers': 'All users',
@@ -1632,7 +1809,6 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Total products',
     'admin.failedLoad': 'Failed to load data.',
     'admin.search': 'Search users…',
-    
 
     // Layout
     'layout.breadcrumbHome': 'Home',
@@ -1663,7 +1839,7 @@ export const translations: Record<Language, Translations> = {
 };
 
 export function isLanguage(value: unknown): value is Language {
-  return typeof value === 'string' && (SUPPORTED_LANGUAGES as string[]).includes(value);
+  return typeof value === 'string' && (SUPPORTED_LANGUAGES as string[]).includes(value as string);
 }
 
 export function translate(language: Language, key: TranslationKey): string {
