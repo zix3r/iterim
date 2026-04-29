@@ -55,6 +55,39 @@ public class AtpaController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Frontend-friendly alias: GET /api/atpa/suggestions?iterationId=X
+    /// Resolves the team server-side from the iteration id, so the FE doesn't
+    /// need to know teamId before opening the suggestions panel.
+    /// Returns the same payload as the POST endpoint — idempotent and cacheable.
+    /// </summary>
+    [HttpGet("api/atpa/suggestions")]
+    public async Task<IActionResult> GetSuggestions([FromQuery] int iterationId)
+    {
+        try
+        {
+            var userId = GetUserId();
+            var result = await _atpa.SuggestAssignmentsAsync(iterationId, userId);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while suggesting assignments", error = ex.Message });
+        }
+    }
+
     private int GetUserId()
     {
         var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value

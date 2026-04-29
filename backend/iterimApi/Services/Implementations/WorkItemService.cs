@@ -272,6 +272,93 @@ public class WorkItemService : IWorkItemService
         return MapToDto(workItem);
     }
 
+    /// <summary>
+    /// Partial update — only the assignee is mutated. Used by the ATPA suggestions
+    /// flow so the UI can apply assignments without re-sending the entire payload.
+    /// Records a single AssignedTo entry in WorkItemHistory.
+    /// </summary>
+    public async Task<WorkItemDto?> AssignWorkItemAsync(int id, int? assignedTo, int userId)
+    {
+        var workItem = await _db.WorkItems
+            .Include(wi => wi.CreatedByUser)
+            .FirstOrDefaultAsync(wi => wi.Id == id);
+
+        if (workItem == null)
+            return null;
+
+        // Validate the assignee belongs to the work item's team.
+        if (assignedTo.HasValue)
+        {
+            var assigneeExists = await _db.TeamMembers
+                .AnyAsync(tm => tm.Id == assignedTo.Value && tm.TeamId == workItem.TeamId);
+
+            if (!assigneeExists)
+                throw new InvalidOperationException("AssignedTo must be a valid team member");
+        }
+
+        // Confirm the requester is on the team (same authz contract as PUT).
+        var orgMember = await _db.OrganizationMembers
+            .Include(om => om.TeamMemberships)
+            .FirstOrDefaultAsync(om =>
+                om.UserId == userId &&
+                om.TeamMemberships.Any(tm => tm.TeamId == workItem.TeamId));
+
+        if (orgMember == null)
+            throw new UnauthorizedAccessException("User is not a member of this team");
+
+        // No-op: same assignee, skip work / history entry.
+        if (workItem.AssignedTo == assignedTo)
+        {
+            await _db.Entry(workItem).Reference(wi => wi.UpdatedByUser).LoadAsync();
+            if (workItem.AssignedTo.HasValue)
+            {
+                await _db.Entry(workItem).Reference(wi => wi.AssignedMember).LoadAsync();
+                if (workItem.AssignedMember != null)
+                {
+                    await _db.Entry(workItem.AssignedMember).Reference(m => m.OrgMember).LoadAsync();
+                    await _db.Entry(workItem.AssignedMember.OrgMember).Reference(om => om.User).LoadAsync();
+                }
+            }
+            return MapToDto(workItem);
+        }
+
+        var now = DateTime.UtcNow;
+        var historyEntry = new WorkItemHistory
+        {
+            WorkItemId = workItem.Id,
+            FieldName  = "AssignedTo",
+            OldValue   = workItem.AssignedTo?.ToString(),
+            NewValue   = assignedTo?.ToString(),
+            ChangedAt  = now,
+            ChangedBy  = orgMember.Id,
+        };
+
+        workItem.AssignedTo = assignedTo;
+        workItem.UpdatedBy  = userId;
+        workItem.UpdatedAt  = now;
+        _db.WorkItemHistories.Add(historyEntry);
+
+        await _db.SaveChangesAsync();
+
+        // Reload nav properties for the response.
+        await _db.Entry(workItem).Reference(wi => wi.UpdatedByUser).LoadAsync();
+        if (workItem.AssignedTo.HasValue)
+        {
+            await _db.Entry(workItem).Reference(wi => wi.AssignedMember).LoadAsync();
+            if (workItem.AssignedMember != null)
+            {
+                await _db.Entry(workItem.AssignedMember).Reference(m => m.OrgMember).LoadAsync();
+                await _db.Entry(workItem.AssignedMember.OrgMember).Reference(om => om.User).LoadAsync();
+            }
+        }
+        else
+        {
+            workItem.AssignedMember = null;
+        }
+
+        return MapToDto(workItem);
+    }
+
     public async Task<WorkItemDto?> TransferWorkItemAsync(int id, int targetTeamId, int userId)
     {
         var workItem = await _db.WorkItems
