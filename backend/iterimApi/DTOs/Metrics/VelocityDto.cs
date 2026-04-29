@@ -14,4 +14,9 @@ public class SprintVelocityItem
     public DateOnly EndDate { get; set; }
     public int PlannedPoints { get; set; }
     public int CompletedPoints { get; set; }
+    /// <summary>
+    /// Iteration status as string ("Active", "Completed"). Lets the frontend
+    /// visually distinguish in-progress sprints from finished ones.
+    /// </summary>
+    public string Status { get; set; } = string.Empty;
 }

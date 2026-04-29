@@ -386,6 +386,7 @@ export type TranslationKey =
   | 'metrics.completed'
   | 'metrics.remaining'
   | 'metrics.committed'
+  | 'metrics.inProgress'
   | 'metrics.dateRange'
   | 'metrics.lastNSprints'
   | 'metrics.points'
@@ -878,6 +879,7 @@ export const translations: Record<Language, Translations> = {
     'metrics.completed': 'Užbaigta',
     'metrics.remaining': 'Liko',
     'metrics.committed': 'Įsipareigota',
+    'metrics.inProgress': 'Vykdoma',
     'metrics.dateRange': 'Datų intervalas',
     'metrics.lastNSprints': 'Paskutinės iteracijos',
     'metrics.points': 'Balai',
@@ -1367,6 +1369,7 @@ export const translations: Record<Language, Translations> = {
     'metrics.completed': 'Completed',
     'metrics.remaining': 'Remaining',
     'metrics.committed': 'Committed',
+    'metrics.inProgress': 'In progress',
     'metrics.dateRange': 'Date range',
     'metrics.lastNSprints': 'Last iterations',
     'metrics.points': 'Points',

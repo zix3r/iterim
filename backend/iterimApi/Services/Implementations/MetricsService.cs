@@ -21,10 +21,13 @@ public class MetricsService : IMetricsService
     {
         await EnsureTeamAccessAsync(teamId, userId);
 
-        // Take the N most recent completed sprints before (and including) the given iteration.
+        // Take the N most recent completed OR active sprints before (and including) the given iteration.
+        // Active (in-progress) sprints are included so the chart shows current progress
+        // alongside historical velocity.
         // Sort priority: Id desc, then CreatedAt desc (as specified).
         var query = _db.Iterations
-            .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Completed);
+            .Where(i => i.TeamId == teamId
+                && (i.Status == IterationStatus.Completed || i.Status == IterationStatus.Active));
 
         if (beforeIterationId.HasValue)
             query = query.Where(i => i.Id <= beforeIterationId.Value);
@@ -38,24 +41,44 @@ public class MetricsService : IMetricsService
 
         var sprintItems = iterations
             .OrderBy(i => i.Id)
-            .Select(i => new SprintVelocityItem
+            .Select(i =>
             {
-                IterationId     = i.Id,
-                Name            = i.Name,
-                StartDate       = i.StartDate,
-                EndDate         = i.EndDate,
-                // Use snapshot values captured at completion time.
-                // Fall back to live WorkItems sum for iterations completed before
-                // the snapshot feature was introduced (SnapshotPlannedPoints == null).
-                PlannedPoints   = i.SnapshotPlannedPoints
-                    ?? i.WorkItems.Where(w => w.Points.HasValue).Sum(w => w.Points!.Value),
-                CompletedPoints = i.SnapshotCompletedPoints
-                    ?? i.WorkItems.Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done).Sum(w => w.Points!.Value),
+                var isCompleted = i.Status == IterationStatus.Completed;
+
+                // For Completed sprints prefer the snapshot taken at completion time.
+                // For Active sprints (and legacy completed sprints without a snapshot)
+                // compute the values live from the WorkItems collection so the chart
+                // reflects the current state.
+                var planned = isCompleted
+                    ? i.SnapshotPlannedPoints
+                        ?? i.WorkItems.Where(w => w.Points.HasValue).Sum(w => w.Points!.Value)
+                    : i.WorkItems.Where(w => w.Points.HasValue).Sum(w => w.Points!.Value);
+
+                var completed = isCompleted
+                    ? i.SnapshotCompletedPoints
+                        ?? i.WorkItems.Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done).Sum(w => w.Points!.Value)
+                    : i.WorkItems.Where(w => w.Points.HasValue && w.Status == WorkItemStatus.Done).Sum(w => w.Points!.Value);
+
+                return new SprintVelocityItem
+                {
+                    IterationId     = i.Id,
+                    Name            = i.Name,
+                    StartDate       = i.StartDate,
+                    EndDate         = i.EndDate,
+                    PlannedPoints   = planned,
+                    CompletedPoints = completed,
+                    Status          = i.Status.ToString(),
+                };
             })
             .ToList();
 
-        var avg = sprintItems.Count > 0
-            ? Math.Round((decimal)sprintItems.Average(s => s.CompletedPoints), 1)
+        // Average velocity is computed only from Completed sprints — including
+        // an in-progress sprint would skew the historical baseline downward.
+        var completedItems = sprintItems
+            .Where(s => s.Status == IterationStatus.Completed.ToString())
+            .ToList();
+        var avg = completedItems.Count > 0
+            ? Math.Round((decimal)completedItems.Average(s => s.CompletedPoints), 1)
             : 0m;
 
         return new VelocityDto

@@ -973,6 +973,8 @@ export interface SprintVelocityItem {
   endDate: string;
   plannedPoints: number;
   completedPoints: number;
+  /** "Active" or "Completed" — used to visually distinguish in-progress sprints. */
+  status: string;
 }
 
 export interface VelocityData {

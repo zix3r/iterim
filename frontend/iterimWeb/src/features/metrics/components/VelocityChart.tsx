@@ -37,9 +37,13 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
   const chartData = (data?.sprints ?? []).map((s) => ({
     name: s.name ?? `#${s.iterationId}`,
     iterationId: s.iterationId,
+    status: s.status,
+    isActive: s.status === 'Active',
     Planned: s.plannedPoints,
     Completed: s.completedPoints,
   }));
+
+  const hasActiveSprint = chartData.some((s) => s.isActive);
 
   const colors = {
     planned: isDark ? '#b7b7c1' : '#d4d4d8',
@@ -51,6 +55,22 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
     tooltipBg: 'var(--popover)',
     tooltipText: isDark ? '#ffffff' : 'var(--popover-foreground)',
     cursor: 'var(--accent)',
+  };
+
+  // Pattern fills used for in-progress (Active) sprints — same base color
+  // as completed sprints but with diagonal stripes so they are visually distinct.
+  const plannedPatternId = 'velocity-planned-stripes';
+  const completedPatternId = 'velocity-completed-stripes';
+
+  const fillFor = (entry: { iterationId: number; isActive: boolean }, kind: 'Planned' | 'Completed') => {
+    const isHighlighted = entry.iterationId === highlightIterationId;
+    if (entry.isActive) {
+      return kind === 'Planned' ? `url(#${plannedPatternId})` : `url(#${completedPatternId})`;
+    }
+    if (kind === 'Planned') {
+      return isHighlighted ? colors.plannedActive : colors.planned;
+    }
+    return isHighlighted ? colors.completedActive : colors.completed;
   };
 
   return (
@@ -78,6 +98,29 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData} barGap={4} barCategoryGap="30%">
+              <defs>
+                {/* Diagonal-stripe patterns mark sprints that are still in progress */}
+                <pattern
+                  id={plannedPatternId}
+                  patternUnits="userSpaceOnUse"
+                  width="6"
+                  height="6"
+                  patternTransform="rotate(45)"
+                >
+                  <rect width="6" height="6" fill={colors.planned} />
+                  <line x1="0" y1="0" x2="0" y2="6" stroke={colors.completed} strokeWidth="2" strokeOpacity="0.55" />
+                </pattern>
+                <pattern
+                  id={completedPatternId}
+                  patternUnits="userSpaceOnUse"
+                  width="6"
+                  height="6"
+                  patternTransform="rotate(45)"
+                >
+                  <rect width="6" height="6" fill={colors.completed} />
+                  <line x1="0" y1="0" x2="0" y2="6" stroke={colors.planned} strokeWidth="2" strokeOpacity="0.7" />
+                </pattern>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
               <XAxis
                 dataKey="name"
@@ -108,7 +151,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
               <Legend
                 wrapperStyle={{ fontSize: 12, paddingTop: 12, color: colors.tick }}
                 content={() => (
-                  <div className="mt-3 flex items-center justify-center gap-4 text-xs" style={{ color: colors.tick }}>
+                  <div className="mt-3 flex items-center justify-center gap-4 text-xs flex-wrap" style={{ color: colors.tick }}>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: colors.planned }} />
                       {t('metrics.committed')}
@@ -117,6 +160,17 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
                       <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: colors.completed }} />
                       {t('metrics.completed')}
                     </span>
+                    {hasActiveSprint && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="inline-block h-2 w-2 rounded-sm"
+                          style={{
+                            backgroundImage: `repeating-linear-gradient(45deg, ${colors.completed} 0 2px, ${colors.planned} 2px 4px)`,
+                          }}
+                        />
+                        {t('metrics.inProgress')}
+                      </span>
+                    )}
                   </div>
                 )}
               />
@@ -138,7 +192,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
                 {chartData.map((entry) => (
                   <Cell
                     key={entry.iterationId}
-                    fill={entry.iterationId === highlightIterationId ? colors.plannedActive : colors.planned}
+                    fill={fillFor(entry, 'Planned')}
                   />
                 ))}
               </Bar>
@@ -146,7 +200,7 @@ export function VelocityChart({ data, loading, highlightIterationId }: Props) {
                 {chartData.map((entry) => (
                   <Cell
                     key={entry.iterationId}
-                    fill={entry.iterationId === highlightIterationId ? colors.completedActive : colors.completed}
+                    fill={fillFor(entry, 'Completed')}
                   />
                 ))}
               </Bar>
