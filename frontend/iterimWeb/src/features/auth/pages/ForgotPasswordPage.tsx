@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function ForgotPasswordPage() {
   const { forgotPassword } = useAuth();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -51,16 +53,16 @@ export function ForgotPasswordPage() {
             </svg>
           </div>
 
-          <h2 className="auth-heading">Check your email</h2>
+          <h2 className="auth-heading">{t('auth.checkEmailTitle')}</h2>
           <p className="auth-subheading">
-            If that email address is registered, a password reset link has been sent to <strong>{email}</strong>.
+            {t('auth.resetLinkSent')} <strong>{email}</strong>.
           </p>
           <p className="auth-note">
-            Can't find it? Check your spam or junk folder. The link expires after a limited time.
+            {t('auth.didntReceive')}
           </p>
 
           <p className="auth-footer-text">
-            <Link to="/login" className="auth-link">← Back to sign in</Link>
+            <Link to="/login" className="auth-link">← {t('auth.backToSignIn')}</Link>
           </p>
         </div>
         <style>{forgotStyles}</style>
@@ -75,9 +77,9 @@ export function ForgotPasswordPage() {
           <h1 className="auth-title">iterim</h1>
         </div>
 
-        <h2 className="auth-heading">Forgot your password?</h2>
+        <h2 className="auth-heading">{t('auth.forgotTitle')}</h2>
         <p className="auth-subheading">
-          Enter your email address and we'll send you a password reset link.
+          {t('auth.forgotSubtitle')}
         </p>
 
         {(status === 'error' && serverError) && (
@@ -93,7 +95,7 @@ export function ForgotPasswordPage() {
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="field-group">
-            <label className="field-label" htmlFor="email">Email address</label>
+            <label className="field-label" htmlFor="email">{t('auth.emailAddress')}</label>
             <input
               id="email"
               type="email"
@@ -120,12 +122,12 @@ export function ForgotPasswordPage() {
           </div>
 
           <button type="submit" className="auth-btn" disabled={status === 'submitting'}>
-            {status === 'submitting' ? <span className="btn-spinner" /> : 'Send reset link'}
+            {status === 'submitting' ? <span className="btn-spinner" /> : t('auth.sendResetLink')}
           </button>
         </form>
 
         <p className="auth-footer-text">
-          <Link to="/login" className="auth-link">← Back to sign in</Link>
+          <Link to="/login" className="auth-link">← {t('auth.backToSignIn')}</Link>
         </p>
       </div>
 
@@ -224,8 +226,26 @@ const forgotStyles = `
   }
   .field-input::placeholder { color: #71717a; }
   .field-input:focus { border-color: rgba(24,24,27,1); box-shadow: 0 0 0 3px rgba(24,24,27,0.12); }
+  .field-input:-webkit-autofill,
+  .field-input:-webkit-autofill:hover,
+  .field-input:-webkit-autofill:focus,
+  .field-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #000000;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: background-color 9999s ease-out 0s;
+  }
   .field-input-error { border-color: rgba(239,68,68,0.5) !important; }
   .field-input-error:focus { border-color: rgba(239,68,68,0.5) !important; box-shadow: 0 0 0 3px rgba(239,68,68,0.12) !important; }
+  .field-input-error:-webkit-autofill,
+  .field-input-error:-webkit-autofill:hover,
+  .field-input-error:-webkit-autofill:focus,
+  .field-input-error:-webkit-autofill:active {
+    border: 1px solid rgba(239,68,68,0.5) !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset, 0 0 0 3px rgba(239,68,68,0.12);
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset, 0 0 0 3px rgba(239,68,68,0.12);
+  }
   .field-error { color: #f87171; font-size: 0.75rem; margin-top: 0.25rem; display: block; }
 
   .auth-btn {

@@ -9,6 +9,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { createProduct } from '@/lib/api';
 import type { CreateProductRequest } from '@/lib/api';
 import { maxLength, required } from '@/lib/validation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   orgId: number;
@@ -19,6 +20,7 @@ export function CreateProductModal({ orgId, onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<CreateProductRequest>(
     {
@@ -45,7 +47,7 @@ export function CreateProductModal({ orgId, onCreated }: Props) {
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -58,17 +60,17 @@ export function CreateProductModal({ orgId, onCreated }: Props) {
       });
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Product created successfully'
+        title: t('common.success'),
+        description: t('products.failedCreate')
       });
       setOpen(false);
       resetForm({ name: '', description: '' });
-      onCreated(); // Atnaujiname sąrašą
+      onCreated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to create product. Please try again.')
+        title: t('common.error'),
+        description: getMessageFromError(error, t('products.failedCreate'))
       });
     } finally {
       setIsLoading(false);
@@ -86,11 +88,11 @@ export function CreateProductModal({ orgId, onCreated }: Props) {
       }}
     >
       <DialogTrigger asChild>
-        <Button>Create Product</Button>
+        <Button>{t('products.create')}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Product</DialogTitle>
+          <DialogTitle>{t('products.createTitle')}</DialogTitle>
           <DialogDescription>
             Add a new product to your organization.
           </DialogDescription>
@@ -128,10 +130,10 @@ export function CreateProductModal({ orgId, onCreated }: Props) {
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create'}
+              {isLoading ? t('common.creating') : t('common.create')}
             </Button>
           </div>
         </form>

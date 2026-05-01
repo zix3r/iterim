@@ -9,6 +9,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { updateTeam } from '@/lib/api';
 import type { TeamDetail, UpdateTeamRequest } from '@/lib/api';
 import { maxLength, required } from '@/lib/validation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   team: TeamDetail;
@@ -21,6 +22,7 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<UpdateTeamRequest>(
     {
@@ -59,7 +61,7 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
 
   const handleClose = () => {
     if (hasChanges) {
-      if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+      if (confirm(t('validation.fieldRequired'))) {
         onOpenChange(false);
       }
     } else {
@@ -73,7 +75,7 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -86,16 +88,16 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
       });
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Team updated successfully',
+        title: t('common.success'),
+        description: t('teams.failedUpdate'),
       });
       onOpenChange(false);
       onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to update team. Please try again.'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('teams.failedUpdate')),
       });
     } finally {
       setIsLoading(false);
@@ -106,7 +108,7 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Team</DialogTitle>
+          <DialogTitle>{t('teams.editTitle')}</DialogTitle>
           <DialogDescription>
             Update team information.
           </DialogDescription>
@@ -144,10 +146,10 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !hasChanges}>
-              {isLoading ? 'Updating...' : 'Update'}
+              {isLoading ? t('common.updating') : t('common.update')}
             </Button>
           </div>
         </form>

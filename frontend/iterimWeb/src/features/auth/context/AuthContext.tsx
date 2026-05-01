@@ -8,12 +8,15 @@ import {
   type ReactNode,
 } from 'react';
 import { fetchWithAuth } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 export interface User {
   id: number;
   email: string;
   name: string;
   avatarUrl?: string;
+  role?: string;
+  theme?: 'light' | 'dark';
 }
 
 interface AuthContextValue {
@@ -52,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const initialized = useRef(false);
+  const { language } = useLanguage();
 
   const fetchMe = useCallback(async () => {
     try {
@@ -94,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (name: string, email: string, password: string) => {
     const res = await fetchWithAuth(`${AUTH}/register`, {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, language }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -102,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(msg);
     }
     // Do NOT set user here — email must be confirmed first
-  }, []);
+  }, [language]);
 
   const confirmEmail = useCallback(async (token: string) => {
     const res = await fetchWithAuth(`${AUTH}/confirm-email`, {
@@ -119,26 +123,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resendConfirmation = useCallback(async (email: string) => {
     const res = await fetchWithAuth(`${AUTH}/resend-confirmation`, {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, language }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       const msg = extractError(data, 'Failed to resend confirmation.');
       throw new Error(msg);
     }
-  }, []);
+  }, [language]);
 
   const forgotPassword = useCallback(async (email: string) => {
     const res = await fetchWithAuth(`${AUTH}/forgot-password`, {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, language }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       const msg = extractError(data, 'Failed to send reset link.');
       throw new Error(msg);
     }
-  }, []);
+  }, [language]);
 
   const resetPassword = useCallback(async (token: string, newPassword: string) => {
     const res = await fetchWithAuth(`${AUTH}/reset-password`, {

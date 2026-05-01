@@ -48,6 +48,9 @@ public class AuthController : ControllerBase
             // Atskirti 403 (nepatvirtintas el. paštas) nuo 401 (blogas slaptažodis)
             if (result.Errors.Any(e => e.Contains("confirm your email")))
                 return StatusCode(403, new { errors = result.Errors });
+            
+            if (result.Errors.Any(e => e.Contains("blocked")))
+                return StatusCode(403, new { errors = result.Errors });
 
             return Unauthorized(new { errors = result.Errors });
         }
@@ -126,7 +129,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        await _authService.ResendConfirmationAsync(dto.Email);
+        await _authService.ResendConfirmationAsync(dto.Email, dto.Language);
         return Ok(new { message = "If that email exists and is unconfirmed, a new confirmation link has been sent." });
     }
 
@@ -142,7 +145,7 @@ public class AuthController : ControllerBase
     {
         if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        await _authService.ForgotPasswordAsync(dto.Email);
+        await _authService.ForgotPasswordAsync(dto.Email, dto.Language);
         return Ok(new { message = "If that email is registered, a password reset link has been sent." });
     }
 

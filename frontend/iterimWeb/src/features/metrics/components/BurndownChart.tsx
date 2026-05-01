@@ -4,7 +4,9 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTheme } from '@/context/ThemeContext';
 import type { SprintMetrics } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   data: SprintMetrics | null;
@@ -12,6 +14,10 @@ interface Props {
 }
 
 export function BurndownChart({ data, loading }: Props) {
+  const { t } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+
   if (loading) {
     return (
       <Card>
@@ -31,6 +37,15 @@ export function BurndownChart({ data, loading }: Props) {
 
   const hasData = burndownPoints.length > 0;
 
+  const colors = {
+    ideal: isDark ? '#b7b7c1' : '#c4c4ce',
+    actual: isDark ? '#ffffff' : '#18181b',
+    tick: 'var(--muted-foreground)',
+    grid: 'var(--border)',
+    tooltipBg: 'var(--popover)',
+    tooltipText: 'var(--popover-foreground)',
+  };
+
   const chartData = burndownPoints.map((p) => ({
     date: fmtDay(p.date),
     'Actual': p.remainingPoints,
@@ -42,16 +57,16 @@ export function BurndownChart({ data, loading }: Props) {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Burndown</CardTitle>
+            <CardTitle className="text-base">{t('metrics.burndown')}</CardTitle>
             <CardDescription className="mt-0.5">
-              Remaining points per day {' '}
-              <span className="text-zinc-400">(dashed = ideal, solid = actual)</span>
+              {t('metrics.remaining')} {' '}
+              <span className="text-muted-foreground">(dashed = {t('metrics.ideal')}, solid = {t('metrics.actual')})</span>
             </CardDescription>
           </div>
           {data && (
             <div className="text-right shrink-0">
-              <p className="text-2xl font-bold text-zinc-900">{data.remainingPoints}</p>
-              <p className="text-xs text-muted-foreground">pts remaining</p>
+              <p className="text-2xl font-bold text-foreground">{data.remainingPoints}</p>
+              <p className="text-xs text-muted-foreground">{t('metrics.points')}</p>
             </div>
           )}
         </div>
@@ -60,25 +75,25 @@ export function BurndownChart({ data, loading }: Props) {
       <CardContent>
         {!hasData ? (
           <div className="flex flex-col items-center justify-center h-56 gap-2">
-            <p className="text-sm text-muted-foreground">No burndown data yet.</p>
-            <p className="text-xs text-zinc-400 text-center max-w-xs">
+            <p className="text-sm text-muted-foreground">{t('metrics.noData')}</p>
+            <p className="text-xs text-muted-foreground text-center max-w-xs">
               Burndown is built from work item status change history.
-              Move items to <strong>Done</strong> during the iteration to see the chart fill in.
+              Move items to <strong>{t('board.done')}</strong> during the iteration to see the chart fill in.
             </p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={{ fontSize: 11, fill: colors.tick }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 11, fill: '#71717a' }}
+                tick={{ fontSize: 11, fill: colors.tick }}
                 axisLine={false}
                 tickLine={false}
                 width={32}
@@ -86,21 +101,34 @@ export function BurndownChart({ data, loading }: Props) {
               <Tooltip
                 contentStyle={{
                   borderRadius: '8px',
-                  border: '1px solid #e4e4e7',
+                  border: `1px solid ${colors.grid}`,
                   fontSize: 12,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  backgroundColor: colors.tooltipBg,
+                  color: colors.tooltipText,
                 }}
                 formatter={(value: unknown, name: unknown) => [`${value} pts`, String(name)]}
               />
               <Legend
-                iconType="plainline"
-                wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+                wrapperStyle={{ fontSize: 12, paddingTop: 12, color: colors.tick }}
+                content={() => (
+                  <div className="mt-3 flex items-center justify-center gap-4 text-xs" style={{ color: colors.tick }}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-0.5 w-3" style={{ backgroundColor: colors.ideal }} />
+                      {t('metrics.ideal')}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-0.5 w-3" style={{ backgroundColor: colors.actual }} />
+                      {t('metrics.actual')}
+                    </span>
+                  </div>
+                )}
               />
               {/* Ideal: dashed grey */}
               <Line
                 type="linear"
                 dataKey="Ideal"
-                stroke="#d4d4d8"
+                stroke={colors.ideal}
                 strokeWidth={2}
                 strokeDasharray="5 4"
                 dot={false}
@@ -110,9 +138,9 @@ export function BurndownChart({ data, loading }: Props) {
               <Line
                 type="monotone"
                 dataKey="Actual"
-                stroke="#18181b"
+                stroke={colors.actual}
                 strokeWidth={2}
-                dot={{ r: 3, fill: '#18181b' }}
+                dot={{ r: 3, fill: colors.actual }}
                 activeDot={{ r: 5 }}
               />
             </LineChart>

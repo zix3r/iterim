@@ -1,6 +1,7 @@
 using iterimApi.Data;
 using iterimApi.DTOs.Boards;
 using iterimApi.DTOs.Iterations;
+using iterimApi.DTOs.Tags;
 using Microsoft.EntityFrameworkCore;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
@@ -24,6 +25,15 @@ namespace iterimApi.Services.Implementations
                     .ThenInclude(wi => wi.AssignedMember)
                         .ThenInclude(tm => tm!.OrgMember)
                             .ThenInclude(om => om.User)
+                .Include(i => i.WorkItems)
+                    .ThenInclude(wi => wi.Tags)
+                        .ThenInclude(wit => wit.Tag)
+                .Include(i => i.WorkItems)
+                    .ThenInclude(wi => wi.BlockedBy)
+                        .ThenInclude(d => d.BlockerWorkItem)
+                            .ThenInclude(bwi => bwi.Team)
+                                .ThenInclude(t => t.Product)
+                                    .ThenInclude(p => p.Organization)
                 .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Active)
                 .FirstOrDefaultAsync();
 
@@ -66,13 +76,32 @@ namespace iterimApi.Services.Implementations
                         Title = wi.Title,
                         Type = wi.Type.ToString(),
                         Points = wi.Points,
-                        
-                        AssignedMember = wi.AssignedMember != null ? new AssignedMemberDto 
-                        { 
-                            Id = wi.AssignedMember.Id, 
+                        AssignedMember = wi.AssignedMember != null ? new AssignedMemberDto
+                        {
+                            Id = wi.AssignedMember.Id,
                             FullName = wi.AssignedMember.OrgMember.User.Name,
                             AvatarUrl = wi.AssignedMember.OrgMember.User.AvatarUrl
-                        } : null
+                        } : null,
+                        Tags = wi.Tags.Select(wit => new TagDto
+                        {
+                            Id = wit.Tag.Id,
+                            OrganizationId = wit.Tag.OrganizationId,
+                            Name = wit.Tag.Name,
+                            Color = wit.Tag.Color,
+                            CreatedAt = wit.Tag.CreatedAt
+                        }).ToList(),
+                        Blockers = wi.BlockedBy.Select(d => new BoardBlockerDto
+                        {
+                            DependencyId = d.Id,
+                            WorkItemId = d.BlockerWorkItemId,
+                            Title = d.BlockerWorkItem.Title,
+                            Status = d.BlockerWorkItem.Status.ToString(),
+                            TeamId = d.BlockerWorkItem.TeamId,
+                            TeamName = d.BlockerWorkItem.Team.Name,
+                            ProductId = d.BlockerWorkItem.Team.ProductId,
+                            ProductName = d.BlockerWorkItem.Team.Product.Name,
+                            OrgId = d.BlockerWorkItem.Team.Product.OrganizationId
+                        }).ToList()
                     }).ToList() ?? new List<BoardWorkItemDto>();
 
                 columns.Add(new BoardColumnDto

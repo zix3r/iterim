@@ -9,6 +9,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { createIteration } from '@/lib/api';
 import { dateOnOrAfter, maxLength } from '@/lib/validation';
 import { Plus } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   teamId: number;
@@ -19,6 +20,7 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation(
     {
@@ -60,15 +62,15 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
         startDate: values.startDate || undefined,
         endDate: values.endDate || undefined,
       });
-      toast({ variant: 'success', title: 'Iteration created successfully' });
+      toast({ variant: 'success', title: t('common.success') });
       setOpen(false);
       resetForm();
       onCreated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to create iteration'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedCreate')),
       });
     } finally {
       setIsLoading(false);
@@ -79,19 +81,19 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Plus className="h-4 w-4 mr-2" /> Create Iteration
+          <Plus className="h-4 w-4 mr-2" /> {t('backlog.createIteration')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Iteration</DialogTitle>
+          <DialogTitle>{t('backlog.createIteration')}</DialogTitle>
           <DialogDescription>
             Leave dates empty to use the default iteration length from organization settings.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm font-medium">Name</label>
+            <label className="text-sm font-medium">{t('backlog.iterationName')}</label>
             <Input
               placeholder="Iteration 5"
               value={values.name}
@@ -104,7 +106,7 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Start Date</label>
+              <label className="text-sm font-medium">{t('backlog.iterationStartDate')}</label>
               <Input
                 type="date"
                 value={values.startDate}
@@ -113,7 +115,7 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">End Date</label>
+              <label className="text-sm font-medium">{t('backlog.iterationEndDate')}</label>
               <Input
                 type="date"
                 value={values.endDate}
@@ -126,7 +128,7 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Goal (optional)</label>
+            <label className="text-sm font-medium">{t('backlog.iterationGoal')} ({t('common.optional')})</label>
             <Textarea
               placeholder="What should this iteration achieve?"
               value={values.goal}
@@ -136,8 +138,8 @@ export function CreateIterationModal({ teamId, onCreated }: Props) {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>{isLoading ? 'Creating...' : 'Create Iteration'}</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>{t('common.cancel')}</Button>
+            <Button type="submit" disabled={isLoading}>{isLoading ? t('common.creating') : t('backlog.createIteration')}</Button>
           </div>
         </form>
       </DialogContent>

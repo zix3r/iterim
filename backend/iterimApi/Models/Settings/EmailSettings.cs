@@ -6,6 +6,8 @@ public class EmailSettings
     public string FromAddress { get; set; } = string.Empty;
     public string FromName { get; set; } = "Iterim";
     public string FrontendBaseUrl { get; set; } = string.Empty;
+    public int EmailConfirmationExpiryMinutes { get; set; } = 1440;
+    public int ProfileEmailChangeConfirmationExpiryMinutes { get; set; } = 10;
 
     // SMTP (Gmail, etc.)
     public SmtpSettings? Smtp { get; set; }

@@ -8,6 +8,7 @@ import { addTeamMember } from '@/lib/api';
 import type { OrganizationMember, TeamMember, AddTeamMemberRequest } from '@/lib/api';
 import { required } from '@/lib/validation';
 import { UserPlusIcon } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   teamId: number;
@@ -20,6 +21,7 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation(
     {
@@ -44,7 +46,7 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -54,7 +56,7 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
     if (!selectedMember) {
       toast({
         variant: 'warning',
-        title: 'Selected member is no longer available',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -69,8 +71,8 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
       await addTeamMember(teamId, requestData);
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Team member added successfully'
+        title: t('common.success'),
+        description: t('teams.failedCreate')
       });
       setOpen(false);
       resetForm({ selectedUserId: '', selectedRole: '1' });
@@ -78,8 +80,8 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to add team member. Please try again.'
+        title: t('common.error'),
+        description: error instanceof Error ? error.message : t('teams.failedCreate')
       });
     } finally {
       setIsLoading(false);
@@ -99,12 +101,12 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
       <DialogTrigger asChild>
         <Button>
           <UserPlusIcon className="h-4 w-4 mr-2" />
-          Add Member
+          {t('teams.addMember')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Team Member</DialogTitle>
+          <DialogTitle>{t('teams.addMemberTitle')}</DialogTitle>
           <DialogDescription>
             Add a member from your organization to this team.
           </DialogDescription>
@@ -141,7 +143,7 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
           </div>
           <div>
             <label htmlFor="role" className="text-sm font-medium block mb-2">
-              Role <span className="text-destructive">*</span>
+              {t('organizations.role')} <span className="text-destructive">*</span>
             </label>
             <select 
               id="role"
@@ -159,13 +161,13 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading || eligibleMembers.length === 0}
             >
-              {isLoading ? 'Adding...' : 'Add Member'}
+              {isLoading ? t('common.creating') : t('teams.addMember')}
             </Button>
           </div>
         </form>

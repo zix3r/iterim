@@ -2,12 +2,15 @@ using iterimApi.Data;
 using iterimApi.DTOs;
 using iterimApi.DTOs.Users;
 using iterimApi.Models.Entities;
+using iterimApi.Models.Settings;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace iterimApi.Controllers;
 
@@ -16,18 +19,54 @@ namespace iterimApi.Controllers;
 [Authorize]
 public class UsersController : ControllerBase
 {
+    private static readonly HashSet<string> AllowedThemes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "light",
+        "dark"
+    };
+
     private readonly IRecentPageService _recentPageService;
     private readonly AppDbContext _context;
     private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IEmailService _emailService;
+    private readonly EmailSettings _emailSettings;
 
     public UsersController(
         IRecentPageService recentPageService,
         AppDbContext context,
-        IPasswordHasher<User> passwordHasher)
+        IPasswordHasher<User> passwordHasher,
+        IEmailService emailService,
+        IOptions<EmailSettings> emailSettings)
     {
         _recentPageService = recentPageService;
         _context = context;
         _passwordHasher = passwordHasher;
+        _emailService = emailService;
+        _emailSettings = emailSettings.Value;
+    }
+
+    private int GetProfileEmailChangeConfirmationExpiryMinutes()
+    {
+        if (_emailSettings.ProfileEmailChangeConfirmationExpiryMinutes < 1)
+            return 1;
+
+        return _emailSettings.ProfileEmailChangeConfirmationExpiryMinutes;
+    }
+
+    private static string GenerateSecureToken() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(64))
+            .Replace("+", "-").Replace("/", "_").Replace("=", "");
+
+    private async Task SendConfirmationEmailSafe(string toEmail, string toName, string confirmationToken, string? language = null)
+    {
+        try
+        {
+            await _emailService.SendEmailChangeConfirmationAsync(toEmail, toName, confirmationToken, language);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[EmailService] Failed to send confirmation email to {toEmail} (lang={language ?? "null"}): {ex}");
+        }
     }
 
     private int GetCurrentUserId()
@@ -46,6 +85,27 @@ public class UsersController : ControllerBase
         return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
     }
 
+    private static string NormalizeTheme(string? theme)
+    {
+        if (string.IsNullOrWhiteSpace(theme)) return "light";
+        return theme.Trim().ToLowerInvariant();
+    }
+
+    private static string GetSafeTheme(string? theme)
+    {
+        var normalized = NormalizeTheme(theme);
+        return AllowedThemes.Contains(normalized) ? normalized : "light";
+    }
+
+    private static CurrentUserProfileDto MapCurrentUserProfile(User user) => new()
+    {
+        Name = user.Name,
+        Email = user.Email,
+        AvatarUrl = user.AvatarUrl,
+        Theme = GetSafeTheme(user.Theme),
+        CreatedAt = user.CreatedAt
+    };
+
     [HttpGet("me")]
     public async Task<ActionResult<CurrentUserProfileDto>> GetCurrentUserProfile()
     {
@@ -55,13 +115,7 @@ public class UsersController : ControllerBase
             if (user is null)
                 return NotFound(new { errors = new[] { "User not found." } });
 
-            return Ok(new CurrentUserProfileDto
-            {
-                Name = user.Name,
-                Email = user.Email,
-                AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
-            });
+            return Ok(MapCurrentUserProfile(user));
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
@@ -75,26 +129,65 @@ public class UsersController : ControllerBase
             if (user is null)
                 return NotFound(new { errors = new[] { "User not found." } });
 
+            var normalizedName = dto.Name.Trim();
             var normalizedEmail = dto.Email.Trim().ToLowerInvariant();
+            var shouldQueueEmailChange = !string.Equals(user.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase);
 
-            var emailTaken = await _context.Users
-                .AnyAsync(u => u.Id != user.Id && u.Email == normalizedEmail);
-            if (emailTaken)
-                return Conflict(new { errors = new[] { "Email is already in use." } });
+            if (shouldQueueEmailChange)
+            {
+                var emailTaken = await _context.Users
+                    .AnyAsync(u => u.Id != user.Id && (u.Email == normalizedEmail || u.PendingEmail == normalizedEmail));
+                if (emailTaken)
+                    return Conflict(new { errors = new[] { "Email is already in use." } });
+            }
 
-            user.Name = dto.Name.Trim();
-            user.Email = normalizedEmail;
+            if (!string.IsNullOrWhiteSpace(dto.Theme))
+            {
+                var theme = NormalizeTheme(dto.Theme);
+                if (!AllowedThemes.Contains(theme))
+                    return BadRequest(new { errors = new[] { "Theme must be one of: light, dark." } });
+                user.Theme = theme;
+            }
+
+            user.Name = normalizedName;
+
+            if (shouldQueueEmailChange)
+            {
+                user.PendingEmail = normalizedEmail;
+                user.EmailConfirmationToken = GenerateSecureToken();
+                user.EmailConfirmationTokenExpiry = DateTime.UtcNow.AddMinutes(GetProfileEmailChangeConfirmationExpiryMinutes());
+            }
+
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
-            return Ok(new CurrentUserProfileDto
-            {
-                Name = user.Name,
-                Email = user.Email,
-                AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
-            });
+            if (shouldQueueEmailChange && user.EmailConfirmationToken is not null)
+                _ = SendConfirmationEmailSafe(normalizedEmail, user.Name, user.EmailConfirmationToken, dto.Language);
+
+            return Ok(MapCurrentUserProfile(user));
+        }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+    }
+
+    [HttpPut("me/theme")]
+    public async Task<ActionResult<CurrentUserProfileDto>> UpdateCurrentUserTheme([FromBody] UpdateThemeDto dto)
+    {
+        try
+        {
+            var user = await GetCurrentUserEntityAsync();
+            if (user is null)
+                return NotFound(new { errors = new[] { "User not found." } });
+
+            var theme = NormalizeTheme(dto.Theme);
+            if (!AllowedThemes.Contains(theme))
+                return BadRequest(new { errors = new[] { "Theme must be one of: light, dark." } });
+
+            user.Theme = theme;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(MapCurrentUserProfile(user));
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
@@ -149,13 +242,7 @@ public class UsersController : ControllerBase
 
             await _context.SaveChangesAsync();
 
-            return Ok(new CurrentUserProfileDto
-            {
-                Name = user.Name,
-                Email = user.Email,
-                AvatarUrl = user.AvatarUrl,
-                CreatedAt = user.CreatedAt
-            });
+            return Ok(MapCurrentUserProfile(user));
         }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
@@ -264,7 +351,7 @@ public class UsersController : ControllerBase
             var userId = GetCurrentUserId();
 
             var pinnedTeam = await _context.PinnedTeams.FirstOrDefaultAsync(pt => pt.UserId == userId && pt.TeamId == teamId);
-            
+
             if (pinnedTeam != null)
             {
                 _context.PinnedTeams.Remove(pinnedTeam);

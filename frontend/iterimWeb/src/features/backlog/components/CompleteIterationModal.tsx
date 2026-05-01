@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { completeIteration } from '@/lib/api';
 import { useToast } from '@/components/ui/toast';
 import type { Iteration } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   iteration: Iteration | null;
@@ -17,6 +18,7 @@ export function CompleteIterationModal({ iteration, otherIterations, open, onOpe
   const [moveTarget, setMoveTarget] = useState<string>('backlog');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const handleComplete = async () => {
     if (!iteration) return;
@@ -24,11 +26,11 @@ export function CompleteIterationModal({ iteration, otherIterations, open, onOpe
     try {
       const moveUnfinishedToIterationId = moveTarget === 'backlog' ? null : Number(moveTarget);
       await completeIteration(iteration.id, { moveUnfinishedToIterationId });
-      toast({ variant: 'success', title: 'Iteration completed!' });
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       onCompleted();
     } catch (error: any) {
-      toast({ variant: 'error', title: 'Error', description: error.message || 'Failed to complete iteration' });
+      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedUpdate') });
     } finally {
       setIsLoading(false);
     }
@@ -43,14 +45,14 @@ export function CompleteIterationModal({ iteration, otherIterations, open, onOpe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Complete Iteration</DialogTitle>
+          <DialogTitle>{t('backlog.completeIteration')}</DialogTitle>
           <DialogDescription>
-            Complete "{iteration?.name}" and choose where to move unfinished work items.
+            {t('backlog.completeIteration')} "{iteration?.name}" and choose where to move unfinished work items.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <p className="text-sm text-muted-foreground">
-            Items with status "Done" will stay in this iteration. All other items will be moved to:
+            Items with status "{t('backlog.statusDone')}" will stay in this iteration. All other items will be moved to:
           </p>
           <select
             value={moveTarget}
@@ -66,9 +68,9 @@ export function CompleteIterationModal({ iteration, otherIterations, open, onOpe
           </select>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{t('common.cancel')}</Button>
           <Button onClick={handleComplete} disabled={isLoading}>
-            {isLoading ? 'Completing...' : 'Complete Iteration'}
+            {isLoading ? `${t('common.updating')}` : t('backlog.completeIteration')}
           </Button>
         </DialogFooter>
       </DialogContent>

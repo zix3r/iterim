@@ -13,6 +13,7 @@ import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function ProductPage() {
   const { orgId, productId } = useParams();
@@ -24,6 +25,7 @@ export function ProductPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (product && orgId && productId) {
@@ -64,16 +66,16 @@ export function ProductPage() {
       await deleteProduct(Number(productId));
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Product deleted successfully'
+        title: t('common.success'),
+        description: t('products.failedDelete')
       });
       navigate(`/org/${orgId}/products`);
     } catch (err) {
       console.error('Failed to delete product', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete product.';
+      const errorMessage = err instanceof Error ? err.message : t('products.failedDelete');
       toast({
         variant: 'error',
-        title: 'Error',
+        title: t('common.error'),
         description: errorMessage
       });
       setIsDeleting(false);
@@ -138,9 +140,9 @@ export function ProductPage() {
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: t('dashboard.title'), href: '/dashboard' },
           { label: product.organizationName, href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
+          { label: t('products.title'), href: `/org/${orgId}/products` },
           { label: product.name }
         ]}
       />
@@ -157,10 +159,10 @@ export function ProductPage() {
           {isAdmin && (
             <>
               <Button variant="outline" onClick={() => setEditModalOpen(true)}>
-                Edit
+                {t('common.edit')}
               </Button>
               <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                Delete
+                {t('common.delete')}
               </Button>
             </>
           )}
@@ -169,59 +171,59 @@ export function ProductPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card 
+        <Card
           className="cursor-pointer hover:border-primary/50 transition-colors"
           onClick={() => navigate(`/org/${orgId}/products/${productId}/teams`)}
         >
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Teams</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('products.team')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{product.teamCount}</div>
-            <Button 
-              variant="link" 
-              className="p-0 h-auto mt-2" 
+            <Button
+              variant="link"
+              className="p-0 h-auto mt-2"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/org/${orgId}/products/${productId}/teams`);
               }}
             >
-              View Teams →
+              {t('common.actions')} →
             </Button>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('common.status')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">Active</div>
+            <div className="text-2xl font-bold text-green-600">{t('products.statusActive')}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Product Content Section */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Overview</h2>
+        <h2 className="text-xl font-semibold">{t('products.overview')}</h2>
         <Card>
           <CardHeader>
-            <CardTitle>Product Details</CardTitle>
+            <CardTitle>{t('products.details')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <div>
-              <span className="font-medium">Product ID:</span> {product.id}
+              <span className="font-medium">{t('products.productId')}:</span> {product.id}
             </div>
             <div>
-              <span className="font-medium">Organization:</span> {product.organizationName}
+              <span className="font-medium">{t('products.organization')}:</span> {product.organizationName}
             </div>
             <div>
-              <span className="font-medium">Created By:</span> {product.createdByName}
+              <span className="font-medium">{t('products.createdBy')}:</span> {product.createdByName}
               <span className="text-muted-foreground text-sm ml-2">
                 ({formatDate(product.createdAt)})
               </span>
             </div>
             <div>
-              <span className="font-medium">Updated By:</span> {product.updatedByName}
+              <span className="font-medium">{t('products.updatedBy')}:</span> {product.updatedByName}
               <span className="text-muted-foreground text-sm ml-2">
                 ({formatDate(product.updatedAt)})
               </span>

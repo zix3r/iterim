@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { deleteAbsence } from '@/lib/api';
 import type { MemberAbsence, OrganizationMember } from '@/lib/api';
@@ -7,6 +8,16 @@ import { useToast } from '@/components/ui/toast';
 import { EditAbsenceModal } from './EditAbsenceModal';
 import { Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/i18n/translations';
+
+const REASON_LABEL_KEYS: Record<string, TranslationKey> = {
+  Vacation: 'absences.typeVacation',
+  Sick: 'absences.typeSick',
+  Late: 'absences.typeLate',
+  Absent: 'absences.typeAbsent',
+  Other: 'absences.typeOther',
+};
 
 const getMessageFromError = (error: unknown, fallback: string) => {
   if (error instanceof Error) return error.message;
@@ -40,24 +51,27 @@ interface Props {
 }
 
 export function AbsenceList({ absences, members, currentUserId, canManageAllAbsences, onChanged }: Props) {
+  const { t } = useLanguage();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MemberAbsence | null>(null);
   const { toast } = useToast();
 
   const orgMemberUserById = new Map(members.map((member) => [member.id, member.userId]));
 
-  const handleDelete = async (absenceId: number) => {
-    if (!confirm('Are you sure you want to delete this absence?')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
 
-    setDeletingId(absenceId);
+    setDeletingId(deleteTarget.id);
     try {
-      await deleteAbsence(absenceId);
-      toast({ variant: 'success', title: 'Absence deleted successfully' });
+      await deleteAbsence(deleteTarget.id);
+      toast({ variant: 'success', title: t('common.success') });
+      setDeleteTarget(null);
       onChanged();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Failed to delete absence',
-        description: getMessageFromError(error, 'Please try again.'),
+        title: t('absences.failedDelete'),
+        description: getMessageFromError(error, t('common.tryAgain')),
       });
     } finally {
       setDeletingId(null);
@@ -68,7 +82,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
     return (
       <Card>
         <CardContent className="py-10 text-center text-muted-foreground">
-          No absences found for the selected date range.
+          {t('absences.noAbsences')}
         </CardContent>
       </Card>
     );
@@ -79,11 +93,11 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Member</TableHead>
-            <TableHead>From</TableHead>
-            <TableHead>To</TableHead>
-            <TableHead>Reason</TableHead>
-            <TableHead className="w-[180px]">Actions</TableHead>
+            <TableHead>{t('common.name')}</TableHead>
+            <TableHead>{t('common.from')}</TableHead>
+            <TableHead>{t('common.to')}</TableHead>
+            <TableHead>{t('absences.reason')}</TableHead>
+            <TableHead className="w-[180px]">{t('common.actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -93,7 +107,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
               <TableCell>{formatDateOnly(absence.fromDate)}</TableCell>
               <TableCell>{formatDateOnly(absence.toDate)}</TableCell>
               <TableCell>
-                <div>{absence.reason}</div>
+                <div>{REASON_LABEL_KEYS[absence.reason] ? t(REASON_LABEL_KEYS[absence.reason]) : absence.reason}</div>
                 {absence.reasonDetails && (
                   <div
                     className="text-xs text-muted-foreground mt-1 break-all"
@@ -109,7 +123,7 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
                   const canManageThisAbsence = canManageAllAbsences || ownerUserId === currentUserId;
 
                   if (!canManageThisAbsence) {
-                    return <span className="text-sm text-muted-foreground">No access</span>;
+                    return <span className="text-sm text-muted-foreground">{t('common.unauthorized')}</span>;
                   }
 
                   return (
@@ -119,11 +133,11 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:bg-destructive/10"
-                    onClick={() => handleDelete(absence.id)}
+                    onClick={() => setDeleteTarget(absence)}
                     disabled={deletingId === absence.id}
                   >
                     <Trash2Icon className="h-4 w-4" />
-                    Delete
+                    {t('common.delete')}
                   </Button>
                 </div>
                   );
@@ -133,6 +147,33 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('absences.deleteConfirm')}</DialogTitle>
+            <DialogDescription>
+              {t('common.confirm')}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              disabled={deletingId === deleteTarget?.id}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deletingId === deleteTarget?.id}
+            >
+              {deletingId === deleteTarget?.id ? t('common.deleting') : t('common.delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

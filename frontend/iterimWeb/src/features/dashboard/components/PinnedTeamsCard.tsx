@@ -1,10 +1,11 @@
 import { useNavigate } from 'react-router';
 import { Pin, Users2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { usePinnedTeams } from '@/lib/favorites';
 import { useMyTeamsTree } from '@/hooks/useMyTeamsTree';
 import type { DashboardSprint } from '@/lib/api';
+import { IterationStatusBar } from './IterationStatusBar';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface ResolvedPinnedTeam {
   teamId: number;
@@ -21,6 +22,7 @@ export function PinnedTeamsCard() {
   const { pinnedTeams, isLoading } = usePinnedTeams();
   const { organizations } = useMyTeamsTree();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const resolved: ResolvedPinnedTeam[] = pinnedTeams.map((pt) => {
     let orgName = '';
@@ -57,7 +59,7 @@ export function PinnedTeamsCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <Pin className="h-4 w-4 text-zinc-500" />
-          Pinned Teams
+          {t('sidebar.pinned')}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -68,7 +70,7 @@ export function PinnedTeamsCard() {
             ))}
           </div>
         ) : resolved.length === 0 ? (
-          <p className="text-sm text-zinc-500">No pinned teams yet. Pin a team from the sidebar.</p>
+          <p className="text-sm text-zinc-500">{t('dashboard.noPinnedTeams')}</p>
         ) : (
           <div className="space-y-3">
             {resolved.map((team) => (
@@ -94,9 +96,10 @@ export function PinnedTeamsCard() {
                         {team.activeSprint.daysLeft}d left
                       </span>
                     </div>
-                    <Progress
-                      value={Math.round(team.activeSprint.progress * 100)}
-                      className="h-1.5 bg-zinc-200 [&>[data-slot=progress-indicator]]:bg-zinc-900"
+                    <IterationStatusBar
+                      byStatus={team.activeSprint.byStatus}
+                      progress={team.activeSprint.progress}
+                      iterationId={team.activeSprint.id}
                     />
                   </div>
                 )}

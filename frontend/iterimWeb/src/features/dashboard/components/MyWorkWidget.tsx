@@ -3,28 +3,30 @@ import { CheckSquare } from 'lucide-react';
 import { Link } from 'react-router';
 import type { DashboardWorkItem } from '@/lib/api';
 import { WorkItemBadge } from '@/components/shared/WorkItemBadge';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function MyWorkWidget({ workItems }: { workItems: DashboardWorkItem[] }) {
+  const { t } = useLanguage();
   return (
     <Card className="h-full border-none shadow-none bg-transparent lg:bg-card lg:border lg:shadow-sm">
       <CardHeader className="pb-3 px-0 lg:px-6">
         <CardTitle className="text-lg font-bold flex items-center gap-2">
           <CheckSquare className="h-5 w-5 text-primary" />
-          My Work
+          {t('dashboard.assignedToMe')}
         </CardTitle>
       </CardHeader>
       <CardContent className="px-0 lg:px-6 max-h-[400px] overflow-y-auto pr-2">
         {workItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground text-sm border-2 border-dashed rounded-xl bg-muted/30">
             <CheckSquare className="h-8 w-8 mb-2 text-muted-foreground/30" />
-            <p>No active work items assigned to you.</p>
+            <p>{t('dashboard.noAssignedItems')}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {workItems.map(item => (
               <Link 
                 key={item.id} 
-                to={`/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}`}
+                to={`/org/${item.organizationId}/products/${item.productId}/teams/${item.teamId}/backlog?item=${item.id}`}
                 className="flex items-start gap-3 group p-3 rounded-lg bg-card border hover:border-primary/50 hover:shadow-sm transition-all block text-foreground"
               >
                 <div className="flex-1 min-w-0">

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 type Status = 'loading' | 'success' | 'error' | 'missing';
 
 export function ConfirmEmailPage() {
   const [searchParams] = useSearchParams();
   const { confirmEmail } = useAuth();
+  const { t } = useLanguage();
   const token = searchParams.get('token');
 
   const [status, setStatus] = useState<Status>(token ? 'loading' : 'missing');
@@ -41,8 +43,8 @@ export function ConfirmEmailPage() {
         {status === 'loading' && (
           <div className="confirm-state">
             <div className="confirm-spinner" />
-            <h2 className="auth-heading">Confirming...</h2>
-            <p className="auth-subheading">Please wait while we verify your confirmation token.</p>
+            <h2 className="auth-heading">{t('auth.confirmingEmail')}</h2>
+            <p className="auth-subheading">{t('auth.weWillRedirect')}</p>
           </div>
         )}
 
@@ -53,10 +55,10 @@ export function ConfirmEmailPage() {
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
-            <h2 className="auth-heading">Email confirmed!</h2>
-            <p className="auth-subheading">Your account is now active. You can sign in.</p>
+            <h2 className="auth-heading">{t('auth.emailConfirmed')}</h2>
+            <p className="auth-subheading">{t('auth.checkEmailSubtitle')}</p>
             <Link to="/login" className="auth-btn">
-              Sign in
+              {t('auth.signIn')}
             </Link>
           </div>
         )}
@@ -69,15 +71,15 @@ export function ConfirmEmailPage() {
                 <line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </div>
-            <h2 className="auth-heading">Link invalid or expired</h2>
+            <h2 className="auth-heading">{t('auth.invalidResetLink')}</h2>
             <p className="auth-subheading">
-              This confirmation link is invalid or has expired. You can request a new one.
+              {t('auth.confirmFailed')}
             </p>
             <Link to="/login" className="auth-btn">
-              Back to sign in
+              {t('auth.backToSignIn')}
             </Link>
             <p className="auth-footer-text" style={{ marginTop: '1rem' }}>
-              To get a new link, go to sign in and click "Resend confirmation email".
+              {t('auth.didntReceive')}
             </p>
           </div>
         )}
@@ -91,12 +93,12 @@ export function ConfirmEmailPage() {
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </div>
-            <h2 className="auth-heading">Confirmation token missing</h2>
+            <h2 className="auth-heading">{t('auth.resetTokenMissing')}</h2>
             <p className="auth-subheading">
-              The link appears incomplete. Please make sure you copied the full link from your email.
+              {t('auth.confirmFailed')}
             </p>
             <Link to="/login" className="auth-btn">
-              Back to sign in
+              {t('auth.backToSignIn')}
             </Link>
           </div>
         )}

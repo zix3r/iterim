@@ -16,4 +16,5 @@ public class Organization
     public ICollection<OrganizationMember> Members { get; set; } = [];
     public ICollection<Product> Products { get; set; } = [];
     public OrganizationConfig? Config { get; set; }
+    public ICollection<Tag> Tags { get; set; } = [];
 }

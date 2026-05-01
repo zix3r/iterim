@@ -10,6 +10,7 @@ import { Package, AlertCircleIcon } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function ProductsListPage() {
   const { orgId } = useParams();
@@ -17,6 +18,7 @@ export function ProductsListPage() {
   const [organization, setOrganization] = useState<OrganizationDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   // Išsprendžiame setState useEffect viduje problemą naudodami useCallback ir async/await
   const loadProducts = useCallback(async () => {
@@ -83,10 +85,10 @@ export function ProductsListPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Products</h3>
-          <p className="text-sm text-red-700">{error || "Organization not found."}</p>
+          <h3 className="text-lg font-semibold text-red-800">{t('products.failedLoad')}</h3>
+          <p className="text-sm text-red-700">{error || t('common.notFound')}</p>
           <Button onClick={loadProducts} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -100,26 +102,26 @@ export function ProductsListPage() {
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: t('dashboard.title'), href: '/dashboard' },
           { label: organization.name, href: `/org/${orgId}` },
-          { label: 'Products' }
+          { label: t('products.title') }
         ]}
       />
 
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Products</h1>
+          <h1 className="text-3xl font-bold">{t('products.title')}</h1>
           <p className="text-muted-foreground">{organization.name}</p>
         </div>
         {isAdmin && <CreateProductModal orgId={Number(orgId)} onCreated={loadProducts} />}
       </div>
 
       {products.length === 0 ? (
-        <EmptyState 
-          title="No products yet"
-          description={isAdmin 
-            ? 'Get started by creating your first product.' 
-            : 'No products have been created in this organization yet.'}
+        <EmptyState
+          title={t('products.noProducts')}
+          description={isAdmin
+            ? t('products.createFirst')
+            : t('products.noProducts')}
           icon={<Package className="h-8 w-8" />}
           action={isAdmin ? <CreateProductModal orgId={Number(orgId)} onCreated={loadProducts} /> : undefined}
         />

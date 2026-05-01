@@ -12,4 +12,5 @@ public interface ITeamService
     Task<TeamMemberDto?> UpdateTeamMemberRoleAsync(int teamId, int memberUserId, UpdateTeamMemberRoleDto dto, int userId);
     Task<bool> RemoveTeamMemberAsync(int teamId, int userId, int memberUserId);
     Task<bool> DeleteTeamAsync(int teamId, int userId);
+    Task UpdateMemberScheduleAsync(int teamId, int teamMemberId, UpdateTeamMemberScheduleDto dto, int userId);
 }

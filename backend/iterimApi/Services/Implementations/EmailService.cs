@@ -27,19 +27,36 @@ public class EmailService : IEmailService
         _httpClientFactory = httpClientFactory;
     }
 
-    public async Task SendEmailConfirmationAsync(string toEmail, string toName, string confirmationToken)
+    public async Task SendEmailConfirmationAsync(string toEmail, string toName, string confirmationToken, string? language = null)
     {
         var url = $"{_settings.FrontendBaseUrl}/confirm-email?token={Uri.EscapeDataString(confirmationToken)}";
-        var subject = "Patvirtinkite savo el. paštą – Iterim";
-        var body = EmailTemplates.EmailConfirmation(toName, url);
+        var subject = EmailTemplates.EmailConfirmationSubject(language);
+        var body = EmailTemplates.EmailConfirmation(toName, url, language);
         await SendAsync(toEmail, toName, subject, body);
     }
 
-    public async Task SendPasswordResetAsync(string toEmail, string toName, string resetToken)
+    public async Task SendEmailChangeConfirmationAsync(string toEmail, string toName, string confirmationToken, string? language = null)
+    {
+        var url = $"{_settings.FrontendBaseUrl}/confirm-email?token={Uri.EscapeDataString(confirmationToken)}";
+        var subject = EmailTemplates.EmailChangeConfirmationSubject(language);
+        var body = EmailTemplates.EmailChangeConfirmation(toName, url, language);
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
+    public async Task SendPasswordResetAsync(string toEmail, string toName, string resetToken, string? language = null)
     {
         var url = $"{_settings.FrontendBaseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
-        var subject = "Slaptažodžio atkūrimas – Iterim";
-        var body = EmailTemplates.PasswordReset(toName, url);
+        var subject = EmailTemplates.PasswordResetSubject(language);
+        var body = EmailTemplates.PasswordReset(toName, url, language);
+        await SendAsync(toEmail, toName, subject, body);
+    }
+
+    public async Task SendOrganizationInvitationAsync(string toEmail, string toName, string organizationName, string inviterName, string role, string? language = null)
+    {
+        // Po prisijungimo vartotojas pamatys laukiančius pakvietimus puslapyje "/invitations".
+        var url = $"{_settings.FrontendBaseUrl}/invitations";
+        var subject = EmailTemplates.OrganizationInvitationSubject(organizationName, language);
+        var body = EmailTemplates.OrganizationInvitation(toName, organizationName, inviterName, role, url, language);
         await SendAsync(toEmail, toName, subject, body);
     }
 

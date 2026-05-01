@@ -4,6 +4,7 @@ import { LayoutDashboard, LogOut, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { RecentPages } from './RecentPages';
 import { NavTree } from './nav/NavTree';
 import { CollapsibleSection } from './nav/CollapsibleSection';
@@ -14,6 +15,7 @@ export function SidebarContent() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { pinnedTeams } = usePinnedTeams();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await logout();
@@ -21,7 +23,7 @@ export function SidebarContent() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-zinc-50 border-r border-zinc-200">
+    <div className="flex h-full flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
       <div className="flex-1 overflow-y-auto py-6 px-4">
         <div className="space-y-1">
 
@@ -31,23 +33,23 @@ export function SidebarContent() {
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
               location.pathname === '/dashboard'
-                ? 'bg-zinc-900 text-white shadow-md'
-                : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900',
+                ? 'bg-sidebar-primary text-sidebar-primary-foreground shadow-md'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
             )}
           >
             <LayoutDashboard
               className={cn(
                 'h-4 w-4',
-                location.pathname === '/dashboard' ? 'text-white' : 'text-zinc-400',
+                location.pathname === '/dashboard' ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground/60',
               )}
             />
-            Dashboard
+            {t('sidebar.dashboard')}
           </Link>
 
           {/* Pinned Teams */}
           {pinnedTeams.length > 0 && (
             <div className="mt-4">
-              <CollapsibleSection title="Pinned" storageKey="nav-collapse-pinned">
+              <CollapsibleSection title={t('sidebar.pinned')} storageKey="nav-collapse-pinned">
                 <PinnedTeams />
               </CollapsibleSection>
             </div>
@@ -56,14 +58,14 @@ export function SidebarContent() {
           {/* My Organizations tree */}
           <div className="mt-4">
             <div className="px-2 mb-2">
-              <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">My Organizations</h3>
+              <h3 className="text-[10px] font-bold text-sidebar-foreground/60 uppercase tracking-widest">{t('sidebar.myOrganizations')}</h3>
             </div>
             <NavTree />
           </div>
 
           {/* Recent Pages */}
           <div className="mt-4">
-            <CollapsibleSection title="Recent Pages" storageKey="nav-collapse-recent">
+            <CollapsibleSection title={t('sidebar.recentPages')} storageKey="nav-collapse-recent">
               <RecentPages />
             </CollapsibleSection>
           </div>
@@ -72,17 +74,17 @@ export function SidebarContent() {
       </div>
 
       {/* BOTTOM: User & Logout */}
-      <div className="p-4 border-t border-zinc-200 bg-zinc-100/50">
+      <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/60">
         {user && (
           <Link
             to="/profile"
-            className="mb-2 flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-zinc-200/80"
+            className="mb-2 flex items-center justify-between gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-sidebar-accent"
           >
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-zinc-900 truncate">{user.name}</p>
-              <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+              <p className="text-sm font-semibold text-sidebar-foreground truncate">{user.name}</p>
+              <p className="text-xs text-sidebar-foreground/70 truncate">{user.email}</p>
             </div>
-            <span className="shrink-0 text-zinc-500">
+            <span className="shrink-0 text-sidebar-foreground/70">
               <Pencil className="h-4 w-4" />
             </span>
           </Link>
@@ -90,11 +92,11 @@ export function SidebarContent() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-zinc-600 hover:bg-zinc-200 hover:text-zinc-900 transition-colors gap-3"
+          className="w-full justify-start text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors gap-3"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
-          Logout
+          {t('sidebar.logout')}
         </Button>
       </div>
     </div>

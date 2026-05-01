@@ -1,7 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, User } from 'lucide-react';
+import { GripVertical, User, Lock, ArrowRight } from 'lucide-react';
 import type { WorkItem } from '@/lib/api';
+import { TagBadge } from '@/components/shared/TagBadge';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   Story: { label: 'STORY', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
@@ -78,7 +79,39 @@ export function WorkItemRow({ item, readOnly = false, onClick }: Props) {
       </span>
 
       {/* Title */}
-      <span className="flex-1 text-sm font-medium truncate">{item.title}</span>
+      <span className="flex-1 min-w-0 text-sm font-medium truncate">{item.title}</span>
+
+      {/* Tags */}
+      {item.tags && item.tags.length > 0 && (
+        <span className="flex items-center gap-0.5 shrink-0">
+          {item.tags.slice(0, 3).map(tag => (
+            <TagBadge key={tag.id} tag={tag} size="xs" />
+          ))}
+          {item.tags.length > 3 && (
+            <span className="text-[9px] text-muted-foreground">+{item.tags.length - 3}</span>
+          )}
+        </span>
+      )}
+
+      {/* Dependency badges */}
+      {item.blockerCount > 0 && (
+        <span
+          className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          title={`${item.blockerCount} bloker${item.blockerCount === 1 ? 'is' : 'iai'}`}
+        >
+          <Lock className="h-2.5 w-2.5" />
+          {item.blockerCount}
+        </span>
+      )}
+      {item.blocksCount > 0 && (
+        <span
+          className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          title={`Blokuoja ${item.blocksCount}`}
+        >
+          <ArrowRight className="h-2.5 w-2.5" />
+          {item.blocksCount}
+        </span>
+      )}
 
       {/* Status */}
       <span className={`text-[10px] font-medium px-2 py-0.5 rounded shrink-0 ${statusConfig.color}`}>

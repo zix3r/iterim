@@ -7,6 +7,7 @@ import { RecentPagesCard } from './RecentPagesCard';
 import { MyTeamsByOrgCard } from './MyTeamsByOrgCard';
 import { ActiveIterationsCard } from './ActiveIterationsCard';
 import type { DashboardWorkItem, DashboardActivity } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   firstName: string;
@@ -24,12 +25,14 @@ function SectionHeader({ label }: { label: string }) {
 }
 
 export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationProcessed }: Props) {
+  const { t, language } = useLanguage();
   const now = new Date();
   const hour = now.getHours();
   const greeting =
-    hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    hour < 12 ? t('dashboard.greetingMorning') : hour < 18 ? t('dashboard.greetingAfternoon') : t('dashboard.greetingEvening');
 
-  const dateLabel = now.toLocaleDateString('en-US', {
+  const dateLocale = language === 'lt' ? 'lt-LT' : 'en-US';
+  const dateLabel = now.toLocaleDateString(dateLocale, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -51,7 +54,7 @@ export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationP
       </div>
 
       <section>
-        <SectionHeader label="Work" />
+        <SectionHeader label={t('dashboard.sectionWork')} />
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <div className="md:col-span-8">
             <MyWorkWidget workItems={myWork} />
@@ -63,7 +66,7 @@ export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationP
       </section>
 
       <section>
-        <SectionHeader label="Workspace" />
+        <SectionHeader label={t('dashboard.sectionWorkspace')} />
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <div className="md:col-span-8">
             <MyTeamsByOrgCard />
@@ -75,7 +78,7 @@ export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationP
       </section>
 
       <section>
-        <SectionHeader label="Quick Access" />
+        <SectionHeader label={t('dashboard.sectionQuickAccess')} />
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <div className="md:col-span-6">
             <RecentPagesCard />

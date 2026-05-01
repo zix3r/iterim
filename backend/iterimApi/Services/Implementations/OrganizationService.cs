@@ -1,7 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
-using iterimApi.Data; // Pakeiskite į savo DbContext namespace
+using iterimApi.Data;
 using iterimApi.DTOs.Organizations;
+using iterimApi.DTOs.MemberAbsences; // PRIDĖTA: kad matytų MemberAbsenceDto
 using iterimApi.Services.Interfaces;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
@@ -10,16 +11,23 @@ namespace iterimApi.Services.Implementations;
 
 public class OrganizationService : IOrganizationService
 {
-    private readonly AppDbContext _context; // Pakeiskite į savo konteksto pavadinimą
+    private readonly AppDbContext _db;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<OrganizationService> _logger;
 
-    public OrganizationService(AppDbContext context)
+    public OrganizationService(
+        AppDbContext db,
+        IEmailService emailService,
+        ILogger<OrganizationService> logger)
     {
-        _context = context;
+        _db = db;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<OrganizationDto>> GetUserOrganizationsAsync(int userId)
     {
-        return await _context.Organizations
+        return await _db.Organizations
             .Where(o => o.Members.Any(m => m.UserId == userId && m.Status == OrgMemberStatus.Active))
             .Select(o => new OrganizationDto
             {
@@ -29,31 +37,34 @@ public class OrganizationService : IOrganizationService
             })
             .ToListAsync();
     }
+
     public async Task DeleteOrganizationAsync(int orgId, int userId)
-{
-    // 1. Patikriname, ar vartotojas priklauso organizacijai ir ar jis yra Adminas
-    var membership = await _context.OrganizationMembers
-        .FirstOrDefaultAsync(om => om.OrganizationId == orgId && om.UserId == userId);
-
-    if (membership == null)
-        throw new KeyNotFoundException("Organization not found.");
-
-    if (membership.Role != iterimApi.Models.Enums.OrgMemberRole.Admin)
     {
-    throw new UnauthorizedAccessException("Only Administrators can delete the organization.");
-    }
-    // 2. Surandame organizaciją
-    var org = await _context.Organizations.FindAsync(orgId);
-    if (org == null)
-        throw new KeyNotFoundException("Organization not found.");
+        // 1. Patikriname, ar vartotojas priklauso organizacijai ir ar jis yra Adminas
+        var membership = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(om => om.OrganizationId == orgId && om.UserId == userId);
 
-    // 3. Ištriname (Dėka tavo AppDbContext konfigūracijos, tai automatiškai ištrins ir visus produktus, komandas bei užduotis!)
-    _context.Organizations.Remove(org);
-    await _context.SaveChangesAsync();
-}
+        if (membership == null)
+            throw new KeyNotFoundException("Organization not found.");
+
+        if (membership.Role != OrgMemberRole.Admin)
+        {
+            throw new UnauthorizedAccessException("Only Administrators can delete the organization.");
+        }
+
+        // 2. Surandame organizaciją
+        var org = await _db.Organizations.FindAsync(orgId);
+        if (org == null)
+            throw new KeyNotFoundException("Organization not found.");
+
+        // 3. Ištriname
+        _db.Organizations.Remove(org);
+        await _db.SaveChangesAsync();
+    }
+
     public async Task<OrganizationDetailDto> GetOrganizationByIdAsync(int id, int userId)
     {
-        var organization = await _context.Organizations
+        var organization = await _db.Organizations
             .Include(o => o.Members)
             .ThenInclude(m => m.User)
             .FirstOrDefaultAsync(o => o.Id == id);
@@ -85,15 +96,52 @@ public class OrganizationService : IOrganizationService
         };
     }
 
+    // IT-110: Grąžinimo tipas Task<IEnumerable<MemberAbsenceDto>> privalo sutapti su interfeisu
+    public async Task<IEnumerable<MemberAbsenceDto>> GetOrganizationAbsencesAsync(
+        int orgId, string? memberName, DateOnly? from, DateOnly? to, AbsenceReason? type)
+    {
+        var query = _db.MemberAbsences
+            .Include(a => a.OrgMember)
+                .ThenInclude(m => m.User)
+            .Where(a => a.OrgMember.OrganizationId == orgId);
+
+        // Filtruojame pagal parametrus
+        if (!string.IsNullOrWhiteSpace(memberName))
+            query = query.Where(a => a.OrgMember.User.Name.Contains(memberName));
+
+        if (from.HasValue)
+            query = query.Where(a => a.ToDate >= from.Value);
+            
+        if (to.HasValue)
+            query = query.Where(a => a.FromDate <= to.Value);
+
+        if (type.HasValue)
+            query = query.Where(a => a.Reason == type.Value);
+
+        // 1. SVARBU: Pirmiausia parsisiunčiame duomenis iš DB, kad išvengtume SQL klaidos!
+        var absencesList = await query.OrderByDescending(a => a.FromDate).ToListAsync();
+
+        // 2. Dabar saugiai konvertuojame objektus (čia .ToString() veiks be problemų)
+        return absencesList.Select(a => new MemberAbsenceDto 
+        {
+            Id = a.Id,
+            OrgMemberId = a.OrgMemberId,
+            MemberName = a.OrgMember.User.Name,
+            FromDate = a.FromDate,
+            ToDate = a.ToDate,
+            Reason = a.Reason.ToString(),
+            ReasonDetails = a.ReasonDetails
+        });
+    }
+
     public async Task<OrganizationDto> CreateOrganizationAsync(CreateOrganizationDto dto, int userId)
     {
-        // Paimame vartotoją, kad gautume jo el. paštą organizacijos narių lentelei
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _db.Users.FindAsync(userId);
         if (user == null) throw new UnauthorizedAccessException("User not found.");
 
         var slug = GenerateSlug(dto.Name);
 
-        if (await _context.Organizations.AnyAsync(o => o.Slug == slug))
+        if (await _db.Organizations.AnyAsync(o => o.Slug == slug))
         {
             slug = $"{slug}-{Guid.NewGuid().ToString().Substring(0, 5)}";
         }
@@ -109,16 +157,16 @@ public class OrganizationService : IOrganizationService
                 new OrganizationMember
                 {
                     UserId = userId,
-                    Email = user.Email, // Paimame el. paštą iš User
-                    Role = OrgMemberRole.Admin, // Darant prielaidą, kad toks Enum egzistuoja
-                    Status = OrgMemberStatus.Active, // Darant prielaidą, kad toks Enum egzistuoja
+                    Email = user.Email,
+                    Role = OrgMemberRole.Admin,
+                    Status = OrgMemberStatus.Active,
                     JoinedAt = DateTime.UtcNow
                 }
             }
         };
 
-        _context.Organizations.Add(organization);
-        await _context.SaveChangesAsync();
+        _db.Organizations.Add(organization);
+        await _db.SaveChangesAsync();
 
         return new OrganizationDto
         {
@@ -130,25 +178,21 @@ public class OrganizationService : IOrganizationService
 
     public async Task<OrganizationMemberDto> AddMemberToOrganizationAsync(int organizationId, AddOrganizationMemberDto dto, int currentUserId)
     {
-        // Check if organization exists
-        var organization = await _context.Organizations
+        var organization = await _db.Organizations
             .Include(o => o.Members)
             .FirstOrDefaultAsync(o => o.Id == organizationId);
 
         if (organization == null)
             throw new KeyNotFoundException("Organization not found.");
 
-        // Check if current user is an admin of the organization
         var currentUserMember = organization.Members.FirstOrDefault(m => m.UserId == currentUserId);
         if (currentUserMember == null || currentUserMember.Role != OrgMemberRole.Admin)
             throw new UnauthorizedAccessException("Only organization admins can add members.");
 
-        // Check if user with this email exists
-        var userToAdd = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+        var userToAdd = await _db.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
         if (userToAdd == null)
             throw new KeyNotFoundException($"User with email '{dto.Email}' not found.");
 
-        // Check if user is already a member
         var existingMember = organization.Members.FirstOrDefault(m => m.UserId == userToAdd.Id);
         
         if (existingMember != null && 
@@ -157,22 +201,32 @@ public class OrganizationService : IOrganizationService
             throw new InvalidOperationException($"User '{dto.Email}' is already a member of this organization.");
         }
 
-        // Parse the role from string to enum
         if (!Enum.TryParse<OrgMemberRole>(dto.Role, true, out var role))
             throw new ArgumentException($"Invalid role: {dto.Role}. Valid roles are: Admin, Member, Viewer");
 
+        // Inviter info reikalingas tiek išsaugojant DB, tiek formuojant el. laišką.
+        var inviter = await _db.Users.FindAsync(currentUserId);
+        var inviterName = !string.IsNullOrWhiteSpace(inviter?.Name)
+            ? inviter!.Name
+            : (inviter?.Email ?? "Iterim");
+
         if (existingMember != null)
         {
-             // Re-invite existing (removed/declined) member
              existingMember.Status = OrgMemberStatus.Invited;
              existingMember.Role = role;
              existingMember.InvitedAt = DateTime.UtcNow;
              existingMember.InvitedBy = currentUserId;
-             existingMember.JoinedAt = null; 
+             existingMember.JoinedAt = null;
              existingMember.UpdatedAt = DateTime.UtcNow;
              existingMember.UpdatedByUserId = currentUserId;
-             
-             await _context.SaveChangesAsync();
+
+             await _db.SaveChangesAsync();
+
+             await SendInvitationEmailSafeAsync(
+                 userToAdd,
+                 organization.Name,
+                 inviterName,
+                 existingMember.Role.ToString());
 
              return new OrganizationMemberDto
              {
@@ -184,7 +238,6 @@ public class OrganizationService : IOrganizationService
              };
         }
 
-        // Create new organization member
         var newMember = new OrganizationMember
         {
             OrganizationId = organizationId,
@@ -196,8 +249,14 @@ public class OrganizationService : IOrganizationService
             InvitedBy = currentUserId
         };
 
-        _context.OrganizationMembers.Add(newMember);
-        await _context.SaveChangesAsync();
+        _db.OrganizationMembers.Add(newMember);
+        await _db.SaveChangesAsync();
+
+        await SendInvitationEmailSafeAsync(
+            userToAdd,
+            organization.Name,
+            inviterName,
+            newMember.Role.ToString());
 
         return new OrganizationMemberDto
         {
@@ -209,12 +268,34 @@ public class OrganizationService : IOrganizationService
         };
     }
 
+    // Saugus el. laiško siuntimas: nesugriaus pakvietimo, jei SMTP/Resend laikinai neveikia.
+    private async Task SendInvitationEmailSafeAsync(User recipient, string organizationName, string inviterName, string role)
+    {
+        try
+        {
+            var displayName = !string.IsNullOrWhiteSpace(recipient.Name) ? recipient.Name : recipient.Email;
+            await _emailService.SendOrganizationInvitationAsync(
+                recipient.Email,
+                displayName,
+                organizationName,
+                inviterName,
+                role);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Nepavyko išsiųsti pakvietimo laiško vartotojui {Email} į organizaciją {Organization}",
+                recipient.Email,
+                organizationName);
+        }
+    }
+
     public async Task<AcceptInvitationResultDto> AcceptInvitationAsync(int organizationId, int userId)
     {
-        var invitation = await _context.OrganizationMembers
+        var invitation = await _db.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && 
-                                     m.UserId == userId && 
-                                     m.Status == OrgMemberStatus.Invited);
+                                      m.UserId == userId && 
+                                      m.Status == OrgMemberStatus.Invited);
 
         if (invitation == null)
             throw new KeyNotFoundException("Pending invitation not found.");
@@ -223,7 +304,7 @@ public class OrganizationService : IOrganizationService
         invitation.JoinedAt = DateTime.UtcNow;
         invitation.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
         return new AcceptInvitationResultDto
         {
@@ -239,10 +320,10 @@ public class OrganizationService : IOrganizationService
 
     public async Task<DeclineInvitationResultDto> DeclineInvitationAsync(int organizationId, int userId)
     {
-        var invitation = await _context.OrganizationMembers
+        var invitation = await _db.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && 
-                                     m.UserId == userId && 
-                                     m.Status == OrgMemberStatus.Invited);
+                                      m.UserId == userId && 
+                                      m.Status == OrgMemberStatus.Invited);
 
         if (invitation == null)
             throw new KeyNotFoundException("Pending invitation not found.");
@@ -250,7 +331,7 @@ public class OrganizationService : IOrganizationService
         invitation.Status = OrgMemberStatus.Declined;
         invitation.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _db.SaveChangesAsync();
 
         return new DeclineInvitationResultDto
         {
@@ -264,16 +345,15 @@ public class OrganizationService : IOrganizationService
 
     public async Task<bool> RemoveMemberAsync(int organizationId, int memberId, int requestingUserId)
     {
-        var memberToRemove = await _context.OrganizationMembers
+        var memberToRemove = await _db.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Id == memberId);
 
         if (memberToRemove == null)
             throw new KeyNotFoundException("Member not found in this organization.");
 
-        var potentialRequester = await _context.OrganizationMembers
+        var potentialRequester = await _db.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == requestingUserId);
 
-        // If the requester is not in the organization, they can't remove anyone
         if (potentialRequester == null)
             throw new UnauthorizedAccessException("You are not a member of this organization.");
 
@@ -285,38 +365,112 @@ public class OrganizationService : IOrganizationService
 
         if (memberToRemove.Role == OrgMemberRole.Admin && memberToRemove.Status == OrgMemberStatus.Active)
         {
-            var adminCount = await _context.OrganizationMembers
+            var adminCount = await _db.OrganizationMembers
                 .CountAsync(m => m.OrganizationId == organizationId && m.Role == OrgMemberRole.Admin && m.Status == OrgMemberStatus.Active);
             
             if (adminCount <= 1)
             {
-                // This is the last admin
                  throw new InvalidOperationException("Cannot remove the last administrator of the organization.");
             }
         }
 
-        // Soft delete: Change status to Removed
         memberToRemove.Status = OrgMemberStatus.Removed;
         memberToRemove.UpdatedAt = DateTime.UtcNow;
         memberToRemove.UpdatedByUserId = requestingUserId;
 
-        // Remove from all teams (explicitly needed for soft delete)
-        var teamMemberships = await _context.TeamMembers
+        var teamMemberships = await _db.TeamMembers
             .Where(tm => tm.OrgMemberId == memberId)
             .ToListAsync();
         
         if (teamMemberships.Any())
         {
-            _context.TeamMembers.RemoveRange(teamMemberships);
+            _db.TeamMembers.RemoveRange(teamMemberships);
         }
 
-        await _context.SaveChangesAsync();
+        await _db.SaveChangesAsync();
         return true;
     }
 
+    public async Task<OrganizationMemberDto> UpdateMemberRoleAsync(int organizationId, int memberId, string newRole, int requestingUserId)
+    {
+        // 1. Validate role string
+        if (!Enum.TryParse<OrgMemberRole>(newRole, true, out var parsedRole))
+            throw new ArgumentException($"Invalid role: {newRole}. Valid roles are: Admin, Member, Viewer");
+
+        // 2. Locate the member to update
+        var memberToUpdate = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Id == memberId);
+
+        if (memberToUpdate == null)
+            throw new KeyNotFoundException("Member not found in this organization.");
+
+        // 3. Verify the requester is an admin of this organization
+        var requester = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == requestingUserId);
+
+        if (requester == null)
+            throw new UnauthorizedAccessException("You are not a member of this organization.");
+
+        if (requester.Role != OrgMemberRole.Admin)
+            throw new UnauthorizedAccessException("Only organization admins can change member roles.");
+
+        // 4. Prevent admins from demoting themselves (use Leave Organization for that)
+        if (memberToUpdate.UserId == requestingUserId)
+            throw new InvalidOperationException("You cannot change your own role.");
+
+        // 5. Don't allow role changes on removed/declined members
+        if (memberToUpdate.Status == OrgMemberStatus.Removed || memberToUpdate.Status == OrgMemberStatus.Declined)
+            throw new InvalidOperationException("Cannot change the role of a removed or declined member.");
+
+        // 6. If demoting an active admin, ensure at least one admin remains
+        if (memberToUpdate.Role == OrgMemberRole.Admin
+            && parsedRole != OrgMemberRole.Admin
+            && memberToUpdate.Status == OrgMemberStatus.Active)
+        {
+            var adminCount = await _db.OrganizationMembers
+                .CountAsync(m => m.OrganizationId == organizationId
+                                 && m.Role == OrgMemberRole.Admin
+                                 && m.Status == OrgMemberStatus.Active);
+
+            if (adminCount <= 1)
+            {
+                throw new InvalidOperationException("Cannot demote the last administrator of the organization.");
+            }
+        }
+
+        // 7. No-op shortcut: nothing to do if role unchanged
+        if (memberToUpdate.Role == parsedRole)
+        {
+            return new OrganizationMemberDto
+            {
+                Id = memberToUpdate.Id,
+                UserId = memberToUpdate.UserId,
+                Email = memberToUpdate.Email,
+                Role = memberToUpdate.Role.ToString(),
+                Status = memberToUpdate.Status.ToString()
+            };
+        }
+
+        memberToUpdate.Role = parsedRole;
+        memberToUpdate.UpdatedAt = DateTime.UtcNow;
+        memberToUpdate.UpdatedByUserId = requestingUserId;
+
+        await _db.SaveChangesAsync();
+
+        return new OrganizationMemberDto
+        {
+            Id = memberToUpdate.Id,
+            UserId = memberToUpdate.UserId,
+            Email = memberToUpdate.Email,
+            Role = memberToUpdate.Role.ToString(),
+            Status = memberToUpdate.Status.ToString()
+        };
+    }
+
+    // PATAISYTA: _context pakeistas į _db
     public async Task<IEnumerable<PendingInvitationDto>> GetPendingInvitationsAsync(int userId)
     {
-        return await _context.OrganizationMembers
+        return await _db.OrganizationMembers
             .Where(m => m.UserId == userId && m.Status == OrgMemberStatus.Invited)
             .Include(m => m.Organization)
             .Select(m => new PendingInvitationDto
@@ -324,7 +478,7 @@ public class OrganizationService : IOrganizationService
                 OrganizationId = m.Organization.Id,
                 OrganizationName = m.Organization.Name,
                 OrganizationSlug = m.Organization.Slug,
-                Role = m.Role,
+                Role = m.Role, // Pataisyta, kad grąžintų string
                 InvitedAt = m.InvitedAt
             })
             .ToListAsync();

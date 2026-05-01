@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Clock, Building2, Package, Users, LayoutDashboard, Compass } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getRecentPages, type RecentPage } from '@/lib/recentPages';
+import { useLanguage } from '@/context/LanguageContext';
 
 function iconForType(iconType: string) {
   switch (iconType) {
@@ -23,6 +24,7 @@ export function RecentPagesCard() {
   const [pages, setPages] = useState<RecentPage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const load = () => {
     getRecentPages()
@@ -44,7 +46,7 @@ export function RecentPagesCard() {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base font-semibold text-zinc-900">
           <Clock className="h-4 w-4 text-zinc-500" />
-          Recent Pages
+          {t('sidebar.recentPages')}
         </CardTitle>
       </CardHeader>
       <CardContent>

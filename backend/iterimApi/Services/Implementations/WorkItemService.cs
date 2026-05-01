@@ -1,6 +1,8 @@
 using iterimApi.Data;
+using iterimApi.DTOs.Tags;
 using iterimApi.DTOs.Teams;
 using iterimApi.DTOs.WorkItems;
+using iterimApi.Exceptions;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
@@ -11,10 +13,12 @@ namespace iterimApi.Services.Implementations;
 public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _db;
+    private readonly IWorkItemDependencyService _dependencyService;
 
-    public WorkItemService(AppDbContext db)
+    public WorkItemService(AppDbContext db, IWorkItemDependencyService dependencyService)
     {
         _db = db;
+        _dependencyService = dependencyService;
     }
 
     public async Task<IEnumerable<WorkItemDto>> GetWorkItemsByTeamAsync(int teamId, WorkItemFilterDto filters, int userId)
@@ -52,6 +56,10 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
             .OrderByDescending(wi => wi.CreatedAt)
             .ToListAsync();
 
@@ -70,6 +78,10 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
             .OrderBy(wi => wi.Position)
             .ThenByDescending(wi => wi.CreatedAt)
             .ToListAsync();
@@ -103,6 +115,10 @@ public class WorkItemService : IWorkItemService
             .Include(wi => wi.AssignedMember)
                 .ThenInclude(m => m!.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -207,6 +223,14 @@ public class WorkItemService : IWorkItemService
         if (orgMember == null)
             throw new UnauthorizedAccessException("User is not a member of this team");
 
+        // Block transition to InProgress if there are unfinished blockers
+        if (dto.Status == WorkItemStatus.InProgress && workItem.Status != WorkItemStatus.InProgress)
+        {
+            var unfinishedBlockers = await _dependencyService.GetUnfinishedBlockersAsync(workItem.Id);
+            if (unfinishedBlockers.Count > 0)
+                throw new BlockedByDependenciesException(unfinishedBlockers);
+        }
+
         // Track changes and build history entries before mutating the entity
         var historyEntries = BuildHistoryEntries(workItem, dto, orgMember.Id);
 
@@ -244,6 +268,191 @@ public class WorkItemService : IWorkItemService
         {
             workItem.AssignedMember = null;
         }
+
+        return MapToDto(workItem);
+    }
+
+    /// <summary>
+    /// Partial update — only the assignee is mutated. Used by the ATPA suggestions
+    /// flow so the UI can apply assignments without re-sending the entire payload.
+    /// Records a single AssignedTo entry in WorkItemHistory.
+    /// </summary>
+    public async Task<WorkItemDto?> AssignWorkItemAsync(int id, int? assignedTo, int userId)
+    {
+        var workItem = await _db.WorkItems
+            .Include(wi => wi.CreatedByUser)
+            .FirstOrDefaultAsync(wi => wi.Id == id);
+
+        if (workItem == null)
+            return null;
+
+        // Validate the assignee belongs to the work item's team.
+        if (assignedTo.HasValue)
+        {
+            var assigneeExists = await _db.TeamMembers
+                .AnyAsync(tm => tm.Id == assignedTo.Value && tm.TeamId == workItem.TeamId);
+
+            if (!assigneeExists)
+                throw new InvalidOperationException("AssignedTo must be a valid team member");
+        }
+
+        // Confirm the requester is on the team (same authz contract as PUT).
+        var orgMember = await _db.OrganizationMembers
+            .Include(om => om.TeamMemberships)
+            .FirstOrDefaultAsync(om =>
+                om.UserId == userId &&
+                om.TeamMemberships.Any(tm => tm.TeamId == workItem.TeamId));
+
+        if (orgMember == null)
+            throw new UnauthorizedAccessException("User is not a member of this team");
+
+        // No-op: same assignee, skip work / history entry.
+        if (workItem.AssignedTo == assignedTo)
+        {
+            await _db.Entry(workItem).Reference(wi => wi.UpdatedByUser).LoadAsync();
+            if (workItem.AssignedTo.HasValue)
+            {
+                await _db.Entry(workItem).Reference(wi => wi.AssignedMember).LoadAsync();
+                if (workItem.AssignedMember != null)
+                {
+                    await _db.Entry(workItem.AssignedMember).Reference(m => m.OrgMember).LoadAsync();
+                    await _db.Entry(workItem.AssignedMember.OrgMember).Reference(om => om.User).LoadAsync();
+                }
+            }
+            return MapToDto(workItem);
+        }
+
+        var now = DateTime.UtcNow;
+        var historyEntry = new WorkItemHistory
+        {
+            WorkItemId = workItem.Id,
+            FieldName  = "AssignedTo",
+            OldValue   = workItem.AssignedTo?.ToString(),
+            NewValue   = assignedTo?.ToString(),
+            ChangedAt  = now,
+            ChangedBy  = orgMember.Id,
+        };
+
+        workItem.AssignedTo = assignedTo;
+        workItem.UpdatedBy  = userId;
+        workItem.UpdatedAt  = now;
+        _db.WorkItemHistories.Add(historyEntry);
+
+        await _db.SaveChangesAsync();
+
+        // Reload nav properties for the response.
+        await _db.Entry(workItem).Reference(wi => wi.UpdatedByUser).LoadAsync();
+        if (workItem.AssignedTo.HasValue)
+        {
+            await _db.Entry(workItem).Reference(wi => wi.AssignedMember).LoadAsync();
+            if (workItem.AssignedMember != null)
+            {
+                await _db.Entry(workItem.AssignedMember).Reference(m => m.OrgMember).LoadAsync();
+                await _db.Entry(workItem.AssignedMember.OrgMember).Reference(om => om.User).LoadAsync();
+            }
+        }
+        else
+        {
+            workItem.AssignedMember = null;
+        }
+
+        return MapToDto(workItem);
+    }
+
+    public async Task<WorkItemDto?> TransferWorkItemAsync(int id, int targetTeamId, int userId)
+    {
+        var workItem = await _db.WorkItems
+            .Include(wi => wi.Team)
+                .ThenInclude(t => t.Product)
+                .ThenInclude(p => p.Organization)
+            .Include(wi => wi.CreatedByUser)
+            .Include(wi => wi.UpdatedByUser)
+            .Include(wi => wi.AssignedMember)
+                .ThenInclude(m => m!.OrgMember)
+                .ThenInclude(om => om.User)
+            .Include(wi => wi.Tags)
+                .ThenInclude(wit => wit.Tag)
+            .Include(wi => wi.BlockedBy)
+            .Include(wi => wi.Blocks)
+            .FirstOrDefaultAsync(wi => wi.Id == id);
+
+        if (workItem == null)
+            return null;
+
+        await EnsureTransferPermissionAsync(workItem.TeamId, userId);
+
+        var targetTeam = await _db.Teams
+            .Include(t => t.Product)
+                .ThenInclude(p => p.Organization)
+            .FirstOrDefaultAsync(t => t.Id == targetTeamId);
+
+        if (targetTeam == null)
+            throw new KeyNotFoundException("Target team not found");
+
+        if (targetTeam.Product.OrganizationId != workItem.Team.Product.OrganizationId)
+            throw new InvalidOperationException("Target team must belong to the same organization");
+
+        if (workItem.TeamId == targetTeamId)
+            throw new InvalidOperationException("Work item is already in this team");
+
+        var requesterMember = await _db.OrganizationMembers
+            .FirstOrDefaultAsync(om =>
+                om.OrganizationId == workItem.Team.Product.OrganizationId &&
+                om.UserId == userId &&
+                om.Status == OrgMemberStatus.Active);
+
+        if (requesterMember == null)
+            throw new UnauthorizedAccessException("Only a team leader can transfer tasks");
+
+        var now = DateTime.UtcNow;
+        var nextPosition = await _db.WorkItems
+            .Where(wi => wi.TeamId == targetTeamId && wi.IterationId == null)
+            .MaxAsync(wi => (int?)wi.Position) ?? -1;
+
+        var historyEntries = new List<WorkItemHistory>
+        {
+            new()
+            {
+                WorkItemId = workItem.Id,
+                FieldName = "TeamId",
+                OldValue = workItem.TeamId.ToString(),
+                NewValue = targetTeamId.ToString(),
+                ChangedAt = now,
+                ChangedBy = requesterMember.Id
+            },
+            new()
+            {
+                WorkItemId = workItem.Id,
+                FieldName = "IterationId",
+                OldValue = workItem.IterationId?.ToString(),
+                NewValue = null,
+                ChangedAt = now,
+                ChangedBy = requesterMember.Id
+            },
+            new()
+            {
+                WorkItemId = workItem.Id,
+                FieldName = "AssignedTo",
+                OldValue = workItem.AssignedTo?.ToString(),
+                NewValue = null,
+                ChangedAt = now,
+                ChangedBy = requesterMember.Id
+            }
+        };
+
+        workItem.TeamId = targetTeamId;
+        workItem.Team = targetTeam;
+        workItem.IterationId = null;
+        workItem.Iteration = null;
+        workItem.AssignedTo = null;
+        workItem.AssignedMember = null;
+        workItem.Position = nextPosition + 1;
+        workItem.UpdatedBy = userId;
+        workItem.UpdatedAt = now;
+
+        _db.WorkItemHistories.AddRange(historyEntries);
+        await _db.SaveChangesAsync();
+        await _db.Entry(workItem).Reference(wi => wi.UpdatedByUser).LoadAsync();
 
         return MapToDto(workItem);
     }
@@ -310,6 +519,30 @@ public class WorkItemService : IWorkItemService
 
         if (!isTeamMember)
             throw new UnauthorizedAccessException("User is not a member of this team");
+    }
+
+    private async Task EnsureTransferPermissionAsync(int teamId, int userId)
+    {
+        var team = await _db.Teams
+            .Include(t => t.Product)
+            .FirstOrDefaultAsync(t => t.Id == teamId)
+            ?? throw new KeyNotFoundException("Work item not found");
+
+        var requester = await _db.OrganizationMembers
+            .AnyAsync(om =>
+                om.OrganizationId == team.Product.OrganizationId &&
+                om.UserId == userId &&
+                om.Status == OrgMemberStatus.Active);
+
+        if (!requester)
+            throw new UnauthorizedAccessException("Only a team leader can transfer tasks");
+
+        var isTeamLeader = team.CreatedBy == userId;
+        var isTeamAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId && tm.OrgMember.UserId == userId && tm.Role == TeamMemberRole.Admin);
+
+        if (!isTeamLeader && !isTeamAdmin)
+            throw new UnauthorizedAccessException("Only a team leader can transfer tasks");
     }
 
     /// <summary>
@@ -385,7 +618,17 @@ public class WorkItemService : IWorkItemService
             UpdatedBy = wi.UpdatedBy,
             CreatedByName = wi.CreatedByUser.Name,
             UpdatedByName = wi.UpdatedByUser.Name,
-            AssignedMember = assignedMemberDto
+            AssignedMember = assignedMemberDto,
+            Tags = wi.Tags.Select(wit => new TagDto
+            {
+                Id = wit.Tag.Id,
+                OrganizationId = wit.Tag.OrganizationId,
+                Name = wit.Tag.Name,
+                Color = wit.Tag.Color,
+                CreatedAt = wit.Tag.CreatedAt
+            }).ToList(),
+            BlockerCount = wi.BlockedBy.Count,
+            BlocksCount = wi.Blocks.Count
         };
     }
 }

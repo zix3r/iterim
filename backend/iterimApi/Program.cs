@@ -1,6 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using iterimApi.Data;
+using iterimApi.HealthChecks;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
 using iterimApi.Services.Implementations;
@@ -35,9 +36,9 @@ builder.Services.Configure<JwtSettings>(jwtSettings);
 
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("Email"));
- 
+
 builder.Services.AddHttpClient(); // reikalinga Resend / SendGrid provider'iams
- 
+
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Authentication
@@ -58,7 +59,8 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(jwtSettings["Secret"]!)),
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        // RoleClaimType = "role"
     };
 
     // Read JWT from cookie if no Authorization header
@@ -85,6 +87,7 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
+builder.Services.AddScoped<IWorkItemDependencyService, WorkItemDependencyService>();
 builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IIterationService, IterationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
@@ -92,6 +95,10 @@ builder.Services.AddScoped<IBoardService, BoardService>();
 builder.Services.AddScoped<IMemberAbsenceService, MemberAbsenceService>();
 builder.Services.AddScoped<IMetricsService, MetricsService>();
 builder.Services.AddScoped<IRecentPageService, RecentPageService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IAdminOrganizationService, AdminOrganizationService>();
+builder.Services.AddScoped<IAtpaService, AtpaService>();
+
 
 // CORS — restrict methods and headers
 builder.Services.AddCors(options =>
@@ -145,6 +152,12 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddMySql(connectionString, name: "mysql", tags: ["db"])
+    .AddCheck<UptimeHealthCheck>("uptime")
+    .AddCheck<MemoryHealthCheck>("memory");
+
 var app = builder.Build();
 
 // Trust reverse proxy headers (Caddy sends X-Forwarded-For, X-Forwarded-Proto)
@@ -179,6 +192,17 @@ app.UseCors("AllowFrontend");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Health check endpoints
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = HealthCheckResponseWriter.WriteMinimal
+}).AllowAnonymous();
+
+app.MapHealthChecks("/health/detail", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = HealthCheckResponseWriter.WriteDetailed
+}).RequireAuthorization(new Microsoft.AspNetCore.Authorization.AuthorizeAttribute { Roles = "Admin" });
 
 // Dev-only: API docs
 if (app.Environment.IsDevelopment())

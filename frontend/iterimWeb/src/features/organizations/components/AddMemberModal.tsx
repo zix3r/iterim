@@ -8,6 +8,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { addOrganizationMember } from '@/lib/api';
 import { email, required } from '@/lib/validation';
 import { UserPlus } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   organizationId: number;
@@ -19,6 +20,7 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation(
     {
@@ -50,7 +52,7 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -63,7 +65,7 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
 
       toast({
         variant: 'success',
-        title: 'Member invited successfully',
+        title: t('organizations.memberInvited'),
       });
 
       setOpen(false);
@@ -74,7 +76,7 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
       setSubmitError(errorMessage);
       toast({
         variant: 'error',
-        title: 'Failed to add member',
+        title: t('organizations.failedInvite'),
         description: errorMessage,
       });
     } finally {
@@ -95,14 +97,14 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
       <DialogTrigger asChild>
         <Button>
           <UserPlus className="h-4 w-4 mr-2" />
-          Add Member
+          {t('organizations.addMember')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Organization Member</DialogTitle>
+          <DialogTitle>{t('organizations.addMemberTitle')}</DialogTitle>
           <DialogDescription>
-            Invite a user to join this organization by entering their email address.
+            {t('organizations.addMemberDescription')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
@@ -126,7 +128,7 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
           
           <div>
             <label htmlFor="role" className="text-sm font-medium block mb-2">
-              Role <span className="text-destructive">*</span>
+              {t('organizations.role')} <span className="text-destructive">*</span>
             </label>
             <select
               id="role"
@@ -153,10 +155,10 @@ export function AddMemberModal({ organizationId, onMemberAdded }: Props) {
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Adding...' : 'Add Member'}
+              {isLoading ? t('common.creating') : t('organizations.addMember')}
             </Button>
           </div>
         </form>

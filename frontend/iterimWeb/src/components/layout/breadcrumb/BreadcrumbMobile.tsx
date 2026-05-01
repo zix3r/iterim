@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SegmentItem {
   id: string;
@@ -26,6 +27,7 @@ interface BreadcrumbMobileProps {
 export function BreadcrumbMobile({ summary, sections, loading }: BreadcrumbMobileProps) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const { t } = useLanguage();
 
   if (loading) {
     return <div className="bg-zinc-200 animate-pulse w-32 h-4 rounded" />;
@@ -44,9 +46,9 @@ export function BreadcrumbMobile({ summary, sections, loading }: BreadcrumbMobil
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-auto max-h-[80vh] overflow-y-auto rounded-t-xl p-0">
-        <SheetTitle className="sr-only">Navigation</SheetTitle>
+        <SheetTitle className="sr-only">{t('header.navigation')}</SheetTitle>
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200">
-          <span className="text-sm font-semibold text-zinc-900">Navigate</span>
+          <span className="text-sm font-semibold text-zinc-900">{t('header.navigation')}</span>
         </div>
         <div className="px-6 py-4 space-y-6">
           {sections.map((section) => (

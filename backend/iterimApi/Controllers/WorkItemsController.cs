@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using iterimApi.DTOs.WorkItems;
+using iterimApi.Exceptions;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -182,6 +183,10 @@ public class WorkItemsController : ControllerBase
         {
             return StatusCode(403, new { message = ex.Message });
         }
+        catch (BlockedByDependenciesException ex)
+        {
+            return BadRequest(new { message = ex.Message, blockers = ex.Blockers });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
@@ -189,6 +194,92 @@ public class WorkItemsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred while updating the work item", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Partial update — assignee only.
+    /// PATCH /api/workitems/:id with body { "assignedTo": int|null }.
+    /// Used by the ATPA suggestions flow so the FE can apply assignments
+    /// without re-sending the whole work item payload.
+    /// </summary>
+    [HttpPatch("api/workitems/{id}")]
+    public async Task<IActionResult> AssignWorkItem(int id, [FromBody] AssignWorkItemDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            var workItem = await _workItemService.AssignWorkItemAsync(id, dto.AssignedTo, userId);
+
+            if (workItem == null)
+            {
+                return NotFound(new { message = "Work item not found" });
+            }
+
+            return Ok(workItem);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while assigning the work item", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Transfer a work item to another team within the same organization.
+    /// PATCH /api/workitems/:id/transfer
+    /// </summary>
+    [HttpPatch("api/workitems/{id}/transfer")]
+    public async Task<IActionResult> TransferWorkItem(int id, [FromBody] TransferWorkItemDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        try
+        {
+            var userId = GetUserId();
+            var workItem = await _workItemService.TransferWorkItemAsync(id, dto.TargetTeamId, userId);
+
+            if (workItem == null)
+            {
+                return NotFound(new { message = "Work item not found" });
+            }
+
+            return Ok(workItem);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while transferring the work item", error = ex.Message });
         }
     }
 

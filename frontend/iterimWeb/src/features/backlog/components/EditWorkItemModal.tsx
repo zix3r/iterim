@@ -6,10 +6,14 @@ import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { updateWorkItem, deleteWorkItem } from '@/lib/api';
-import type { WorkItem, TeamMember } from '@/lib/api';
+import { updateWorkItem, deleteWorkItem, assignWorkItemTags } from '@/lib/api';
+import type { WorkItem, TeamMember, Tag } from '@/lib/api';
+import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
-import { Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Trash2 } from 'lucide-react';
+import { DependencySection } from './DependencySection';
+import { useLanguage } from '@/context/LanguageContext';
+import { TransferWorkItemModal } from './TransferWorkItemModal';
 
 const STATUS_OPTIONS = [
   { value: 0, label: 'Backlog' },
@@ -40,7 +44,9 @@ const PRIORITY_MAP: Record<string, number> = { Low: 0, Medium: 1, High: 2, Criti
 
 interface Props {
   item: WorkItem | null;
+  orgId: number;
   members: TeamMember[];
+  canTransferWorkItem?: boolean;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onUpdated: () => void;
@@ -57,10 +63,13 @@ interface EditWorkItemFormValues {
   type: number;
 }
 
-export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated }: Props) {
+export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = false, open, onOpenChange, onUpdated }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [transferOpen, setTransferOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<EditWorkItemFormValues>(
     {
@@ -99,6 +108,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
         iterationId: item.iterationId?.toString() ?? '',
         type: TYPE_MAP[item.type] ?? 0,
       });
+      setSelectedTags(item.tags ?? []);
       setConfirmDelete(false);
     }
   }, [item, resetForm]);
@@ -127,14 +137,15 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
         assignedTo: values.assignedTo ? Number(values.assignedTo) : null,
         iterationId: values.iterationId ? Number(values.iterationId) : null,
       });
-      toast({ variant: 'success', title: 'Work item updated' });
+      await assignWorkItemTags(item.id, selectedTags.map(t => t.id));
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to update work item'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedUpdate')),
       });
     } finally {
       setIsLoading(false);
@@ -146,14 +157,14 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
     setIsLoading(true);
     try {
       await deleteWorkItem(item.id);
-      toast({ variant: 'success', title: 'Work item deleted' });
+      toast({ variant: 'success', title: t('common.success') });
       onOpenChange(false);
       onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to delete work item'),
+        title: t('common.error'),
+        description: getMessageFromError(error, t('backlog.failedDelete')),
       });
     } finally {
       setIsLoading(false);
@@ -165,22 +176,30 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
   const handleDialogChange = (isOpen: boolean) => {
     if (!isOpen) {
       setConfirmDelete(false);
+      setTransferOpen(false);
     }
 
     onOpenChange(isOpen);
   };
 
+  const handleTransferred = () => {
+    setTransferOpen(false);
+    setConfirmDelete(false);
+    onOpenChange(false);
+    onUpdated();
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Work Item</DialogTitle>
-          <DialogDescription>Update work item fields and save changes.</DialogDescription>
+          <DialogTitle>{t('backlog.editItemTitle')}</DialogTitle>
+          <DialogDescription>{t('backlog.editItemDescription')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm font-medium">
-              Title <span className="text-destructive">*</span>
+              {t('backlog.itemTitle')} <span className="text-destructive">*</span>
             </label>
             <Input
               value={values.title}
@@ -195,7 +214,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium">Type</label>
+              <label className="text-sm font-medium">{t('backlog.type')}</label>
               <select
                 value={values.type}
                 onChange={(e) => setFieldValue('type', Number(e.target.value))}
@@ -208,7 +227,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-sm font-medium">{t('backlog.status')}</label>
               <select
                 value={values.status}
                 onChange={(e) => setFieldValue('status', Number(e.target.value))}
@@ -221,7 +240,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Priority</label>
+              <label className="text-sm font-medium">{t('backlog.priority')}</label>
               <select
                 value={values.priority}
                 onChange={(e) => setFieldValue('priority', Number(e.target.value))}
@@ -237,7 +256,7 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Points</label>
+              <label className="text-sm font-medium">{t('backlog.points')}</label>
               <Input
                 type="number"
                 min={0}
@@ -251,14 +270,14 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
               <FieldError id="edit-work-item-points-error" message={errors.points} />
             </div>
             <div>
-              <label className="text-sm font-medium">Assignee</label>
+              <label className="text-sm font-medium">{t('backlog.assignee')}</label>
               <select
                 value={values.assignedTo}
                 onChange={(e) => setFieldValue('assignedTo', e.target.value)}
                 className={selectClass}
                 disabled={isLoading}
               >
-                <option value="">Unassigned</option>
+                <option value="">{t('backlog.unassigned')}</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.id.toString()}>{m.userName}</option>
                 ))}
@@ -267,7 +286,17 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
           </div>
 
           <div>
-            <label className="text-sm font-medium">Description</label>
+            <label className="text-sm font-medium">{t('backlog.tags')}</label>
+            <TagSelector
+              orgId={orgId}
+              selected={selectedTags}
+              onChange={setSelectedTags}
+              disabled={isLoading}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">{t('backlog.itemDescription')}</label>
             <Textarea
               value={values.description}
               onChange={(e) => setFieldValue('description', e.target.value)}
@@ -276,31 +305,60 @@ export function EditWorkItemModal({ item, members, open, onOpenChange, onUpdated
             />
           </div>
 
+          {item && (
+            <div className="border-t pt-4">
+              <DependencySection workItemId={item.id} />
+            </div>
+          )}
+
+          {item && canTransferWorkItem && (
+            <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 space-y-2">
+              <div>
+                <p className="text-sm font-medium">{t('backlog.transferItemTitle')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('backlog.transferItemDescription')}
+                </p>
+              </div>
+              <Button type="button" variant="outline" onClick={() => setTransferOpen(true)}>
+                <ArrowRightLeft className="h-4 w-4 mr-2" /> {t('backlog.transferItem')}
+              </Button>
+            </div>
+          )}
+
           <DialogFooter className="flex justify-between sm:justify-between">
             <div>
               {confirmDelete ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-destructive">Are you sure?</span>
+                  <span className="text-sm text-destructive">{t('shared.confirmMessage')}</span>
                   <Button type="button" variant="destructive" size="sm" onClick={handleDelete} disabled={isLoading}>
-                    {isLoading ? 'Deleting...' : 'Yes, delete'}
+                    {isLoading ? t('common.deleting') : t('common.yes')}
                   </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => setConfirmDelete(false)} disabled={isLoading}>
-                    No
+                    {t('common.no')}
                   </Button>
                 </div>
               ) : (
                 <Button type="button" variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} disabled={isLoading}>
-                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                  <Trash2 className="h-4 w-4 mr-1 text-destructive" /> {t('common.delete')}
                 </Button>
               )}
             </div>
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-              <Button type="submit" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Changes'}</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{t('common.cancel')}</Button>
+              <Button type="submit" disabled={isLoading}>{isLoading ? t('common.saving') : t('common.save')}</Button>
             </div>
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <TransferWorkItemModal
+        item={item}
+        orgId={orgId}
+        currentTeamId={item?.teamId ?? 0}
+        open={transferOpen}
+        onOpenChange={setTransferOpen}
+        onTransferred={handleTransferred}
+      />
     </Dialog>
   );
 }

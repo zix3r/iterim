@@ -10,8 +10,10 @@ import { useToast } from '@/components/ui/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, LayoutGrid, LayoutList } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function BoardPage() {
+  const { t } = useLanguage();
   const { orgId, productId, teamId } = useParams();
   const { toast } = useToast();
   
@@ -69,7 +71,7 @@ export function BoardPage() {
       setEditItem(fullItem);
     } catch (err) {
       console.error(err);
-      toast({ variant: 'error', title: 'Error', description: 'Failed to load task details' });
+      toast({ variant: 'error', title: t('common.error'), description: t('backlog.failedLoad') });
     }
   };
 
@@ -106,15 +108,19 @@ export function BoardPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Board</h3>
-          <p className="text-sm text-red-700">{error || "Team not found."}</p>
+          <h3 className="text-lg font-semibold text-red-800">{t('board.failedLoad')}</h3>
+          <p className="text-sm text-red-700">{error || t('common.notFound')}</p>
           <Button onClick={() => loadData()} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.tryAgain')}
           </Button>
         </div>
       </div>
     );
   }
+
+  const canTransferWorkItems = team.currentUserId === team.createdBy || team.members.some(
+    (member) => member.userId === team.currentUserId && member.role === 'Admin'
+  );
 
   // 3. SĖKMINGA BŪSENA
   return (
@@ -132,35 +138,35 @@ export function BoardPage() {
       />
 
       <div className="flex-shrink-0">
-        <h1 className="text-3xl font-bold">Iteration board</h1>
+        <h1 className="text-3xl font-bold">{t('board.title')}</h1>
         <p className="text-muted-foreground">
-          {boardData?.iteration.name ? `Active Iteration: ${boardData.iteration.name}` : team.name}
+          {boardData?.iteration.name ? boardData.iteration.name : team.name}
         </p>
       </div>
 
       <div className="flex-1 min-h-0 pt-4">
         {!boardData ? (
            <EmptyState
-             title="No Active Iteration"
-             description="There is currently no active iteration for this team. Start an iteration from the backlog to view the board."
+             title={t('board.noActiveIteration')}
+             description={t('backlog.failedLoad')}
              icon={<LayoutGrid className="h-8 w-8" />}
              action={
                <Button asChild>
                  <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
-                   Go to Backlog
+                   {t('products.backlog')}
                  </Link>
                </Button>
              }
            />
         ) : isIterationEmpty ? (
            <EmptyState
-             title="Active Iteration is Empty"
-             description="There are no work items in this iteration. Please add tasks from the backlog to get started."
+             title={t('board.noItemsInColumn')}
+             description={t('backlog.failedLoad')}
              icon={<LayoutList className="h-8 w-8" />}
              action={
                <Button asChild>
                  <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
-                   Add tasks from backlog
+                   {t('products.backlog')}
                  </Link>
                </Button>
              }
@@ -177,7 +183,9 @@ export function BoardPage() {
 
       <EditWorkItemModal
         item={editItem}
+        orgId={Number(orgId)}
         members={team.members}
+        canTransferWorkItem={canTransferWorkItems}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}
         onUpdated={refreshSilent}

@@ -1,4 +1,5 @@
 using iterimApi.Data;
+using iterimApi.DTOs.Tags;
 using iterimApi.DTOs.Teams;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
@@ -63,7 +64,37 @@ public class TeamService : ITeamService
 
         return teams;
     }
+    public async Task UpdateMemberScheduleAsync(int teamId, int teamMemberId, UpdateTeamMemberScheduleDto dto, int userId)
+    {
+        var teamMember = await _db.TeamMembers
+            .Include(tm => tm.Team)
+            .FirstOrDefaultAsync(tm => tm.TeamId == teamId && tm.Id == teamMemberId);
 
+        if (teamMember == null)
+            throw new KeyNotFoundException("Team member not found.");
+
+        // Patikriname ar vartotojas turi teisę (Team Leader / Admin)
+        // (Naudok savo esamą metodą, pvz., EnsureTeamAdmin(teamId, userId) arba panašų)
+        await EnsureTeamAdminAsync(teamId, userId); 
+
+        if (!Enum.TryParse<WorkScheduleType>(dto.ScheduleType, out var typeEnum))
+            throw new ArgumentException("Invalid schedule type.");
+
+        teamMember.ScheduleType = typeEnum;
+        
+        // Priverstinai nustatome valandas, jei pasirinktas standartinis tipas
+        teamMember.WeeklyHours = typeEnum switch
+        {
+            WorkScheduleType.FullTime => 40,
+            WorkScheduleType.PartTime => 20,
+            _ => dto.WeeklyHours
+        };
+
+        teamMember.UpdatedBy = userId;
+        teamMember.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+    }
     public async Task<TeamDetailDto?> GetTeamByIdAsync(int teamId, int userId)
     {
         var team = await _db.Teams
@@ -73,6 +104,9 @@ public class TeamService : ITeamService
             .Include(t => t.Members)
                 .ThenInclude(m => m.OrgMember)
                 .ThenInclude(om => om.User)
+            .Include(t => t.Members)
+                .ThenInclude(m => m.Tags)
+                .ThenInclude(tmt => tmt.Tag)
             .FirstOrDefaultAsync(t => t.Id == teamId);
 
         if (team == null)
@@ -115,7 +149,18 @@ public class TeamService : ITeamService
                 UserName = m.OrgMember.User.Name,
                 UserEmail = m.OrgMember.User.Email,
                 Role = m.Role.ToString(),
-                CreatedAt = m.CreatedAt
+                CreatedAt = m.CreatedAt,
+
+                WeeklyHours = m.WeeklyHours,
+                ScheduleType = m.ScheduleType.ToString(),
+                Tags = m.Tags.Select(tmt => new TagDto
+                {
+                    Id = tmt.Tag.Id,
+                    OrganizationId = tmt.Tag.OrganizationId,
+                    Name = tmt.Tag.Name,
+                    Color = tmt.Tag.Color,
+                    CreatedAt = tmt.Tag.CreatedAt
+                }).ToList()
             }).ToList()
         };
     }
@@ -534,5 +579,18 @@ public class TeamService : ITeamService
         await _db.SaveChangesAsync();
 
         return true;
+    }
+    private async Task EnsureTeamAdminAsync(int teamId, int userId)
+    {
+        var hasAccess = await _db.TeamMembers
+            .Include(tm => tm.OrgMember)
+            .AnyAsync(tm => tm.TeamId == teamId && tm.OrgMember.UserId == userId);
+
+        // Jei turi specialias roles (pvz. TeamMemberRole.Leader), gali čia jas patikrinti.
+        // Šiuo atveju tiesiog patikriname, ar jis apskritai priklauso komandai.
+        if (!hasAccess)
+        {
+            throw new UnauthorizedAccessException("You do not have permission to modify this team member.");
+        }
     }
 }

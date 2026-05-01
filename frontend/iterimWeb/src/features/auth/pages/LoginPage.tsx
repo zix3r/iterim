@@ -3,9 +3,11 @@ import { Link, useNavigate, useLocation } from 'react-router';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { email, required } from '@/lib/validation';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function LoginPage() {
   const { login, resendConfirmation } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } })?.from;
@@ -48,7 +50,7 @@ export function LoginPage() {
       await login(values.email.trim(), values.password);
       navigate(destination, { replace: true });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed.';
+      const errorMessage = err instanceof Error ? err.message : t('auth.loginFailed');
       // Check if it's an "unconfirmed email" error (403 from backend)
       if (errorMessage.toLowerCase().includes('confirm your email') || errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('confirm')) {
         setUnconfirmedEmail(values.email.trim());
@@ -79,15 +81,15 @@ export function LoginPage() {
           <h1 className="auth-title">iterim</h1>
         </div>
 
-        <h2 className="auth-heading">Welcome back</h2>
-        <p className="auth-subheading">Sign in to continue to your workspace</p>
+        <h2 className="auth-heading">{t('auth.welcomeBack')}</h2>
+        <p className="auth-subheading">{t('auth.signInSubtitle')}</p>
 
         {passwordResetSuccess && (
           <div className="auth-success" role="status">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            Password changed successfully. You can now sign in.
+            {t('auth.passwordResetSuccess')}
           </div>
         )}
 
@@ -109,39 +111,39 @@ export function LoginPage() {
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
-              <strong>Email not confirmed</strong>
+              <strong>{t('auth.emailNotConfirmed')}</strong>
             </div>
-            <p>You need to confirm your email address before signing in. Please check your inbox.</p>
+            <p>{t('auth.emailNotConfirmedMessage')}</p>
             {resendStatus === 'idle' && (
               <button className="resend-btn" onClick={handleResendConfirmation}>
-                Resend confirmation email
+                {t('auth.resendConfirmation')}
               </button>
             )}
             {resendStatus === 'sending' && (
-              <span className="resend-status">Sending...</span>
+              <span className="resend-status">{t('auth.sending')}</span>
             )}
             {resendStatus === 'sent' && (
               <span className="resend-status resend-ok">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
-                Confirmation link sent
+                {t('auth.confirmationLinkSent')}
               </span>
             )}
             {resendStatus === 'error' && (
-              <span className="resend-status resend-err">Failed to send. Please try again later.</span>
+              <span className="resend-status resend-err">{t('auth.failedToSend')}</span>
             )}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="field-group">
-            <label className="field-label" htmlFor="email">Email address</label>
+            <label className="field-label" htmlFor="email">{t('auth.emailAddress')}</label>
             <input
               id="email"
               type="email"
               className={`field-input ${errors.email ? 'field-input-error' : ''}`}
               value={values.email}
               onChange={(e) => setFieldValue('email', e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
               autoComplete="email"
               required
               aria-invalid={!!errors.email}
@@ -154,8 +156,8 @@ export function LoginPage() {
 
           <div className="field-group">
             <div className="field-label-row">
-              <label className="field-label" htmlFor="password">Password</label>
-              <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
+              <label className="field-label" htmlFor="password">{t('auth.password')}</label>
+              <Link to="/forgot-password" className="forgot-link">{t('auth.forgotPassword')}</Link>
             </div>
             <div className="field-password-wrap">
               <input
@@ -164,7 +166,7 @@ export function LoginPage() {
                 className={`field-input ${errors.password ? 'field-input-error' : ''}`}
                 value={values.password}
                 onChange={(e) => setFieldValue('password', e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 autoComplete="current-password"
                 required
                 aria-invalid={!!errors.password}
@@ -174,7 +176,7 @@ export function LoginPage() {
                 type="button"
                 className="field-eye"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               >
                 {showPassword ? (
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
@@ -195,13 +197,13 @@ export function LoginPage() {
           </div>
 
           <button type="submit" className="auth-btn" disabled={isSubmitting}>
-            {isSubmitting ? <span className="btn-spinner" /> : 'Sign in'}
+            {isSubmitting ? <span className="btn-spinner" /> : t('auth.signIn')}
           </button>
         </form>
 
         <p className="auth-footer-text">
-          Don't have an account?{' '}
-          <Link to="/register" className="auth-link">Create one</Link>
+          {t('auth.dontHaveAccount')}{' '}
+          <Link to="/register" className="auth-link">{t('auth.createOne')}</Link>
         </p>
       </div>
 
@@ -404,6 +406,21 @@ const authStyles = `
   }
 
   .field-input::placeholder { color: #71717a; }
+
+  .field-input:-webkit-autofill,
+  .field-input:-webkit-autofill:hover,
+  .field-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #000000;
+    -webkit-box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    caret-color: #000000;
+    transition: background-color 9999s ease-out 0s;
+  }
+
+  .field-input:-moz-autofill {
+    box-shadow: 0 0 0 1000px rgba(0,0,0,0.03) inset;
+    color: #000000;
+  }
 
   .field-input:focus {
     border-color: rgba(24,24,27,1);

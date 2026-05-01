@@ -9,6 +9,7 @@ import { useFormValidation } from '@/hooks/useFormValidation';
 import { updateProduct } from '@/lib/api';
 import type { UpdateProductRequest, ProductDetail } from '@/lib/api';
 import { maxLength, required } from '@/lib/validation';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   product: ProductDetail;
@@ -21,6 +22,7 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<UpdateProductRequest>(
     {
@@ -59,7 +61,7 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
 
   const handleClose = () => {
     if (hasChanges) {
-      if (confirm('You have unsaved changes. Are you sure you want to close?')) {
+      if (confirm(t('validation.fieldRequired'))) {
         onOpenChange(false);
       }
     } else {
@@ -73,7 +75,7 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
     if (!validateForm()) {
       toast({
         variant: 'warning',
-        title: 'Please fix validation errors',
+        title: t('validation.fieldRequired'),
       });
       return;
     }
@@ -86,16 +88,16 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
       });
       toast({
         variant: 'success',
-        title: 'Success',
-        description: 'Product updated successfully'
+        title: t('common.success'),
+        description: t('products.failedUpdate')
       });
       onOpenChange(false);
-      onUpdated(); // Refresh product data
+      onUpdated();
     } catch (error) {
       toast({
         variant: 'error',
-        title: 'Error',
-        description: getMessageFromError(error, 'Failed to update product. Please try again.')
+        title: t('common.error'),
+        description: getMessageFromError(error, t('products.failedUpdate'))
       });
     } finally {
       setIsLoading(false);
@@ -106,7 +108,7 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>{t('products.editTitle')}</DialogTitle>
           <DialogDescription>
             Update product information.
           </DialogDescription>
@@ -144,10 +146,10 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isLoading || !hasChanges}>
-              {isLoading ? 'Updating...' : 'Update'}
+              {isLoading ? t('common.updating') : t('common.update')}
             </Button>
           </div>
         </form>

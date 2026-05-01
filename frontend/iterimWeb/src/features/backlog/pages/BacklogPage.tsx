@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import {
   DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent,
@@ -8,14 +8,16 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
-import { Plus, History, AlertCircle, ListTodo } from 'lucide-react';
+import { Plus, History, AlertCircle, ListTodo, Sparkles } from 'lucide-react';
 import {
-  getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById,
-  updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup,
+  getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
+  updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
 } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 import { IterationSection } from '../components/IterationSection';
 import { BacklogFilters } from '../components/BacklogFilters';
+import { SuggestionsPanel } from '../components/SuggestionsPanel';
 import { CreateIterationModal } from '../components/CreateIterationModal';
 import { EditIterationModal } from '../components/EditIterationModal';
 import { CompleteIterationModal } from '../components/CompleteIterationModal';
@@ -33,6 +35,9 @@ const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 export function BacklogPage() {
   const { orgId, productId, teamId } = useParams();
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const itemId = searchParams.get('item');
 
   // Data
   const [groups, setGroups] = useState<BacklogGroup[]>([]);
@@ -46,14 +51,17 @@ export function BacklogPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
+  const [orgTags, setOrgTags] = useState<Tag[]>([]);
 
   // Modals
   const [createItemOpen, setCreateItemOpen] = useState(false);
   const [editItem, setEditItem] = useState<WorkItem | null>(null);
   const [editIteration, setEditIteration] = useState<Iteration | null>(null);
   const [completeIteration, setCompleteIteration] = useState<Iteration | null>(null);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
 
   // DnD
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null);
@@ -69,16 +77,18 @@ export function BacklogPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const [groupsData, itersData, teamData, orgData] = await Promise.all([
+      const [groupsData, itersData, teamData, orgData, tagsData] = await Promise.all([
         getWorkItemsGrouped(tid),
         getIterationsByTeam(tid),
         getTeamById(tid),
         getOrganizationById(Number(orgId)),
+        getOrgTags(Number(orgId)),
       ]);
       setGroups(groupsData);
       setIterations(itersData);
       setTeam(teamData);
       setOrg(orgData);
+      setOrgTags(tagsData);
     } catch (err) {
       console.error('Failed to load backlog:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to load backlog data.';
@@ -91,6 +101,30 @@ export function BacklogPage() {
   useEffect(() => {
     if (teamId && orgId) loadData();
   }, [teamId, orgId, loadData]);
+
+  // Handle auto-opening task from URL
+  useEffect(() => {
+    if (itemId && groups.length > 0) {
+      const id = Number(itemId);
+      let foundItem: WorkItem | null = null;
+      
+      for (const group of groups) {
+        const item = group.workItems.find(wi => wi.id === id);
+        if (item) {
+          foundItem = item;
+          break;
+        }
+      }
+
+      if (foundItem) {
+        setEditItem(foundItem);
+        // Clear the param so it doesn't reopen on every render/navigation
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('item');
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [itemId, groups, setSearchParams, searchParams]);
 
   useEffect(() => {
     if (team && orgId && productId && teamId) {
@@ -111,6 +145,7 @@ export function BacklogPage() {
       if (assigneeFilter === 'unassigned' && wi.assignedTo !== null) return false;
       if (assigneeFilter && assigneeFilter !== 'unassigned' && wi.assignedTo !== Number(assigneeFilter)) return false;
       if (searchQuery && !wi.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (tagFilter && !wi.tags?.some(t => t.id === Number(tagFilter))) return false;
       return true;
     });
   };
@@ -186,7 +221,7 @@ export function BacklogPage() {
         const items = reordered.map((wi: WorkItem, i: number) => ({ id: wi.id, position: i }));
         await reorderWorkItems(tid, items);
       } catch {
-        toast({ variant: 'error', title: 'Error', description: 'Failed to reorder. Refreshing...' });
+        toast({ variant: 'error', title: t('common.error'), description: 'Failed to reorder. Refreshing...' });
         loadData();
       }
       return;
@@ -243,7 +278,7 @@ export function BacklogPage() {
           iterationId: targetIterationId,
         });
       } catch {
-        toast({ variant: 'error', title: 'Error', description: 'Failed to move item. Refreshing...' });
+        toast({ variant: 'error', title: t('common.error'), description: 'Failed to move item. Refreshing...' });
         loadData();
       }
     }
@@ -292,10 +327,10 @@ export function BacklogPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Backlog</h3>
+          <h3 className="text-lg font-semibold text-red-800">{t('backlog.failedLoad')}</h3>
           <p className="text-sm text-red-700">{error || "Failed to load team data."}</p>
           <Button onClick={loadData} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -303,6 +338,17 @@ export function BacklogPage() {
   }
 
   const members = team.members;
+  const canTransferWorkItems = team.currentUserId === team.createdBy || team.members.some(
+    (member) => member.userId === team.currentUserId && member.role === 'Admin'
+  );
+
+  // ATPA tikslo iteracija: prioritetas Active, tada pirma Planning.
+  // Naudoja jau gautus duomenis, todėl SuggestionsPanel niekad neatsidaro
+  // su `null` iteracija.
+  const suggestionsTarget: Iteration | null =
+    iterations.find((i) => i.status === 'Active') ??
+    iterations.find((i) => i.status === 'Planning') ??
+    null;
 
   const renderSection = (
     iteration: Iteration | null,
@@ -340,25 +386,38 @@ export function BacklogPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Backlog</h1>
+          <h1 className="text-3xl font-bold">{t('backlog.title')}</h1>
           <p className="text-muted-foreground">{team.name}</p>
         </div>
         <div className="flex items-center gap-2">
+          {/*
+            ATPA siūlymai aktualūs tik kai yra Planning ar Active iteracija — kitaip
+            mygtukas išjungiamas su tooltip'u, paaiškinančiu kodėl.
+          */}
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!suggestionsTarget}
+            title={suggestionsTarget ? undefined : t('atpa.noActiveIteration')}
+            onClick={() => setSuggestionsOpen(true)}
+          >
+            <Sparkles className="h-4 w-4 mr-2" /> {t('atpa.suggestButton')}
+          </Button>
           <CreateIterationModal teamId={tid} onCreated={loadData} />
           <Button size="sm" onClick={() => setCreateItemOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" /> Add Item
+            <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
           </Button>
         </div>
       </div>
 
       {isCompletelyEmpty ? (
-        <EmptyState 
-          title="No work items in this team yet"
+        <EmptyState
+          title={t('backlog.noItems')}
           description="Create your first work item or start an iteration to begin planning your work."
           icon={<ListTodo className="h-8 w-8" />}
           action={
             <Button onClick={() => setCreateItemOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" /> Create Work Item
+              <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
             </Button>
           }
           className="mt-8"
@@ -369,20 +428,23 @@ export function BacklogPage() {
             typeFilter={typeFilter}
             statusFilter={statusFilter}
             assigneeFilter={assigneeFilter}
+            tagFilter={tagFilter}
             searchQuery={searchQuery}
             members={members}
+            orgTags={orgTags}
             onTypeChange={setTypeFilter}
             onStatusChange={setStatusFilter}
             onAssigneeChange={setAssigneeFilter}
+            onTagChange={setTagFilter}
             onSearchChange={setSearchQuery}
           />
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>🟦 Story</span>
-            <span>🟨 Task</span>
-            <span>🟥 Bug</span>
+            <span>🟦 {t('backlog.typeStory')}</span>
+            <span>🟨 {t('backlog.typeTask')}</span>
+            <span>🟥 {t('backlog.typeBug')}</span>
             <span className="ml-auto flex items-center gap-3">
-              <span>💡 Drag items between sections to plan iterations</span>
+              <span>💡 {t('backlog.dragHelp')}</span>
               {completedGroups.length > 0 && (
                 <Button
                   variant={showCompleted ? "secondary" : "ghost"}
@@ -391,7 +453,7 @@ export function BacklogPage() {
                   onClick={() => setShowCompleted(!showCompleted)}
                 >
                   <History className="h-3 w-3 mr-1" />
-                  {showCompleted ? 'Hide' : 'Show'} completed ({completedGroups.length})
+                  {showCompleted ? t('common.close') : t('backlog.showCompleted')} ({completedGroups.length})
                 </Button>
               )}
             </span>
@@ -457,6 +519,7 @@ export function BacklogPage() {
       {/* Modals */}
       <CreateWorkItemModal
         teamId={tid}
+        orgId={Number(orgId)}
         members={members}
         open={createItemOpen}
         onOpenChange={setCreateItemOpen}
@@ -465,7 +528,9 @@ export function BacklogPage() {
 
       <EditWorkItemModal
         item={editItem}
+        orgId={Number(orgId)}
         members={members}
+        canTransferWorkItem={canTransferWorkItems}
         open={!!editItem}
         onOpenChange={(v) => { if (!v) setEditItem(null); }}
         onUpdated={loadData}
@@ -484,6 +549,13 @@ export function BacklogPage() {
         open={!!completeIteration}
         onOpenChange={(v) => { if (!v) setCompleteIteration(null); }}
         onCompleted={loadData}
+      />
+
+      <SuggestionsPanel
+        iteration={suggestionsTarget}
+        open={suggestionsOpen}
+        onOpenChange={setSuggestionsOpen}
+        onApplied={() => loadData()}
       />
     </div>
   );

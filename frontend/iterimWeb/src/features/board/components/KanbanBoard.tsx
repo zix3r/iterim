@@ -1,23 +1,27 @@
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { 
-  DndContext, 
-  DragOverlay, 
+import {
+  DndContext,
+  DragOverlay,
   closestCorners,
   useSensor,
   useSensors,
   PointerSensor
 } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { 
-  updateWorkItem, 
-  getWorkItemById, 
-  type BoardData, 
-  type BoardWorkItem 
+import {
+  updateWorkItem,
+  getWorkItemById,
+  BlockedByDependenciesError,
+  type BoardData,
+  type BoardWorkItem,
+  type WorkItemDependency
 } from '@/lib/api';
 import { KanbanColumn } from './KanbanColumn';
 import { KanbanCard } from './KanbanCard';
+import { BlockerErrorModal } from './BlockerErrorModal';
 import { useToast } from '@/components/ui/toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface KanbanBoardProps {
   boardData: BoardData;
@@ -27,8 +31,11 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ boardData, setBoardData, onBoardUpdate, onCardClick }: KanbanBoardProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [activeItem, setActiveItem] = useState<BoardWorkItem | null>(null);
+  const [blockerModalDeps, setBlockerModalDeps] = useState<WorkItemDependency[]>([]);
+  const [blockerModalOpen, setBlockerModalOpen] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -98,34 +105,48 @@ export function KanbanBoard({ boardData, setBoardData, onBoardUpdate, onCardClic
       });
 
       onBoardUpdate();
-      
+
     } catch (error) {
-      console.error('Failed to update status', error);
       setBoardData(previousBoardData);
-      toast({ variant: 'error', title: 'Error', description: 'Failed to update item status. Try again.' });
+
+      if (error instanceof BlockedByDependenciesError) {
+        setBlockerModalDeps(error.blockers);
+        setBlockerModalOpen(true);
+      } else {
+        console.error('Failed to update status', error);
+        toast({ variant: 'error', title: t('common.error'), description: t('board.failedMove') });
+      }
     }
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex h-full gap-4 overflow-x-auto pb-4">
-        {boardData.columns.map(column => (
-          <KanbanColumn 
-            key={column.status} 
-            column={column} 
-            onCardClick={onCardClick} 
-          />
-        ))}
-      </div>
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex h-full gap-4 overflow-x-auto pb-4">
+          {boardData.columns.map(column => (
+            <KanbanColumn
+              key={column.status}
+              column={column}
+              onCardClick={onCardClick}
+            />
+          ))}
+        </div>
 
-      <DragOverlay>
-        {activeItem ? <KanbanCard item={activeItem} /> : null}
-      </DragOverlay>
-    </DndContext>
+        <DragOverlay>
+          {activeItem ? <KanbanCard item={activeItem} /> : null}
+        </DragOverlay>
+      </DndContext>
+
+      <BlockerErrorModal
+        blockers={blockerModalDeps}
+        open={blockerModalOpen}
+        onOpenChange={setBlockerModalOpen}
+      />
+    </>
   );
 }

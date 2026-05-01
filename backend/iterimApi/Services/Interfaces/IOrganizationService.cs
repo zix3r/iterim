@@ -1,4 +1,6 @@
 using iterimApi.DTOs.Organizations;
+using iterimApi.Models.Enums; // Užtikrina, kad matytų AbsenceReason
+using iterimApi.DTOs.MemberAbsences; // Arba kur tavo MemberAbsenceDto guli
 
 namespace iterimApi.Services.Interfaces;
 
@@ -11,6 +13,14 @@ public interface IOrganizationService
     Task<AcceptInvitationResultDto> AcceptInvitationAsync(int organizationId, int userId);
     Task<DeclineInvitationResultDto> DeclineInvitationAsync(int organizationId, int userId);
     Task<bool> RemoveMemberAsync(int organizationId, int memberId, int requestingUserId);
+    Task<OrganizationMemberDto> UpdateMemberRoleAsync(int organizationId, int memberId, string newRole, int requestingUserId);
     Task<IEnumerable<PendingInvitationDto>> GetPendingInvitationsAsync(int userId);
     Task DeleteOrganizationAsync(int orgId, int userId);
+    Task<IEnumerable<MemberAbsenceDto>> GetOrganizationAbsencesAsync(
+        int orgId, 
+        string? memberName = null, 
+        DateOnly? from = null, 
+        DateOnly? to = null, 
+        AbsenceReason? type = null);
+    
 }

@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from 'react-router';
+import { Routes, Route, Navigate, useLocation } from 'react-router';
 import { MainLayout } from '@/components/layout/main-layout';
+import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { MyTeamsTreeProvider } from '@/context/MyTeamsTreeContext';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { OrganizationPage } from '@/features/organizations/pages/OrganizationPage';
@@ -21,12 +22,46 @@ import { AbsencesPage } from '@/features/absences/pages/AbsencesPage';
 import { MetricsPage } from '@/features/metrics/pages/MetricsPage';
 import { ProfilePage } from '@/features/profile/pages/ProfilePage';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AdminUsersPage } from '@/features/admin/pages/AdminUsersPage';
+import { AdminSystemPage } from '@/features/admin/pages/AdminSystemPage';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganizationsPage';
+
+// Maršrutai, kuriuose nerodomas Header/AdminLayout — jiems reikia
+// atskiro plūduriuojančio kalbos perjungiklio.
+const PUBLIC_ROUTE_PREFIXES = [
+  '/login',
+  '/register',
+  '/check-email',
+  '/confirm-email',
+  '/forgot-password',
+  '/reset-password',
+];
+
+function FloatingLanguageToggle() {
+  const location = useLocation();
+  const isPublicRoute = PUBLIC_ROUTE_PREFIXES.some((prefix) =>
+    location.pathname.startsWith(prefix),
+  );
+  if (!isPublicRoute) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50">
+      <LanguageToggle className="bg-background/90 border border-border shadow-sm backdrop-blur" />
+    </div>
+  );
+}
 
 function App() {
+  const { user } = useAuth();
+
   return (
-    <ErrorBoundary>
-      <ToastProvider>
-        <Routes>
+    <ThemeProvider serverTheme={user?.theme}>
+      <ErrorBoundary>
+        <ToastProvider>
+          <FloatingLanguageToggle />
+          <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -37,6 +72,11 @@ function App() {
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
+            {/* Admin — own layout, no sidebar */}
+            <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/system" element={<AdminSystemPage />} />
+            <Route path="/admin/organizations" element={<AdminOrganizationsPage />} />
             <Route
               element={
                 <MyTeamsTreeProvider>
@@ -61,9 +101,10 @@ function App() {
 
           {/* Default redirect */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </ToastProvider>
-    </ErrorBoundary>
+          </Routes>
+        </ToastProvider>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 }
 

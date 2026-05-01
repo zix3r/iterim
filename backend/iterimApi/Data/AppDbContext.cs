@@ -23,6 +23,10 @@ public class AppDbContext : DbContext
     public DbSet<MemberAbsence> MemberAbsences => Set<MemberAbsence>();
     public DbSet<RecentPage> RecentPages => Set<RecentPage>();
     public DbSet<PinnedTeam> PinnedTeams => Set<PinnedTeam>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<WorkItemTag> WorkItemTags => Set<WorkItemTag>();
+    public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
+    public DbSet<WorkItemDependency> WorkItemDependencies => Set<WorkItemDependency>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -73,6 +77,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasIndex(u => u.Email).IsUnique();
+
+            entity.Property(u => u.Theme)
+                .HasMaxLength(16)
+                .HasDefaultValue("light");
         });
 
         // ── RefreshToken ────────────────────────────────────
@@ -335,6 +343,76 @@ public class AppDbContext : DbContext
             entity.HasOne(ma => ma.UpdatedByUser)
                 .WithMany()
                 .HasForeignKey(ma => ma.UpdatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Tag ─────────────────────────────────────────────
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.HasIndex(t => t.OrganizationId);
+            entity.HasIndex(t => new { t.OrganizationId, t.Name }).IsUnique();
+
+            entity.Property(t => t.Name).HasMaxLength(100);
+            entity.Property(t => t.Color).HasMaxLength(20);
+
+            entity.HasOne(t => t.Organization)
+                .WithMany(o => o.Tags)
+                .HasForeignKey(t => t.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── WorkItemTag ──────────────────────────────────────
+        modelBuilder.Entity<WorkItemTag>(entity =>
+        {
+            entity.HasKey(wit => new { wit.WorkItemId, wit.TagId });
+
+            entity.HasOne(wit => wit.WorkItem)
+                .WithMany(wi => wi.Tags)
+                .HasForeignKey(wit => wit.WorkItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(wit => wit.Tag)
+                .WithMany(t => t.WorkItemTags)
+                .HasForeignKey(wit => wit.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── TeamMemberTag ────────────────────────────────────
+        modelBuilder.Entity<TeamMemberTag>(entity =>
+        {
+            entity.HasKey(tmt => new { tmt.TeamMemberId, tmt.TagId });
+
+            entity.HasOne(tmt => tmt.TeamMember)
+                .WithMany(tm => tm.Tags)
+                .HasForeignKey(tmt => tmt.TeamMemberId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(tmt => tmt.Tag)
+                .WithMany(t => t.TeamMemberTags)
+                .HasForeignKey(tmt => tmt.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── WorkItemDependency ───────────────────────────────
+        modelBuilder.Entity<WorkItemDependency>(entity =>
+        {
+            entity.HasIndex(d => new { d.BlockerWorkItemId, d.BlockedWorkItemId }).IsUnique();
+            entity.HasIndex(d => d.BlockerWorkItemId);
+            entity.HasIndex(d => d.BlockedWorkItemId);
+
+            entity.HasOne(d => d.BlockerWorkItem)
+                .WithMany(wi => wi.Blocks)
+                .HasForeignKey(d => d.BlockerWorkItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.BlockedWorkItem)
+                .WithMany(wi => wi.BlockedBy)
+                .HasForeignKey(d => d.BlockedWorkItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.CreatedByMember)
+                .WithMany()
+                .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

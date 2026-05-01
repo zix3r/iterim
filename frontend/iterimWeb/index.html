@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        var storageKey = 'iterim_theme';
+        var fallbackTheme = 'light';
+        var storedTheme = null;
+
+        try {
+          storedTheme = window.localStorage.getItem(storageKey);
+        } catch {
+          storedTheme = null;
+        }
+
+        var theme = (storedTheme === 'light' || storedTheme === 'dark')
+          ? storedTheme
+          : fallbackTheme;
+
+        var resolvedTheme = theme;
+
+        var root = document.documentElement;
+        root.classList.toggle('dark', resolvedTheme === 'dark');
+        root.style.colorScheme = resolvedTheme;
+      })();
+    </script>
     <title>iterimweb</title>
   </head>
   <body>

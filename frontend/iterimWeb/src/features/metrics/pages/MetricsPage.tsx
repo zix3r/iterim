@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/context/LanguageContext';
 import { SprintProgressCard } from '../components/SprintProgressCard';
 import { VelocityChart } from '../components/VelocityChart';
 import { BurndownChart } from '../components/BurndownChart';
@@ -26,12 +27,13 @@ import {
 import { addRecentPage } from '@/lib/recentPages';
 
 const STATUS_BADGE: Record<string, string> = {
-  Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Planning:  'bg-blue-50 text-blue-700 border-blue-200',
-  Completed: 'bg-zinc-100 text-zinc-500 border-zinc-200',
+  Active:    'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30',
+  Planning:  'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30',
+  Completed: 'bg-muted text-muted-foreground border-border',
 };
 
 export function MetricsPage() {
+  const { t } = useLanguage();
   const { orgId, productId, teamId } = useParams<{
     orgId: string; productId: string; teamId: string;
   }>();
@@ -183,12 +185,12 @@ export function MetricsPage() {
   if (iterError || velocityError) {
     return (
       <div className="p-8 max-w-2xl mx-auto mt-12">
-        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
+        <div className="rounded-xl bg-red-50 p-6 border border-red-200 dark:bg-red-500/10 dark:border-red-500/30 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Metrics</h3>
-          <p className="text-sm text-red-700">{iterError ?? velocityError ?? 'Unknown error occurred.'}</p>
-          <Button onClick={loadIterations} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+          <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">{t('metrics.failedLoad')}</h3>
+          <p className="text-sm text-red-700 dark:text-red-300">{iterError ?? velocityError ?? t('common.error')}</p>
+          <Button onClick={loadIterations} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 dark:border-red-500/30 dark:hover:bg-red-500/15 text-red-800 dark:text-red-300">
+            {t('common.tryAgain')}
           </Button>
         </div>
       </div>
@@ -213,8 +215,8 @@ export function MetricsPage() {
       />
 
       <PageHeader
-        title="Metrics"
-        description="Team analytics and iteration health"
+        title={t('metrics.title')}
+        description={t('products.metrics')}
         actions={
           iterations.length > 0 ? (
             <SprintSelector
@@ -230,8 +232,8 @@ export function MetricsPage() {
       {iterations.length === 0 ? (
         <EmptyState
           icon={<BarChart2 className="h-8 w-8" />}
-          title="No iterations yet"
-          description="Create and start an iteration in the Backlog to see analytics here."
+          title={t('board.noActiveIteration')}
+          description={t('backlog.failedLoad')}
         />
       ) : (
         <div className="space-y-6">
@@ -274,16 +276,17 @@ interface SprintSelectorProps {
 }
 
 function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProps) {
+  const { t } = useLanguage();
   const selected = iterations.find((i) => i.id === selectedId);
 
   return (
     <div className="relative">
-      <label className="text-xs text-zinc-500 font-medium block mb-1">Viewing iteration</label>
+      <label className="text-xs text-muted-foreground font-medium block mb-1">{t('board.selectIteration')}</label>
       <div className="relative">
         <select
           value={selectedId ?? ''}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="appearance-none w-full min-w-[220px] rounded-lg border border-zinc-200 bg-white px-3 py-2 pr-8 text-sm font-medium text-zinc-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/20 focus:border-zinc-400 cursor-pointer"
+          className="appearance-none w-full min-w-[220px] rounded-lg border border-input bg-background px-3 py-2 pr-8 text-sm font-medium text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring/30 focus:border-ring cursor-pointer"
         >
           {iterations.map((iter) => (
             <option key={iter.id} value={iter.id}>
@@ -293,10 +296,10 @@ function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProp
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       </div>
       {selected && (
-        <div className="mt-1.5 flex items-center gap-2 text-xs text-zinc-400">
+        <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
           <span>{fmtDate(selected.startDate)} – {fmtDate(selected.endDate)}</span>
           <Badge
             variant="outline"

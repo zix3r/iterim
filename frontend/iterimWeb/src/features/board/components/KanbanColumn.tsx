@@ -1,6 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { KanbanCard } from './KanbanCard';
 import type { BoardColumn } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface KanbanColumnProps {
   column: BoardColumn;
@@ -8,6 +9,7 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({ column, onCardClick }: KanbanColumnProps) {
+  const { t } = useLanguage();
   const { setNodeRef, isOver } = useDroppable({
     id: `col-${column.status}`,
     data: { status: column.status },
@@ -15,8 +17,11 @@ export function KanbanColumn({ column, onCardClick }: KanbanColumnProps) {
 
   const formatStatus = (status: string) => {
     switch(status) {
-      case 'Todo': return 'To Do';
-      case 'InProgress': return 'In Progress';
+      case 'Todo': return t('board.todo');
+      case 'InProgress': return t('board.inProgress');
+      case 'Review': return t('board.review');
+      case 'Done': return t('board.done');
+      case 'Blocked': return t('board.blocked');
       default: return status;
     }
   };

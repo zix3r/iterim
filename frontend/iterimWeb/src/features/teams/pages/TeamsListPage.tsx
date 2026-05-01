@@ -10,6 +10,7 @@ import { Users, AlertCircleIcon } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function TeamsListPage() {
   const { orgId, productId } = useParams();
@@ -17,6 +18,7 @@ export function TeamsListPage() {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   // Išsprendžiame setState useEffect viduje problemą
   const loadTeams = useCallback(async () => {
@@ -83,10 +85,10 @@ export function TeamsListPage() {
       <div className="p-8 max-w-2xl mx-auto mt-12">
         <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
           <AlertCircleIcon className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">Error Loading Teams</h3>
-          <p className="text-sm text-red-700">{error || "Product not found."}</p>
+          <h3 className="text-lg font-semibold text-red-800">{t('teams.failedLoad')}</h3>
+          <p className="text-sm text-red-700">{error || t('common.notFound')}</p>
           <Button onClick={loadTeams} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
-            Try Again
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -100,28 +102,28 @@ export function TeamsListPage() {
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Dashboard', href: '/dashboard' },
+          { label: t('dashboard.title'), href: '/dashboard' },
           { label: product.organizationName, href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
+          { label: t('products.title'), href: `/org/${orgId}/products` },
           { label: product.name, href: `/org/${orgId}/products/${productId}` },
-          { label: 'Teams' }
+          { label: t('teams.title') }
         ]}
       />
 
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Teams</h1>
+          <h1 className="text-3xl font-bold">{t('teams.title')}</h1>
           <p className="text-muted-foreground">{product.name}</p>
         </div>
         {isAdmin && <CreateTeamModal productId={Number(productId)} onCreated={loadTeams} />}
       </div>
 
       {teams.length === 0 ? (
-        <EmptyState 
-          title="No teams yet"
-          description={isAdmin 
-            ? 'Get started by creating your first team.' 
-            : 'No teams have been created in this product yet.'}
+        <EmptyState
+          title={t('teams.noTeams')}
+          description={isAdmin
+            ? t('teams.createFirst')
+            : t('teams.noTeams')}
           icon={<Users className="h-8 w-8" />}
           action={isAdmin ? <CreateTeamModal productId={Number(productId)} onCreated={loadTeams} /> : undefined}
         />

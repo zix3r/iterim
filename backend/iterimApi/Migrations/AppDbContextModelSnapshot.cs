@@ -387,6 +387,40 @@ namespace iterimApi.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("OrganizationId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Tags");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -449,6 +483,9 @@ namespace iterimApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("ScheduleType")
+                        .HasColumnType("int");
+
                     b.Property<int>("TeamId")
                         .HasColumnType("int");
 
@@ -456,6 +493,9 @@ namespace iterimApi.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("UpdatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeeklyHours")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -472,6 +512,21 @@ namespace iterimApi.Migrations
                         .IsUnique();
 
                     b.ToTable("TeamMembers");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.TeamMemberTag", b =>
+                {
+                    b.Property<int>("TeamMemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TeamMemberId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TeamMemberTags");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.User", b =>
@@ -501,6 +556,9 @@ namespace iterimApi.Migrations
                     b.Property<int>("FailedLoginAttempts")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("tinyint(1)");
 
@@ -524,9 +582,19 @@ namespace iterimApi.Migrations
                     b.Property<bool>("PasswordResetTokenUsed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("PendingEmail")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<string>("Theme")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasDefaultValue("light");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -648,6 +716,40 @@ namespace iterimApi.Migrations
                     b.ToTable("WorkItemComments");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.WorkItemDependency", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BlockedWorkItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockerWorkItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockedWorkItemId");
+
+                    b.HasIndex("BlockerWorkItemId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("BlockerWorkItemId", "BlockedWorkItemId")
+                        .IsUnique();
+
+                    b.ToTable("WorkItemDependencies");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.WorkItemHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -684,6 +786,21 @@ namespace iterimApi.Migrations
                     b.HasIndex("WorkItemId");
 
                     b.ToTable("WorkItemHistories");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.WorkItemTag", b =>
+                {
+                    b.Property<int>("WorkItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("int");
+
+                    b.HasKey("WorkItemId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("WorkItemTags");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.Iteration", b =>
@@ -871,6 +988,17 @@ namespace iterimApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.Tag", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.Organization", "Organization")
+                        .WithMany("Tags")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Team", b =>
                 {
                     b.HasOne("iterimApi.Models.Entities.User", "CreatedByUser")
@@ -931,6 +1059,25 @@ namespace iterimApi.Migrations
                     b.Navigation("Team");
 
                     b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.TeamMemberTag", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.Tag", "Tag")
+                        .WithMany("TeamMemberTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.TeamMember", "TeamMember")
+                        .WithMany("Tags")
+                        .HasForeignKey("TeamMemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+
+                    b.Navigation("TeamMember");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.WorkItem", b =>
@@ -1000,6 +1147,33 @@ namespace iterimApi.Migrations
                     b.Navigation("WorkItem");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.WorkItemDependency", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.WorkItem", "BlockedWorkItem")
+                        .WithMany("BlockedBy")
+                        .HasForeignKey("BlockedWorkItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.WorkItem", "BlockerWorkItem")
+                        .WithMany("Blocks")
+                        .HasForeignKey("BlockerWorkItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.OrganizationMember", "CreatedByMember")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BlockedWorkItem");
+
+                    b.Navigation("BlockerWorkItem");
+
+                    b.Navigation("CreatedByMember");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.WorkItemHistory", b =>
                 {
                     b.HasOne("iterimApi.Models.Entities.OrganizationMember", "ChangedByMember")
@@ -1019,6 +1193,25 @@ namespace iterimApi.Migrations
                     b.Navigation("WorkItem");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.WorkItemTag", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.Tag", "Tag")
+                        .WithMany("WorkItemTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.WorkItem", "WorkItem")
+                        .WithMany("Tags")
+                        .HasForeignKey("WorkItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+
+                    b.Navigation("WorkItem");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Iteration", b =>
                 {
                     b.Navigation("WorkItems");
@@ -1031,6 +1224,8 @@ namespace iterimApi.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Products");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.OrganizationMember", b =>
@@ -1049,6 +1244,13 @@ namespace iterimApi.Migrations
                     b.Navigation("Teams");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.Tag", b =>
+                {
+                    b.Navigation("TeamMemberTags");
+
+                    b.Navigation("WorkItemTags");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Team", b =>
                 {
                     b.Navigation("Iterations");
@@ -1061,6 +1263,8 @@ namespace iterimApi.Migrations
             modelBuilder.Entity("iterimApi.Models.Entities.TeamMember", b =>
                 {
                     b.Navigation("AssignedWorkItems");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.User", b =>
@@ -1076,9 +1280,15 @@ namespace iterimApi.Migrations
 
             modelBuilder.Entity("iterimApi.Models.Entities.WorkItem", b =>
                 {
+                    b.Navigation("BlockedBy");
+
+                    b.Navigation("Blocks");
+
                     b.Navigation("Comments");
 
                     b.Navigation("History");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("iterimApi.Models.Entities.WorkItemComment", b =>

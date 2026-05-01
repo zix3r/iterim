@@ -18,7 +18,8 @@ public class MetricsController : ControllerBase
     }
 
     /// <summary>
-    /// Get velocity data for the last N completed sprints before (and including) the given iteration.
+    /// Get velocity data for the last N completed or active sprints before (and including)
+    /// the given iteration. Active sprints are reported with live (non-snapshot) totals.
     /// GET /api/teams/:teamId/metrics/velocity?sprints=5&beforeIterationId=12
     /// </summary>
     [HttpGet("api/teams/{teamId}/metrics/velocity")]

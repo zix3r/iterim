@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 function PasswordReq({ met, label }: { met: boolean; label: string }) {
   return (
@@ -19,6 +20,7 @@ export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const { resetPassword } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const token = searchParams.get('token') ?? '';
 
   const [password, setPassword] = useState('');
@@ -99,15 +101,15 @@ export function ResetPasswordPage() {
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </div>
-          <h2 className="auth-heading">Link expired or invalid</h2>
+          <h2 className="auth-heading">{t('auth.invalidResetLink')}</h2>
           <p className="auth-subheading">
-            This password reset link is invalid or has already been used. Please request a new one.
+            {t('auth.resetTokenInvalid')}
           </p>
           <Link to="/forgot-password" className="auth-btn">
-            Request a new link
+            {t('auth.sendResetLink')}
           </Link>
           <p className="auth-footer-text" style={{ marginTop: '1rem' }}>
-            <Link to="/login" className="auth-link">← Back to sign in</Link>
+            <Link to="/login" className="auth-link">← {t('auth.backToSignIn')}</Link>
           </p>
         </div>
         <style>{resetStyles}</style>
@@ -128,13 +130,13 @@ export function ResetPasswordPage() {
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <h2 className="auth-heading">Password changed!</h2>
+          <h2 className="auth-heading">{t('auth.passwordResetSuccess')}</h2>
           <p className="auth-subheading">
-            Your password has been reset successfully. Redirecting to sign in...
+            {t('auth.weWillRedirect')}
           </p>
           <div className="redirect-indicator">
             <span className="btn-spinner btn-spinner-dark" />
-            Redirecting...
+            {t('auth.weWillRedirect')}
           </div>
         </div>
         <style>{resetStyles}</style>
@@ -149,8 +151,8 @@ export function ResetPasswordPage() {
           <h1 className="auth-title">iterim</h1>
         </div>
 
-        <h2 className="auth-heading">Set new password</h2>
-        <p className="auth-subheading">Enter a new password for your account.</p>
+        <h2 className="auth-heading">{t('auth.resetTitle')}</h2>
+        <p className="auth-subheading">{t('auth.resetSubtitle')}</p>
 
         {serverError && (
           <div className="auth-error" role="alert">
@@ -165,7 +167,7 @@ export function ResetPasswordPage() {
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <div className="field-group">
-            <label className="field-label" htmlFor="password">New password</label>
+            <label className="field-label" htmlFor="password">{t('profile.newPassword')}</label>
             <div className="field-password-wrap">
               <input
                 id="password"
@@ -188,7 +190,7 @@ export function ResetPasswordPage() {
                 type="button"
                 className="field-eye"
                 onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               >
                 {showPassword
                   ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -201,16 +203,16 @@ export function ResetPasswordPage() {
             )}
             {(pwdFocused || password.length > 0) && (
               <div className="pwd-reqs">
-                <PasswordReq met={reqs.length} label="8+ characters" />
-                <PasswordReq met={reqs.upper}  label="Uppercase letter" />
-                <PasswordReq met={reqs.lower}  label="Lowercase letter" />
-                <PasswordReq met={reqs.number} label="Number" />
+                <PasswordReq met={reqs.length} label={t('auth.pwdReqLength')} />
+                <PasswordReq met={reqs.upper}  label={t('auth.pwdReqUpper')} />
+                <PasswordReq met={reqs.lower}  label={t('auth.pwdReqLower')} />
+                <PasswordReq met={reqs.number} label={t('auth.pwdReqNumber')} />
               </div>
             )}
           </div>
 
           <div className="field-group">
-            <label className="field-label" htmlFor="confirm">Confirm password</label>
+            <label className="field-label" htmlFor="confirm">{t('auth.confirmPassword')}</label>
             <div className="field-password-wrap">
               <input
                 id="confirm"
@@ -242,12 +244,12 @@ export function ResetPasswordPage() {
           </div>
 
           <button type="submit" className="auth-btn" disabled={status === 'submitting'}>
-            {status === 'submitting' ? <span className="btn-spinner" /> : 'Reset password'}
+            {status === 'submitting' ? <span className="btn-spinner" /> : t('auth.changePassword')}
           </button>
         </form>
 
         <p className="auth-footer-text">
-          <Link to="/login" className="auth-link">← Back to sign in</Link>
+          <Link to="/login" className="auth-link">← {t('auth.backToSignIn')}</Link>
         </p>
       </div>
 

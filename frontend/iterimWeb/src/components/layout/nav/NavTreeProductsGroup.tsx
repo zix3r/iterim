@@ -4,6 +4,7 @@ import { useNavExpansion } from '@/hooks/useNavExpansion';
 import { NavRow } from './NavRow';
 import { NavTreeProduct } from './NavTreeProduct';
 import type { DashboardProduct } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   products: DashboardProduct[];
@@ -12,6 +13,7 @@ interface Props {
 
 export function NavTreeProductsGroup({ products, orgId }: Props) {
   const location = useLocation();
+  const { t } = useLanguage();
   const autoOpen = location.pathname.includes(`/org/${orgId}/products`);
   const [expanded, toggle] = useNavExpansion(`nav-expand-products-${orgId}`, autoOpen);
 
@@ -19,7 +21,7 @@ export function NavTreeProductsGroup({ products, orgId }: Props) {
     <div>
       <NavRow
         to={`/org/${orgId}/products`}
-        label="Products"
+        label={t('layout.breadcrumbProducts')}
         icon={Package}
         depth={1}
         expandable
