@@ -14,11 +14,16 @@ public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _db;
     private readonly IWorkItemDependencyService _dependencyService;
+    private readonly INotificationService _notifications;
 
-    public WorkItemService(AppDbContext db, IWorkItemDependencyService dependencyService)
+    public WorkItemService(
+        AppDbContext db,
+        IWorkItemDependencyService dependencyService,
+        INotificationService notifications)
     {
         _db = db;
         _dependencyService = dependencyService;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<WorkItemDto>> GetWorkItemsByTeamAsync(int teamId, WorkItemFilterDto filters, int userId)
@@ -181,6 +186,26 @@ public class WorkItemService : IWorkItemService
             }
         }
 
+        // ── Notification: new assignee ───────────────────────────
+        if (workItem.AssignedTo.HasValue && workItem.AssignedMember?.OrgMember != null)
+        {
+            var assigneeUserId = workItem.AssignedMember.OrgMember.UserId;
+            // Don't notify the user about their own self-assignment.
+            if (assigneeUserId != userId)
+            {
+                await _notifications.CreateAsync(
+                    assigneeUserId,
+                    NotificationType.WorkItemAssigned,
+                    "notifications.workItemAssigned.title",
+                    "notifications.workItemAssigned.message",
+                    new Dictionary<string, string>
+                    {
+                        ["workItemTitle"] = workItem.Title
+                    },
+                    $"/workitems/{workItem.Id}");
+            }
+        }
+
         return MapToDto(workItem);
     }
 
@@ -234,6 +259,10 @@ public class WorkItemService : IWorkItemService
         // Track changes and build history entries before mutating the entity
         var historyEntries = BuildHistoryEntries(workItem, dto, orgMember.Id);
 
+        // Capture pre-mutation state for notification logic
+        var previousAssignedTo = workItem.AssignedTo;
+        var previousStatus = workItem.Status;
+
         // Update fields
         workItem.Title = dto.Title;
         if (dto.Type.HasValue)
@@ -267,6 +296,33 @@ public class WorkItemService : IWorkItemService
         else
         {
             workItem.AssignedMember = null;
+        }
+
+        // ── Notification: assignee changed ───────────────────────
+        if (workItem.AssignedTo.HasValue
+            && workItem.AssignedTo != previousAssignedTo
+            && workItem.AssignedMember?.OrgMember != null)
+        {
+            var assigneeUserId = workItem.AssignedMember.OrgMember.UserId;
+            if (assigneeUserId != userId)
+            {
+                await _notifications.CreateAsync(
+                    assigneeUserId,
+                    NotificationType.WorkItemAssigned,
+                    "notifications.workItemAssigned.title",
+                    "notifications.workItemAssigned.message",
+                    new Dictionary<string, string>
+                    {
+                        ["workItemTitle"] = workItem.Title
+                    },
+                    $"/workitems/{workItem.Id}");
+            }
+        }
+
+        // ── Notification: status → Done; if this item blocks others, unblock them ──
+        if (workItem.Status == WorkItemStatus.Done && previousStatus != WorkItemStatus.Done)
+        {
+            await NotifyBlockersResolvedAsync(workItem, userId);
         }
 
         return MapToDto(workItem);
@@ -354,6 +410,25 @@ public class WorkItemService : IWorkItemService
         else
         {
             workItem.AssignedMember = null;
+        }
+
+        // ── Notification: new assignee ───────────────────────────
+        if (workItem.AssignedTo.HasValue && workItem.AssignedMember?.OrgMember != null)
+        {
+            var assigneeUserId = workItem.AssignedMember.OrgMember.UserId;
+            if (assigneeUserId != userId)
+            {
+                await _notifications.CreateAsync(
+                    assigneeUserId,
+                    NotificationType.WorkItemAssigned,
+                    "notifications.workItemAssigned.title",
+                    "notifications.workItemAssigned.message",
+                    new Dictionary<string, string>
+                    {
+                        ["workItemTitle"] = workItem.Title
+                    },
+                    $"/workitems/{workItem.Id}");
+            }
         }
 
         return MapToDto(workItem);
@@ -498,6 +573,65 @@ public class WorkItemService : IWorkItemService
     }
 
     // ── Private helpers ──────────────────────────────────────
+
+    /// <summary>
+    /// When a work item is marked Done, find all work items it was blocking and
+    /// notify the right people:
+    ///  - if the unblocked item has an assignee  → notify the assignee
+    ///  - otherwise → notify the team lead (Team.CreatedBy) AND the work item's
+    ///    creator (WorkItem.CreatedBy), deduplicated.
+    /// The actor (who marked it Done) is never notified about their own action.
+    /// </summary>
+    private async Task NotifyBlockersResolvedAsync(WorkItem resolvedItem, int actorUserId)
+    {
+        // Find work items blocked by this resolved one.
+        var unblocked = await _db.WorkItemDependencies
+            .Where(d => d.BlockerWorkItemId == resolvedItem.Id)
+            .Select(d => d.BlockedWorkItem)
+            .Include(wi => wi.Team)
+            .Include(wi => wi.AssignedMember)
+                .ThenInclude(am => am!.OrgMember)
+            .ToListAsync();
+
+        if (unblocked.Count == 0) return;
+
+        foreach (var item in unblocked)
+        {
+            var titleKey = "notifications.blockerResolved.title";
+            var messageKey = "notifications.blockerResolved.message";
+            var parameters = new Dictionary<string, string>
+            {
+                ["workItemTitle"] = item.Title,
+                ["blockerTitle"] = resolvedItem.Title
+            };
+            var url = $"/workitems/{item.Id}";
+
+            if (item.AssignedMember?.OrgMember != null)
+            {
+                var assigneeUserId = item.AssignedMember.OrgMember.UserId;
+                if (assigneeUserId != actorUserId)
+                {
+                    await _notifications.CreateAsync(
+                        assigneeUserId,
+                        NotificationType.BlockerResolved,
+                        titleKey, messageKey, parameters, url);
+                }
+            }
+            else
+            {
+                // No assignee → notify team lead + creator (deduped, exclude the actor).
+                var recipients = new HashSet<int>();
+                if (item.Team != null) recipients.Add(item.Team.CreatedBy);
+                recipients.Add(item.CreatedBy);
+                recipients.Remove(actorUserId);
+
+                await _notifications.CreateForManyAsync(
+                    recipients,
+                    NotificationType.BlockerResolved,
+                    titleKey, messageKey, parameters, url);
+            }
+        }
+    }
 
     /// <summary>
     /// Verifies that the user is a member of the team (via TeamMembers → OrgMember → User).

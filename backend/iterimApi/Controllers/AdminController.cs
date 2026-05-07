@@ -16,11 +16,13 @@ public class AdminController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IAuthService _authService;
+    private readonly INotificationService _notifications;
 
-    public AdminController(AppDbContext db, IAuthService authService)
+    public AdminController(AppDbContext db, IAuthService authService, INotificationService notifications)
     {
         _db = db;
         _authService = authService;
+        _notifications = notifications;
     }
 
     /// <summary>
@@ -326,6 +328,14 @@ public class AdminController : ControllerBase
 
         // Reuse the existing forgot password flow — sends reset email to user
         await _authService.ForgotPasswordAsync(user.Email);
+
+        // In-app notification so the user sees a heads-up the next time they log in.
+        await _notifications.CreateAsync(
+            user.Id,
+            NotificationType.PasswordReset,
+            "notifications.passwordReset.title",
+            "notifications.passwordReset.message",
+            relatedUrl: "/login");
 
         return Ok(new { message = $"Password reset email sent to {user.Email}." });
     }

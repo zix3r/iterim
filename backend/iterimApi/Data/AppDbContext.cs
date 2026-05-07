@@ -1,3 +1,4 @@
+using iterimApi.Migrations;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,7 @@ public class AppDbContext : DbContext
     public DbSet<WorkItemTag> WorkItemTags => Set<WorkItemTag>();
     public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
     public DbSet<WorkItemDependency> WorkItemDependencies => Set<WorkItemDependency>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -81,6 +83,13 @@ public class AppDbContext : DbContext
             entity.Property(u => u.Theme)
                 .HasMaxLength(16)
                 .HasDefaultValue("light");
+
+            // Notification preferences — default to true so existing rows stay opted in.
+            entity.Property(u => u.NotificationsEnabled).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnWorkItemAssigned).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnBlockerResolved).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnAddedToTeam).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnAddedToOrganization).HasDefaultValue(true);
         });
 
         // ── RefreshToken ────────────────────────────────────
@@ -414,6 +423,27 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Notification ─────────────────────────────────────
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasIndex(n => n.UserId);
+            entity.HasIndex(n => new { n.UserId, n.IsRead });
+            entity.HasIndex(n => new { n.UserId, n.CreatedAt });
+
+            entity.Property(n => n.Type).HasConversion<string>().HasMaxLength(50);
+            entity.Property(n => n.TitleKey).HasMaxLength(200);
+            entity.Property(n => n.MessageKey).HasMaxLength(200);
+            entity.Property(n => n.MessageParams).HasColumnType("json");
+            entity.Property(n => n.Title).HasMaxLength(200);
+            entity.Property(n => n.Message).HasMaxLength(1000);
+            entity.Property(n => n.RelatedUrl).HasMaxLength(500);
+
+            entity.HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

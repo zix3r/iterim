@@ -11,10 +11,12 @@ namespace iterimApi.Services.Implementations;
 public class TeamService : ITeamService
 {
     private readonly AppDbContext _db;
+    private readonly INotificationService _notifications;
 
-    public TeamService(AppDbContext db)
+    public TeamService(AppDbContext db, INotificationService notifications)
     {
         _db = db;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<TeamDto>> GetTeamsByProductAsync(int productId, int userId)
@@ -378,6 +380,21 @@ public class TeamService : ITeamService
 
         _db.TeamMembers.Add(teamMember);
         await _db.SaveChangesAsync();
+
+        // ── Notification: user added to team ─────────────────────
+        if (orgMember.UserId != userId)
+        {
+            await _notifications.CreateAsync(
+                orgMember.UserId,
+                NotificationType.AddedToTeam,
+                "notifications.addedToTeam.title",
+                "notifications.addedToTeam.message",
+                new Dictionary<string, string>
+                {
+                    ["teamName"] = team.Name
+                },
+                $"/teams/{team.Id}");
+        }
 
         return new TeamMemberDto
         {

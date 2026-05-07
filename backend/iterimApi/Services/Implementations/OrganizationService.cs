@@ -13,15 +13,18 @@ public class OrganizationService : IOrganizationService
 {
     private readonly AppDbContext _db;
     private readonly IEmailService _emailService;
+    private readonly INotificationService _notifications;
     private readonly ILogger<OrganizationService> _logger;
 
     public OrganizationService(
         AppDbContext db,
         IEmailService emailService,
+        INotificationService notifications,
         ILogger<OrganizationService> logger)
     {
         _db = db;
         _emailService = emailService;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -228,6 +231,17 @@ public class OrganizationService : IOrganizationService
                  inviterName,
                  existingMember.Role.ToString());
 
+             await _notifications.CreateAsync(
+                 userToAdd.Id,
+                 NotificationType.AddedToOrganization,
+                 "notifications.addedToOrganization.title",
+                 "notifications.addedToOrganization.message",
+                 new Dictionary<string, string>
+                 {
+                     ["organizationName"] = organization.Name
+                 },
+                 $"/organizations/{organization.Slug}");
+
              return new OrganizationMemberDto
              {
                  Id = existingMember.Id,
@@ -257,6 +271,17 @@ public class OrganizationService : IOrganizationService
             organization.Name,
             inviterName,
             newMember.Role.ToString());
+
+        await _notifications.CreateAsync(
+            userToAdd.Id,
+            NotificationType.AddedToOrganization,
+            "notifications.addedToOrganization.title",
+            "notifications.addedToOrganization.message",
+            new Dictionary<string, string>
+            {
+                ["organizationName"] = organization.Name
+            },
+            $"/organizations/{organization.Slug}");
 
         return new OrganizationMemberDto
         {

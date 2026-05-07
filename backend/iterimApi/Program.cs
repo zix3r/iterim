@@ -98,6 +98,8 @@ builder.Services.AddScoped<IRecentPageService, RecentPageService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IAdminOrganizationService, AdminOrganizationService>();
 builder.Services.AddScoped<IAtpaService, AtpaService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddHostedService<NotificationCleanupService>();
 
 
 // CORS — restrict methods and headers
