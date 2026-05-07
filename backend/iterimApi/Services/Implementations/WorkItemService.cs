@@ -202,7 +202,7 @@ public class WorkItemService : IWorkItemService
                     {
                         ["workItemTitle"] = workItem.Title
                     },
-                    $"/workitems/{workItem.Id}");
+                    await BuildWorkItemUrlAsync(workItem.Id));
             }
         }
 
@@ -315,7 +315,7 @@ public class WorkItemService : IWorkItemService
                     {
                         ["workItemTitle"] = workItem.Title
                     },
-                    $"/workitems/{workItem.Id}");
+                    await BuildWorkItemUrlAsync(workItem.Id));
             }
         }
 
@@ -427,7 +427,7 @@ public class WorkItemService : IWorkItemService
                     {
                         ["workItemTitle"] = workItem.Title
                     },
-                    $"/workitems/{workItem.Id}");
+                    await BuildWorkItemUrlAsync(workItem.Id));
             }
         }
 
@@ -575,6 +575,28 @@ public class WorkItemService : IWorkItemService
     // ── Private helpers ──────────────────────────────────────
 
     /// <summary>
+    /// Builds the deep-link URL for a work item, targeting the team's backlog page
+    /// with ?item={id} so BacklogPage auto-opens the EditWorkItemModal.
+    /// Returns null if the work item or its team chain can't be resolved.
+    /// </summary>
+    private async Task<string?> BuildWorkItemUrlAsync(int workItemId)
+    {
+        var loc = await _db.WorkItems
+            .AsNoTracking()
+            .Where(wi => wi.Id == workItemId)
+            .Select(wi => new
+            {
+                OrgId = wi.Team.Product.OrganizationId,
+                ProductId = wi.Team.ProductId,
+                TeamId = wi.TeamId
+            })
+            .FirstOrDefaultAsync();
+
+        if (loc == null) return null;
+        return $"/org/{loc.OrgId}/products/{loc.ProductId}/teams/{loc.TeamId}/backlog?item={workItemId}";
+    }
+
+    /// <summary>
     /// When a work item is marked Done, find all work items it was blocking and
     /// notify the right people:
     ///  - if the unblocked item has an assignee  → notify the assignee
@@ -604,7 +626,7 @@ public class WorkItemService : IWorkItemService
                 ["workItemTitle"] = item.Title,
                 ["blockerTitle"] = resolvedItem.Title
             };
-            var url = $"/workitems/{item.Id}";
+            var url = await BuildWorkItemUrlAsync(item.Id);
 
             if (item.AssignedMember?.OrgMember != null)
             {

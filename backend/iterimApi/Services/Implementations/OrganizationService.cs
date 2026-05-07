@@ -240,7 +240,7 @@ public class OrganizationService : IOrganizationService
                  {
                      ["organizationName"] = organization.Name
                  },
-                 $"/organizations/{organization.Slug}");
+                 $"/org/{organization.Id}");
 
              return new OrganizationMemberDto
              {
@@ -281,7 +281,7 @@ public class OrganizationService : IOrganizationService
             {
                 ["organizationName"] = organization.Name
             },
-            $"/organizations/{organization.Slug}");
+            $"/org/{organization.Id}");
 
         return new OrganizationMemberDto
         {

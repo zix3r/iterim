@@ -1574,3 +1574,90 @@ export const applyAtpaSuggestions = async (
   });
   return { applied, failed };
 };
+
+// ── Notifications ────────────────────────────────────────────
+
+export type NotificationTypeName =
+  | 'WorkItemAssigned'
+  | 'BlockerResolved'
+  | 'AddedToTeam'
+  | 'AddedToOrganization'
+  | 'PasswordReset';
+
+export interface NotificationItem {
+  id: number;
+  type: NotificationTypeName;
+  /** Translation key — looked up via translations.ts. */
+  titleKey: string;
+  /** Translation key for the message body. */
+  messageKey: string;
+  /** Placeholder values for the title/message templates. */
+  messageParams?: Record<string, string> | null;
+  /** Pre-rendered English fallback title. */
+  title: string;
+  /** Pre-rendered English fallback message body. */
+  message: string;
+  isRead: boolean;
+  relatedUrl?: string | null;
+  createdAt: string;
+}
+
+export interface NotificationListResponse {
+  items: NotificationItem[];
+  totalCount: number;
+  unreadCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export const getNotifications = (page = 1, pageSize = 20): Promise<NotificationListResponse> =>
+  fetchWithAuth(`/notifications?page=${page}&pageSize=${pageSize}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getNotificationUnreadCount = (): Promise<UnreadCountResponse> =>
+  fetchWithAuth('/notifications/unread-count').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const markNotificationAsRead = (id: number): Promise<void> =>
+  fetchWithAuth(`/notifications/${id}/read`, { method: 'PATCH' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const markAllNotificationsAsRead = (): Promise<void> =>
+  fetchWithAuth('/notifications/read-all', { method: 'POST' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Notification preferences ─────────────────────────────────
+
+export interface NotificationPreferences {
+  notificationsEnabled: boolean;
+  notifyOnWorkItemAssigned: boolean;
+  notifyOnBlockerResolved: boolean;
+  notifyOnAddedToTeam: boolean;
+  notifyOnAddedToOrganization: boolean;
+}
+
+export const getNotificationPreferences = (): Promise<NotificationPreferences> =>
+  fetchWithAuth('/users/me/notification-preferences').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateNotificationPreferences = (
+  prefs: NotificationPreferences,
+): Promise<void> =>
+  fetchWithAuth('/users/me/notification-preferences', {
+    method: 'PUT',
+    body: JSON.stringify(prefs),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });

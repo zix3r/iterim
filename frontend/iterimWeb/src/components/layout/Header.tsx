@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router';
-import { Bell, Menu, Moon, Shield, Sun } from 'lucide-react';
+import { Menu, Moon, Shield, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { SidebarContent } from './Sidebar';
+import { NotificationDropdown } from './NotificationDropdown';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -98,14 +99,7 @@ export function Header() {
             </Button>
           )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground hover:bg-accent"
-            title={t('header.notifications')}
-          >
-            <Bell className="h-5 w-5" />
-          </Button>
+          <NotificationDropdown />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -393,7 +393,7 @@ public class TeamService : ITeamService
                 {
                     ["teamName"] = team.Name
                 },
-                $"/teams/{team.Id}");
+                $"/org/{team.Product.OrganizationId}/products/{team.ProductId}/teams/{team.Id}");
         }
 
         return new TeamMemberDto

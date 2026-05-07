@@ -66,6 +66,35 @@ export type TranslationKey =
   | 'header.openMenu'
   | 'header.navigation'
 
+  // Notifications
+  | 'notifications.dropdownTitle'
+  | 'notifications.markAllRead'
+  | 'notifications.empty'
+  | 'notifications.emptyDescription'
+  | 'notifications.loading'
+  | 'notifications.unreadBadge'
+  | 'notifications.workItemAssigned.title'
+  | 'notifications.workItemAssigned.message'
+  | 'notifications.blockerResolved.title'
+  | 'notifications.blockerResolved.message'
+  | 'notifications.addedToTeam.title'
+  | 'notifications.addedToTeam.message'
+  | 'notifications.addedToOrganization.title'
+  | 'notifications.addedToOrganization.message'
+  | 'notifications.passwordReset.title'
+  | 'notifications.passwordReset.message'
+  | 'notifications.preferences.title'
+  | 'notifications.preferences.description'
+  | 'notifications.preferences.master'
+  | 'notifications.preferences.masterDescription'
+  | 'notifications.preferences.workItemAssigned'
+  | 'notifications.preferences.blockerResolved'
+  | 'notifications.preferences.addedToTeam'
+  | 'notifications.preferences.addedToOrganization'
+  | 'notifications.preferences.passwordResetNote'
+  | 'notifications.preferences.savedToast'
+  | 'notifications.preferences.errorToast'
+
   // Vartotojo meniu
   | 'user.profile'
   | 'user.logout'
@@ -676,6 +705,35 @@ export const translations: Record<Language, Translations> = {
     'header.openMenu': 'Atidaryti meniu',
     'header.navigation': 'Navigacija',
 
+    // Notifications (TODO: translate to Lithuanian)
+    'notifications.dropdownTitle': 'Notifications',
+    'notifications.markAllRead': 'Mark all as read',
+    'notifications.empty': 'No notifications yet',
+    'notifications.emptyDescription': "We'll let you know when something happens.",
+    'notifications.loading': 'Loading...',
+    'notifications.unreadBadge': '{count} unread',
+    'notifications.workItemAssigned.title': 'Work item assigned',
+    'notifications.workItemAssigned.message': 'You\'ve been assigned to work item: "{workItemTitle}".',
+    'notifications.blockerResolved.title': 'Work item unblocked',
+    'notifications.blockerResolved.message': 'Work item "{workItemTitle}" has been unblocked — the blocking work item "{blockerTitle}" was completed.',
+    'notifications.addedToTeam.title': 'Added to team',
+    'notifications.addedToTeam.message': 'You\'ve been added to the team "{teamName}".',
+    'notifications.addedToOrganization.title': 'Invited to organization',
+    'notifications.addedToOrganization.message': 'You\'ve been invited to the organization "{organizationName}".',
+    'notifications.passwordReset.title': 'Password reset',
+    'notifications.passwordReset.message': 'An administrator has initiated a password reset for your account. Check your email for the reset link.',
+    'notifications.preferences.title': 'Notifications',
+    'notifications.preferences.description': 'Choose which notifications you want to receive.',
+    'notifications.preferences.master': 'Enable notifications',
+    'notifications.preferences.masterDescription': "Master switch — when off, you won't receive any notifications.",
+    'notifications.preferences.workItemAssigned': 'Work item assignments',
+    'notifications.preferences.blockerResolved': 'Blocker resolved',
+    'notifications.preferences.addedToTeam': 'Added to a team',
+    'notifications.preferences.addedToOrganization': 'Added to an organization',
+    'notifications.preferences.passwordResetNote': "Password reset notifications can't be turned off.",
+    'notifications.preferences.savedToast': 'Notification preferences saved',
+    'notifications.preferences.errorToast': 'Could not save preferences',
+
     // Vartotojo meniu
     'user.profile': 'Profilis',
     'user.logout': 'Atsijungti',
@@ -1282,6 +1340,35 @@ export const translations: Record<Language, Translations> = {
     'header.notifications': 'Notifications',
     'header.openMenu': 'Open menu',
     'header.navigation': 'Navigation',
+
+    // Notifications
+    'notifications.dropdownTitle': 'Notifications',
+    'notifications.markAllRead': 'Mark all as read',
+    'notifications.empty': 'No notifications yet',
+    'notifications.emptyDescription': "We'll let you know when something happens.",
+    'notifications.loading': 'Loading...',
+    'notifications.unreadBadge': '{count} unread',
+    'notifications.workItemAssigned.title': 'Work item assigned',
+    'notifications.workItemAssigned.message': 'You\'ve been assigned to work item: "{workItemTitle}".',
+    'notifications.blockerResolved.title': 'Work item unblocked',
+    'notifications.blockerResolved.message': 'Work item "{workItemTitle}" has been unblocked — the blocking work item "{blockerTitle}" was completed.',
+    'notifications.addedToTeam.title': 'Added to team',
+    'notifications.addedToTeam.message': 'You\'ve been added to the team "{teamName}".',
+    'notifications.addedToOrganization.title': 'Invited to organization',
+    'notifications.addedToOrganization.message': 'You\'ve been invited to the organization "{organizationName}".',
+    'notifications.passwordReset.title': 'Password reset',
+    'notifications.passwordReset.message': 'An administrator has initiated a password reset for your account. Check your email for the reset link.',
+    'notifications.preferences.title': 'Notifications',
+    'notifications.preferences.description': 'Choose which notifications you want to receive.',
+    'notifications.preferences.master': 'Enable notifications',
+    'notifications.preferences.masterDescription': "Master switch — when off, you won't receive any notifications.",
+    'notifications.preferences.workItemAssigned': 'Work item assignments',
+    'notifications.preferences.blockerResolved': 'Blocker resolved',
+    'notifications.preferences.addedToTeam': 'Added to a team',
+    'notifications.preferences.addedToOrganization': 'Added to an organization',
+    'notifications.preferences.passwordResetNote': "Password reset notifications can't be turned off.",
+    'notifications.preferences.savedToast': 'Notification preferences saved',
+    'notifications.preferences.errorToast': 'Could not save preferences',
 
     // User menu
     'user.profile': 'Profile',

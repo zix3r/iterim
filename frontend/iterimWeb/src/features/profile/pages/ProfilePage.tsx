@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { NotificationPreferencesCard } from '@/features/profile/components/NotificationPreferencesCard';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -551,12 +552,14 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <Button onClick={handleAvatarSave} disabled={isSavingAvatar} className="gap-2">
+           <Button onClick={handleAvatarSave} disabled={isSavingAvatar} className="gap-2">
             <Save className="h-4 w-4" />
             {isSavingAvatar ? t('common.saving') : t('common.save')}
           </Button>
         </CardContent>
       </Card>
+
+      <NotificationPreferencesCard />
     </div>
   );
 }
