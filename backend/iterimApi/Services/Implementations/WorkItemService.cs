@@ -607,12 +607,15 @@ public class WorkItemService : IWorkItemService
     private async Task NotifyBlockersResolvedAsync(WorkItem resolvedItem, int actorUserId)
     {
         // Find work items blocked by this resolved one.
-        var unblocked = await _db.WorkItemDependencies
-            .Where(d => d.BlockerWorkItemId == resolvedItem.Id)
-            .Select(d => d.BlockedWorkItem)
+        // Querying WorkItems directly (with an EXISTS subquery) instead of projecting
+        // from WorkItemDependencies — EF Core can't apply Include after a Select projection.
+        var unblocked = await _db.WorkItems
+            .Where(wi => _db.WorkItemDependencies.Any(d =>
+                d.BlockerWorkItemId == resolvedItem.Id &&
+                d.BlockedWorkItemId == wi.Id))
             .Include(wi => wi.Team)
-            .Include(wi => wi.AssignedMember)
-                .ThenInclude(am => am!.OrgMember)
+            .Include(wi => wi.AssignedMember!)
+                .ThenInclude(am => am.OrgMember)
             .ToListAsync();
 
         if (unblocked.Count == 0) return;

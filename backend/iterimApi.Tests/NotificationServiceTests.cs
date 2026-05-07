@@ -144,7 +144,9 @@ public class NotificationServiceTests
         var svc = CreateService(db);
         var user = new User
         {
-            Name = "U", Email = "x@test.com", Role = UserRole.User,
+            Name = "U",
+            Email = "x@test.com",
+            Role = UserRole.User,
             NotificationsEnabled = false  // even the master switch off
         };
         db.Users.Add(user);
@@ -212,14 +214,22 @@ public class NotificationServiceTests
         db.Notifications.AddRange(
             new Notification
             {
-                UserId = userId, Type = NotificationType.WorkItemAssigned,
-                TitleKey = "k", MessageKey = "k", Title = "old", Message = "",
+                UserId = userId,
+                Type = NotificationType.WorkItemAssigned,
+                TitleKey = "k",
+                MessageKey = "k",
+                Title = "old",
+                Message = "",
                 CreatedAt = DateTime.UtcNow.AddDays(-31)
             },
             new Notification
             {
-                UserId = userId, Type = NotificationType.WorkItemAssigned,
-                TitleKey = "k", MessageKey = "k", Title = "fresh", Message = "",
+                UserId = userId,
+                Type = NotificationType.WorkItemAssigned,
+                TitleKey = "k",
+                MessageKey = "k",
+                Title = "fresh",
+                Message = "",
                 CreatedAt = DateTime.UtcNow.AddDays(-5)
             });
         await db.SaveChangesAsync();
@@ -229,5 +239,122 @@ public class NotificationServiceTests
         Assert.Equal(1, deleted);
         var remaining = await db.Notifications.AsNoTracking().SingleAsync();
         Assert.Equal("fresh", remaining.Title);
+    }
+
+    [Fact]
+    public async Task BlockerResolved_NotifiesAssigneeOfUnblockedItem()
+    {
+        using var db = CreateDb();
+
+        // Seed minimal graph: 2 users, 1 org, 1 product, 1 team, 2 work items, 1 dependency.
+        var actor = new User { Name = "Actor", Email = "a@t.com", Role = UserRole.User };
+        var assignee = new User { Name = "Assignee", Email = "b@t.com", Role = UserRole.User };
+        db.Users.AddRange(actor, assignee);
+        await db.SaveChangesAsync();
+
+        var org = new Organization { Name = "O", Slug = "o", CreatedBy = actor.Id, UpdatedBy = actor.Id };
+        db.Organizations.Add(org);
+        await db.SaveChangesAsync();
+
+        var product = new Product
+        {
+            OrganizationId = org.Id,
+            Name = "P",
+            Description = "",
+            CreatedBy = actor.Id,
+            UpdatedBy = actor.Id,
+        };
+        db.Products.Add(product);
+        await db.SaveChangesAsync();
+
+        var team = new Team
+        {
+            ProductId = product.Id,
+            Name = "T",
+            Description = "",
+            CreatedBy = actor.Id,
+            UpdatedBy = actor.Id,
+        };
+        db.Teams.Add(team);
+        await db.SaveChangesAsync();
+
+        var assigneeOrgMember = new OrganizationMember
+        {
+            OrganizationId = org.Id,
+            UserId = assignee.Id,
+            Email = assignee.Email,
+            Role = OrgMemberRole.Member,
+            Status = OrgMemberStatus.Active,
+        };
+        db.OrganizationMembers.Add(assigneeOrgMember);
+        await db.SaveChangesAsync();
+
+        var assigneeTeamMember = new TeamMember
+        {
+            TeamId = team.Id,
+            OrgMemberId = assigneeOrgMember.Id,
+            Role = TeamMemberRole.Member,
+            CreatedBy = actor.Id,
+            UpdatedBy = actor.Id,
+        };
+        db.TeamMembers.Add(assigneeTeamMember);
+        await db.SaveChangesAsync();
+
+        var blocker = new WorkItem
+        {
+            TeamId = team.Id,
+            Title = "Blocker",
+            Description = "",
+            Status = WorkItemStatus.InProgress,
+            Type = WorkItemType.Task,
+            Priority = WorkItemPriority.Medium,
+            CreatedBy = actor.Id,
+            UpdatedBy = actor.Id,
+        };
+        var blocked = new WorkItem
+        {
+            TeamId = team.Id,
+            Title = "Blocked",
+            Description = "",
+            Status = WorkItemStatus.Todo,
+            Type = WorkItemType.Task,
+            Priority = WorkItemPriority.Medium,
+            AssignedTo = assigneeTeamMember.Id,
+            CreatedBy = actor.Id,
+            UpdatedBy = actor.Id,
+        };
+        db.WorkItems.AddRange(blocker, blocked);
+        await db.SaveChangesAsync();
+
+        db.WorkItemDependencies.Add(new WorkItemDependency
+        {
+            BlockerWorkItemId = blocker.Id,
+            BlockedWorkItemId = blocked.Id,
+            CreatedBy = assigneeOrgMember.Id,
+        });
+        await db.SaveChangesAsync();
+
+        // Act: simulate the Done transition by calling the WorkItemService update path indirectly.
+        // Easier: invoke the notification service directly to verify the query shape compiles.
+        var notifications = new NotificationService(db, NullLogger<NotificationService>.Instance);
+        var workItemService = new WorkItemService(db, new WorkItemDependencyService(db), notifications);
+
+        await workItemService.UpdateWorkItemAsync(blocker.Id, new DTOs.WorkItems.UpdateWorkItemDto
+        {
+            Title = blocker.Title,
+            Description = blocker.Description,
+            Points = null,
+            Type = blocker.Type,
+            Priority = blocker.Priority,
+            Status = WorkItemStatus.Done,
+            AssignedTo = null,
+            IterationId = null,
+        }, actor.Id);
+
+        // Assert: assignee got a BlockerResolved notification.
+        var notif = await db.Notifications.SingleOrDefaultAsync(n =>
+            n.UserId == assignee.Id && n.Type == NotificationType.BlockerResolved);
+        Assert.NotNull(notif);
+        Assert.Contains("Blocked", notif!.Title);
     }
 }
