@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TagBadge } from '@/components/shared/TagBadge';
+import { Markdown } from '@/components/ui/markdown';
 import { ExternalLink } from 'lucide-react';
 import type { WorkItemDependency } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
@@ -111,8 +112,8 @@ export function DependencyDetailModal({ dependency, direction, open, onOpenChang
           {dependency.description && (
             <div>
               <div className="text-xs text-muted-foreground mb-1">{t('backlog.itemDescription')}</div>
-              <div className="text-sm bg-muted/30 rounded-md p-3 whitespace-pre-wrap max-h-40 overflow-y-auto">
-                {dependency.description}
+              <div className="bg-muted/30 rounded-md p-3 max-h-40 overflow-y-auto">
+                <Markdown>{dependency.description}</Markdown>
               </div>
             </div>
           )}

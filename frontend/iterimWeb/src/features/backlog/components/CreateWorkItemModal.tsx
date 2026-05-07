@@ -233,8 +233,11 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
               value={values.description}
               onChange={(e) => setFieldValue('description', e.target.value)}
               disabled={isLoading}
-              rows={3}
+              rows={4}
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              {t('markdown.helperText')}
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">
@@ -243,6 +246,6 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

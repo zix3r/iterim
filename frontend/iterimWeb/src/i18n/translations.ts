@@ -95,6 +95,12 @@ export type TranslationKey =
   | 'notifications.preferences.savedToast'
   | 'notifications.preferences.errorToast'
 
+  // Markdown
+  | 'markdown.helperText'
+  | 'markdown.tabEdit'
+  | 'markdown.tabPreview'
+  | 'markdown.emptyPlaceholder'
+
   // Vartotojo meniu
   | 'user.profile'
   | 'user.logout'
@@ -734,6 +740,12 @@ export const translations: Record<Language, Translations> = {
     'notifications.preferences.savedToast': 'Notification preferences saved',
     'notifications.preferences.errorToast': 'Could not save preferences',
 
+    // Markdown (TODO: translate to Lithuanian)
+    'markdown.helperText': 'Supports Markdown formatting',
+    'markdown.tabEdit': 'Edit',
+    'markdown.tabPreview': 'Preview',
+    'markdown.emptyPlaceholder': 'Click to add a description...',
+
     // Vartotojo meniu
     'user.profile': 'Profilis',
     'user.logout': 'Atsijungti',
@@ -1369,6 +1381,12 @@ export const translations: Record<Language, Translations> = {
     'notifications.preferences.passwordResetNote': "Password reset notifications can't be turned off.",
     'notifications.preferences.savedToast': 'Notification preferences saved',
     'notifications.preferences.errorToast': 'Could not save preferences',
+
+    // Markdown
+    'markdown.helperText': 'Supports Markdown formatting',
+    'markdown.tabEdit': 'Edit',
+    'markdown.tabPreview': 'Preview',
+    'markdown.emptyPlaceholder': 'Click to add a description...',
 
     // User menu
     'user.profile': 'Profile',

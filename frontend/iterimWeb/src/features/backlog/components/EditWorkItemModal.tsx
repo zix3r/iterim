@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FieldError } from '@/components/ui/field-error';
 import { Textarea } from '@/components/ui/textarea';
+import { Markdown } from '@/components/ui/markdown';
 import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { updateWorkItem, deleteWorkItem, assignWorkItemTags } from '@/lib/api';
@@ -70,6 +71,7 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
   const [transferOpen, setTransferOpen] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<EditWorkItemFormValues>(
     {
@@ -296,13 +298,39 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
           </div>
 
           <div>
-            <label className="text-sm font-medium">{t('backlog.itemDescription')}</label>
-            <Textarea
-              value={values.description}
-              onChange={(e) => setFieldValue('description', e.target.value)}
-              disabled={isLoading}
-              rows={3}
-            />
+            <label className="text-sm font-medium mb-1 block">
+              {t('backlog.itemDescription')}
+            </label>
+
+            {isEditingDescription ? (
+              <>
+                <Textarea
+                  value={values.description}
+                  onChange={(e) => setFieldValue('description', e.target.value)}
+                  onBlur={() => setIsEditingDescription(false)}
+                  disabled={isLoading}
+                  rows={6}
+                  autoFocus
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('markdown.helperText')}
+                </p>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsEditingDescription(true)}
+                className="w-full text-left rounded-md border border-border bg-muted/20 hover:bg-muted/40 hover:border-muted-foreground/40 transition-colors p-3 min-h-[6rem] cursor-text"
+              >
+                {values.description.trim() ? (
+                  <Markdown>{values.description}</Markdown>
+                ) : (
+                  <span className="text-xs text-muted-foreground italic">
+                    {t('markdown.emptyPlaceholder')}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           {item && (
