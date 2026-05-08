@@ -13,7 +13,7 @@ import { useJiraCsvParser } from '../hooks/useJiraCsvParser';
 import { useJiraImportMappings } from '../hooks/useJiraImportMappings';
 import type { TypeMapping, AssigneeMapping } from '../hooks/useJiraImportMappings';
 
-type Step = 'upload' | 'typeMapping' | 'assigneeMapping' | 'preview';
+type Step = 'upload' | 'typeMapping' | 'sprintMapping' | 'assigneeMapping' | 'preview';
 
 interface Props {
   open: boolean;
@@ -38,10 +38,11 @@ export function ImportJiraModal({
 
   const { rows, parseError, parseFile } = useJiraCsvParser();
   const {
-    uniqueTypes, uniqueAssignees,
+    uniqueTypes, uniqueAssignees, uniqueSprints,
     typeMapping, setTypeMapping,
     assigneeMapping, setAssigneeMapping,
-    resolveItems, skippedCount, unmatchedSprints,
+    sprintMapping, setSprintMapping,
+    resolveItems, skippedCount,
   } = useJiraImportMappings(rows, members, iterations);
 
   function handleClose() {
@@ -94,6 +95,7 @@ export function ImportJiraModal({
           <DialogDescription>
             {step === 'upload' && 'Select a Jira CSV export file to begin.'}
             {step === 'typeMapping' && 'Map each Jira issue type to an iterim type.'}
+            {step === 'sprintMapping' && 'Map each CSV sprint to a team iteration.'}
             {step === 'assigneeMapping' && 'Map Jira assignees to team members.'}
             {step === 'preview' && `Review ${resolvedItems.length} items before importing.`}
           </DialogDescription>
@@ -159,7 +161,49 @@ export function ImportJiraModal({
             </table>
           )}
 
-          {/* ── STEP 3: ASSIGNEE MAPPING ── */}
+          {/* ── STEP 3: SPRINT MAPPING ── */}
+          {step === 'sprintMapping' && (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left pb-2">CSV Sprint</th>
+                  <th className="text-left pb-2">Maps to Iteration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {uniqueSprints.map(sprint => (
+                  <tr key={sprint} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-medium">{sprint}</td>
+                    <td className="py-2">
+                      <Select
+                        value={String(sprintMapping[sprint] ?? 'null')}
+                        onValueChange={v =>
+                          setSprintMapping(prev => ({
+                            ...prev,
+                            [sprint]: v === 'null' ? null : Number(v),
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="null">Backlog (no iteration)</SelectItem>
+                          {iterations.map(iter => (
+                            <SelectItem key={iter.id} value={String(iter.id)}>
+                              {iter.name ?? `Sprint ${iter.id}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {/* ── STEP 4: ASSIGNEE MAPPING ── */}
           {step === 'assigneeMapping' && (
             <table className="w-full text-sm">
               <thead>
@@ -201,20 +245,12 @@ export function ImportJiraModal({
             </table>
           )}
 
-          {/* ── STEP 4: PREVIEW ── */}
+          {/* ── STEP 5: PREVIEW ── */}
           {step === 'preview' && (
             <div className="space-y-3">
-              {(skippedCount > 0 || unmatchedSprints.length > 0) && (
-                <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800 space-y-1">
-                  {skippedCount > 0 && (
-                    <p>{skippedCount} row(s) will be skipped (empty title or type mapped to Skip).</p>
-                  )}
-                  {unmatchedSprints.length > 0 && (
-                    <p>
-                      Sprint(s) not matched to any iteration — items will be added to Backlog:{' '}
-                      <strong>{unmatchedSprints.join(', ')}</strong>
-                    </p>
-                  )}
+              {skippedCount > 0 && (
+                <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800">
+                  <p>{skippedCount} row(s) will be skipped (empty title or type mapped to Skip).</p>
                 </div>
               )}
 
@@ -280,8 +316,11 @@ export function ImportJiraModal({
             {step === 'typeMapping' && (
               <Button variant="outline" onClick={() => setStep('upload')}>Back</Button>
             )}
-            {step === 'assigneeMapping' && (
+            {step === 'sprintMapping' && (
               <Button variant="outline" onClick={() => setStep('typeMapping')}>Back</Button>
+            )}
+            {step === 'assigneeMapping' && (
+              <Button variant="outline" onClick={() => setStep('sprintMapping')}>Back</Button>
             )}
             {step === 'preview' && (
               <Button variant="outline" onClick={() => setStep('assigneeMapping')}>Back</Button>
@@ -293,6 +332,9 @@ export function ImportJiraModal({
               </Button>
             )}
             {step === 'typeMapping' && (
+              <Button onClick={() => setStep('sprintMapping')}>Next</Button>
+            )}
+            {step === 'sprintMapping' && (
               <Button onClick={() => setStep('assigneeMapping')}>Next</Button>
             )}
             {step === 'assigneeMapping' && (

@@ -3,7 +3,8 @@ import type { JiraRow } from './useJiraCsvParser';
 import type { TeamMember, Iteration, ImportWorkItemRequest } from '@/lib/api';
 
 export type TypeMapping = 'Story' | 'Task' | 'Bug' | 'Skip';
-export type AssigneeMapping = number | null; // TeamMember.id or null (unassigned)
+export type AssigneeMapping = number | null;
+export type SprintMapping = number | null; // iteration id, null = backlog
 
 const TYPE_VALUES: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 const PRIORITY_VALUES: Record<string, number> = {
@@ -38,7 +39,14 @@ export function useJiraImportMappings(
     [rows],
   );
 
-  const defaultTypeMapping: Record<string, TypeMapping> = useMemo(() => {
+  const uniqueSprints = useMemo(
+    () => [...new Set(
+      rows.map(r => r.sprint ? r.sprint.split(',')[0].trim() : '').filter(Boolean)
+    )],
+    [rows],
+  );
+
+  const defaultTypeMapping = useMemo(() => {
     const defaults: Record<string, TypeMapping> = {};
     for (const t of uniqueTypes) {
       const lower = t.toLowerCase();
@@ -51,7 +59,7 @@ export function useJiraImportMappings(
     return defaults;
   }, [uniqueTypes]);
 
-  const defaultAssigneeMapping: Record<string, AssigneeMapping> = useMemo(() => {
+  const defaultAssigneeMapping = useMemo(() => {
     const defaults: Record<string, AssigneeMapping> = {};
     for (const name of uniqueAssignees) {
       const norm = normalizeName(name);
@@ -61,14 +69,24 @@ export function useJiraImportMappings(
     return defaults;
   }, [uniqueAssignees, members]);
 
+  const defaultSprintMapping = useMemo(() => {
+    const defaults: Record<string, SprintMapping> = {};
+    for (const sprint of uniqueSprints) {
+      const match = iterations.find(i => normalizeName(i.name ?? '') === normalizeName(sprint));
+      defaults[sprint] = match?.id ?? null;
+    }
+    return defaults;
+  }, [uniqueSprints, iterations]);
+
   const [typeMapping, setTypeMapping] = useState<Record<string, TypeMapping>>(defaultTypeMapping);
   const [assigneeMapping, setAssigneeMapping] = useState<Record<string, AssigneeMapping>>(defaultAssigneeMapping);
+  const [sprintMapping, setSprintMapping] = useState<Record<string, SprintMapping>>(defaultSprintMapping);
 
-  // Reset mappings when a new file is parsed (rows change)
+  // Reset all mappings when a new file is parsed (rows change)
   useEffect(() => {
     setTypeMapping(defaultTypeMapping);
     setAssigneeMapping(defaultAssigneeMapping);
-  // defaultTypeMapping and defaultAssigneeMapping are stable references derived from rows
+    setSprintMapping(defaultSprintMapping);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]);
 
@@ -88,11 +106,8 @@ export function useJiraImportMappings(
         const points = parsedPoints !== undefined && !isNaN(parsedPoints) ? parsedPoints : undefined;
         const assignedTo = row.assignee ? (assigneeMapping[row.assignee] ?? null) : null;
 
-        // Jira may list multiple sprints comma-separated; use the first one
         const sprintName = row.sprint ? row.sprint.split(',')[0].trim() : '';
-        const iteration = sprintName
-          ? iterations.find(i => i.name?.toLowerCase() === sprintName.toLowerCase())
-          : undefined;
+        const iterationId = sprintName ? (sprintMapping[sprintName] ?? null) : null;
 
         return {
           title: row.summary.trim(),
@@ -102,7 +117,7 @@ export function useJiraImportMappings(
           status: statusValue,
           points,
           assignedTo,
-          iterationId: iteration?.id ?? null,
+          iterationId,
         } satisfies ImportWorkItemRequest;
       });
   }
@@ -112,27 +127,17 @@ export function useJiraImportMappings(
     [rows, typeMapping],
   );
 
-  const unmatchedSprints = useMemo(() => {
-    const names = new Set<string>();
-    for (const row of rows) {
-      if (!row.sprint) continue;
-      const name = row.sprint.split(',')[0].trim();
-      if (!name) continue;
-      const matched = iterations.find(i => i.name?.toLowerCase() === name.toLowerCase());
-      if (!matched) names.add(name);
-    }
-    return [...names];
-  }, [rows, iterations]);
-
   return {
     uniqueTypes,
     uniqueAssignees,
+    uniqueSprints,
     typeMapping,
     setTypeMapping,
     assigneeMapping,
     setAssigneeMapping,
+    sprintMapping,
+    setSprintMapping,
     resolveItems,
     skippedCount,
-    unmatchedSprints,
   };
 }
