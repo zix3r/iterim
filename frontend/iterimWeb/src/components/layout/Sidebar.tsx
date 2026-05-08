@@ -24,7 +24,9 @@ export function SidebarContent() {
 
   return (
     <div className="flex h-full flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
-      <div className="flex-1 overflow-y-auto py-6 px-4">
+      
+      {/* PAKEITIMAS: Pridėtas "flex flex-col", kad galėtume stumdyti elementus į apačią */}
+      <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col">
         <div className="space-y-1">
 
           {/* Dashboard */}
@@ -63,18 +65,18 @@ export function SidebarContent() {
             <NavTree />
           </div>
 
-          {/* Recent Pages */}
-          <div className="mt-4">
-            <CollapsibleSection title={t('sidebar.recentPages')} storageKey="nav-collapse-recent">
-              <RecentPages />
-            </CollapsibleSection>
-          </div>
+        </div>
 
+        {/* PAKEITIMAS: "mt-auto" nustumia šį bloką į patį peržiūros lango dugną */}
+        <div className="mt-auto pt-8">
+          <CollapsibleSection title={t('sidebar.recentPages')} storageKey="nav-collapse-recent">
+            <RecentPages />
+          </CollapsibleSection>
         </div>
       </div>
 
       {/* BOTTOM: User & Logout */}
-      <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/60">
+      <div className="p-4 border-t border-sidebar-border bg-sidebar-accent/60 shrink-0">
         {user && (
           <Link
             to="/profile"

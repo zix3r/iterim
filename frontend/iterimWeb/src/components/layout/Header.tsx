@@ -58,14 +58,9 @@ export function Header() {
           </Sheet>
         </div>
 
-        {/* Logo */}
+        {/* Logo - Naudojame originalų spalvotą vite.svg žaibą */}
         <Link to="/dashboard" className="flex items-center gap-2 font-bold text-xl text-foreground tracking-tight">
-          <div className="bg-primary text-primary-foreground p-1 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-              <path d="M4.5 3.75a3 3 0 00-3 3v.75h21v-.75a3 3 0 00-3-3h-15z" />
-              <path d="M15 9.75V7.5a.75.75 0 00-1.5 0v2.25h-3V7.5a.75.75 0 00-1.5 0v2.25H4.5v10.5a3 3 0 003 3h9a3 3 0 003-3V9.75H15z" />
-            </svg>
-          </div>
+          <img src="/vite.svg" alt="Iterim Logo" className="w-6 h-6" />
           Iterim
         </Link>
 
@@ -84,7 +79,6 @@ export function Header() {
             <span className="sr-only">{t('header.themeToggle.srLabel')}</span>
           </Button>
 
-          {/* Kalbos perjungimo mygtukas — perjungia tarp lt <-> en */}
           <LanguageToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
 
           {user?.role === 'Admin' && (
