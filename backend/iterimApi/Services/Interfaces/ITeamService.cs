@@ -1,5 +1,5 @@
 using iterimApi.DTOs.Teams;
-
+using iterimApi.DTOs.Planning;
 namespace iterimApi.Services.Interfaces;
 
 public interface ITeamService
@@ -13,4 +13,5 @@ public interface ITeamService
     Task<bool> RemoveTeamMemberAsync(int teamId, int userId, int memberUserId);
     Task<bool> DeleteTeamAsync(int teamId, int userId);
     Task UpdateMemberScheduleAsync(int teamId, int teamMemberId, UpdateTeamMemberScheduleDto dto, int userId);
+    Task<QuarterPlanDto> GetQuarterPlanAsync(int teamId, DateOnly start, DateOnly end);
 }

@@ -5,6 +5,7 @@ using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using iterimApi.DTOs.Planning;
 
 namespace iterimApi.Services.Implementations;
 
@@ -66,6 +67,125 @@ public class TeamService : ITeamService
 
         return teams;
     }
+   public async Task<QuarterPlanDto> GetQuarterPlanAsync(int teamId, DateOnly start, DateOnly end)
+{
+    var result = new QuarterPlanDto();
+
+    // 1. Gauname Iteracijas
+    var iterations = await _db.Iterations
+        .Where(i => i.TeamId == teamId && i.StartDate <= end && i.EndDate >= start)
+        .OrderBy(i => i.StartDate)
+        .ToListAsync();
+
+    if (!iterations.Any())
+        return result;
+
+    var iterationIds = iterations.Select(i => i.Id).ToList();
+
+    // 2. Gauname Work Items
+    var workItems = await _db.WorkItems
+        .Where(w => w.TeamId == teamId && w.IterationId.HasValue && iterationIds.Contains(w.IterationId.Value))
+        .ToListAsync();
+
+    // 3. Gauname komandos narius ir absences
+    var teamMembers = await _db.TeamMembers
+        .Include(tm => tm.OrgMember)
+        .Where(tm => tm.TeamId == teamId)
+        .ToListAsync();
+        
+    var orgMemberIds = teamMembers.Select(tm => tm.OrgMemberId).ToList();
+    
+    var absences = await _db.MemberAbsences
+        .Where(a => orgMemberIds.Contains(a.OrgMemberId) && a.FromDate <= end && a.ToDate >= start)
+        .ToListAsync();
+
+    // 4. Formuojame Iteration Summaries
+    foreach (var iter in iterations)
+    {
+        var iterItems = workItems.Where(w => w.IterationId == iter.Id).ToList();
+
+        // PATAISYTA: Naudojame WorkItemStatus Enums!
+        int totalSP = iterItems.Sum(w => w.Points ?? 0);
+        int doneSP = iterItems.Where(w => w.Status == WorkItemStatus.Done).Sum(w => w.Points ?? 0);
+        int inProgressSP = iterItems.Where(w => w.Status == WorkItemStatus.InProgress || w.Status == WorkItemStatus.Review).Sum(w => w.Points ?? 0);
+        int todoSP = iterItems.Where(w => w.Status == WorkItemStatus.Todo || w.Status == WorkItemStatus.Backlog).Sum(w => w.Points ?? 0);
+
+        result.Iterations.Add(new IterationSummaryDto
+        {
+            Id = iter.Id,
+            Name = iter.Name ?? string.Empty,
+            StartDate = iter.StartDate,
+            EndDate = iter.EndDate,
+            Status = iter.Status.ToString(), // PATAISYTA: Enum to string
+            TotalSP = totalSP,
+            DoneSP = doneSP,
+            InProgressSP = inProgressSP,
+            TodoSP = todoSP,
+            WorkItems = iterItems.Select(w => new QuarterWorkItemDto 
+            { 
+                Id = w.Id, 
+                Title = w.Title, 
+                Type = w.Type.ToString(),     // PATAISYTA: Enum to string
+                Status = w.Status.ToString(), // PATAISYTA: Enum to string
+                Points = w.Points 
+            }).ToList()
+        });
+
+        int totalWorkDaysInIter = CalculateWorkingDays(iter.StartDate, iter.EndDate);
+        int grossCapacity = totalWorkDaysInIter * teamMembers.Count;
+
+        int absenceDaysInIter = 0;
+        foreach (var abs in absences)
+        {
+            var overlapStart = abs.FromDate > iter.StartDate ? abs.FromDate : iter.StartDate;
+            var overlapEnd = abs.ToDate < iter.EndDate ? abs.ToDate : iter.EndDate;
+            
+            if (overlapStart <= overlapEnd)
+            {
+                absenceDaysInIter += CalculateWorkingDays(overlapStart, overlapEnd);
+            }
+        }
+
+        result.CapacityPerIteration.Add(new IterationCapacityDto
+        {
+            IterationId = iter.Id,
+            TotalWorkDays = grossCapacity,
+            TotalAbsenceDays = absenceDaysInIter,
+            NetCapacityDays = grossCapacity - absenceDaysInIter
+        });
+    }
+
+    // 5. Feature Spanning logika
+    result.FeatureSummaries = workItems
+        .Where(w => w.Type == WorkItemType.Story) // PATAISYTA: Naudojame WorkItemType Enum
+        .GroupBy(w => w.Title) 
+        .Where(g => g.Select(x => x.IterationId).Distinct().Count() > 1)
+        .Select(g => new FeatureSpanDto
+        {
+            WorkItemId = g.First().Id,
+            WorkItemTitle = g.Key,
+            Type = g.First().Type.ToString(), // PATAISYTA: Enum to string
+            StartIterationId = g.OrderBy(x => x.IterationId).First().IterationId ?? 0,
+            EndIterationId = g.OrderByDescending(x => x.IterationId).First().IterationId ?? 0,
+            TotalSP = g.Sum(x => x.Points ?? 0),
+            CompletionPercent = g.Sum(x => x.Points ?? 0) == 0 ? 0 : 
+                (int)((double)g.Where(x => x.Status == WorkItemStatus.Done).Sum(x => x.Points ?? 0) / g.Sum(x => x.Points ?? 0) * 100)
+        }).ToList();
+
+    return result;
+}
+
+// Pagalbinis metodas darbo dienoms skaičiuoti (be savaitgalių)
+private int CalculateWorkingDays(DateOnly start, DateOnly end)
+{
+    int count = 0;
+    for (var date = start; date <= end; date = date.AddDays(1))
+    {
+        if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+            count++;
+    }
+    return count;
+}
     public async Task UpdateMemberScheduleAsync(int teamId, int teamMemberId, UpdateTeamMemberScheduleDto dto, int userId)
     {
         var teamMember = await _db.TeamMembers

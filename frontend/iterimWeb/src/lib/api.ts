@@ -1661,3 +1661,50 @@ export const updateNotificationPreferences = (
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
+  // ── Quarter Planning Types ──────────────────────────────────────────
+
+export interface IterationSummaryDto {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: string; // "Planning", "Active", "Completed"
+  totalSP: number;
+  doneSP: number;
+  inProgressSP: number;
+  todoSP: number;
+}
+
+export interface FeatureSpanDto {
+  workItemId: number;
+  workItemTitle: string;
+  type: string;
+  startIterationId: number;
+  endIterationId: number;
+  totalSP: number;
+  completionPercent: number;
+}
+
+export interface IterationCapacityDto {
+  iterationId: number;
+  totalWorkDays: number;
+  totalAbsenceDays: number;
+  netCapacityDays: number;
+}
+
+export interface QuarterPlan {
+  iterations: IterationSummaryDto[];
+  featureSummaries: FeatureSpanDto[];
+  capacityPerIteration: IterationCapacityDto[];
+}
+
+// Naujas API endpointas
+export const getQuarterPlan = (
+  teamId: number,
+  start: string,
+  end: string
+): Promise<QuarterPlan> =>
+  fetchWithAuth(`/teams/${teamId}/quarter-plan?start=${start}&end=${end}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
