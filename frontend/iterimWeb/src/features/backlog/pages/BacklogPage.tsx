@@ -8,7 +8,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
-import { Plus, History, AlertCircle, ListTodo, Sparkles } from 'lucide-react';
+import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload } from 'lucide-react';
 import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
   updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
@@ -23,6 +23,7 @@ import { EditIterationModal } from '../components/EditIterationModal';
 import { CompleteIterationModal } from '../components/CompleteIterationModal';
 import { CreateWorkItemModal } from '../components/CreateWorkItemModal';
 import { EditWorkItemModal } from '../components/EditWorkItemModal';
+import { ImportJiraModal } from '../components/ImportJiraModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { addRecentPage } from '@/lib/recentPages';
@@ -62,6 +63,7 @@ export function BacklogPage() {
   const [editIteration, setEditIteration] = useState<Iteration | null>(null);
   const [completeIteration, setCompleteIteration] = useState<Iteration | null>(null);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   // DnD
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null);
@@ -341,6 +343,9 @@ export function BacklogPage() {
   const canTransferWorkItems = team.currentUserId === team.createdBy || team.members.some(
     (member) => member.userId === team.currentUserId && member.role === 'Admin'
   );
+  const isTeamAdmin = team.members.some(
+    (member) => member.userId === team.currentUserId && member.role === 'Admin'
+  );
 
   // ATPA tikslo iteracija: prioritetas Active, tada pirma Planning.
   // Naudoja jau gautus duomenis, todėl SuggestionsPanel niekad neatsidaro
@@ -403,6 +408,11 @@ export function BacklogPage() {
           >
             <Sparkles className="h-4 w-4 mr-2" /> {t('atpa.suggestButton')}
           </Button>
+          {isTeamAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" /> Import from Jira
+            </Button>
+          )}
           <CreateIterationModal teamId={tid} onCreated={loadData} />
           <Button size="sm" onClick={() => setCreateItemOpen(true)}>
             <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
@@ -556,6 +566,15 @@ export function BacklogPage() {
         open={suggestionsOpen}
         onOpenChange={setSuggestionsOpen}
         onApplied={() => loadData()}
+      />
+
+      <ImportJiraModal
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        teamId={tid}
+        members={team.members}
+        iterations={iterations}
+        onImported={loadData}
       />
     </div>
   );

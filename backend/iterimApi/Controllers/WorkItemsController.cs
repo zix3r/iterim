@@ -352,6 +352,41 @@ public class WorkItemsController : ControllerBase
     }
 
     /// <summary>
+    /// Bulk import work items from a Jira CSV export.
+    /// POST /api/teams/:teamId/workitems/bulk
+    /// Requires team admin role.
+    /// </summary>
+    [HttpPost("api/teams/{teamId}/workitems/bulk")]
+    public async Task<IActionResult> BulkCreateWorkItems(int teamId, [FromBody] BulkCreateWorkItemsDto dto)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var userId = GetUserId();
+            var count = await _workItemService.BulkCreateWorkItemsAsync(teamId, dto, userId);
+            return Ok(new { importedCount = count });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while importing work items", error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Helper method to extract user ID from JWT claims
     /// </summary>
     private int GetUserId()

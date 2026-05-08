@@ -233,6 +233,25 @@ export interface TransferWorkItemRequest {
   targetTeamId: number;
 }
 
+export interface ImportWorkItemRequest {
+  title: string;
+  description?: string;
+  type: number;       // 0=Story, 1=Task, 2=Bug
+  priority: number;   // 0=Low, 1=Medium, 2=High, 3=Critical
+  status: number;     // 0=Backlog, 1=Todo, 2=InProgress, 3=Review, 4=Done
+  points?: number;
+  assignedTo?: number | null;
+  iterationId?: number | null;
+}
+
+export interface BulkImportWorkItemsRequest {
+  items: ImportWorkItemRequest[];
+}
+
+export interface BulkImportResult {
+  importedCount: number;
+}
+
 export interface WorkItemFilter {
   type?: string;
   status?: string;
@@ -846,6 +865,15 @@ export const reorderWorkItems = (teamId: number, items: { id: number; position: 
   }).then(async (r) => {
     if (!r.ok) throw new Error('Failed to reorder');
     teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
+  });
+
+export const bulkImportWorkItems = (teamId: number, data: BulkImportWorkItemsRequest): Promise<BulkImportResult> =>
+  fetchWithAuth(`/teams/${teamId}/workitems/bulk`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
   });
 
 // ── Iteration API ─────────────────────────────────────────────

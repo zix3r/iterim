@@ -572,6 +572,93 @@ public class WorkItemService : IWorkItemService
         await _db.SaveChangesAsync();
     }
 
+    public async Task<int> BulkCreateWorkItemsAsync(int teamId, BulkCreateWorkItemsDto dto, int userId)
+    {
+        await EnsureTeamAdmin(teamId, userId);
+
+        // Validate all AssignedTo IDs belong to this team
+        var assigneeIds = dto.Items
+            .Where(i => i.AssignedTo.HasValue)
+            .Select(i => i.AssignedTo!.Value)
+            .Distinct()
+            .ToList();
+
+        if (assigneeIds.Count > 0)
+        {
+            var validAssigneeIds = await _db.TeamMembers
+                .Where(tm => tm.TeamId == teamId && assigneeIds.Contains(tm.Id))
+                .Select(tm => tm.Id)
+                .ToListAsync();
+
+            var invalid = assigneeIds.Except(validAssigneeIds).ToList();
+            if (invalid.Count > 0)
+                throw new InvalidOperationException(
+                    $"AssignedTo IDs [{string.Join(", ", invalid)}] are not valid team members");
+        }
+
+        // Validate all IterationIds belong to this team
+        var iterationIds = dto.Items
+            .Where(i => i.IterationId.HasValue)
+            .Select(i => i.IterationId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (iterationIds.Count > 0)
+        {
+            var validIterationIds = await _db.Iterations
+                .Where(i => i.TeamId == teamId && iterationIds.Contains(i.Id))
+                .Select(i => i.Id)
+                .ToListAsync();
+
+            var invalid = iterationIds.Except(validIterationIds).ToList();
+            if (invalid.Count > 0)
+                throw new InvalidOperationException(
+                    $"IterationId [{string.Join(", ", invalid)}] are not valid iterations for this team");
+        }
+
+        // Compute starting positions per iteration bucket.
+        // Use -1 as sentinel key for the null (backlog) bucket.
+        var maxPositions = await _db.WorkItems
+            .Where(wi => wi.TeamId == teamId)
+            .GroupBy(wi => wi.IterationId)
+            .Select(g => new { IterationId = g.Key, MaxPos = g.Max(wi => wi.Position) })
+            .ToListAsync();
+
+        var counters = new Dictionary<int, int>();
+        foreach (var g in maxPositions)
+            counters[g.IterationId ?? -1] = g.MaxPos;
+
+        var workItems = dto.Items.Select(item =>
+        {
+            var key = item.IterationId ?? -1;
+            var current = counters.GetValueOrDefault(key, -1);
+            counters[key] = current + 1;
+
+            return new WorkItem
+            {
+                TeamId = teamId,
+                Title = item.Title,
+                Description = item.Description,
+                Type = item.Type,
+                Priority = item.Priority,
+                Status = item.Status,
+                Points = item.Points,
+                AssignedTo = item.AssignedTo,
+                IterationId = item.IterationId,
+                Position = current + 1,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+        }).ToList();
+
+        _db.WorkItems.AddRange(workItems);
+        await _db.SaveChangesAsync();
+
+        return workItems.Count;
+    }
+
     // ── Private helpers ──────────────────────────────────────
 
     /// <summary>
@@ -678,6 +765,19 @@ public class WorkItemService : IWorkItemService
 
         if (!isTeamMember)
             throw new UnauthorizedAccessException("User is not a member of this team");
+    }
+
+    private async Task EnsureTeamAdmin(int teamId, int userId)
+    {
+        await EnsureTeamMember(teamId, userId);
+
+        var isAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId &&
+                            tm.OrgMember.UserId == userId &&
+                            tm.Role == TeamMemberRole.Admin);
+
+        if (!isAdmin)
+            throw new UnauthorizedAccessException("Only team admins can perform this action");
     }
 
     private async Task EnsureTransferPermissionAsync(int teamId, int userId)
