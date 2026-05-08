@@ -8,7 +8,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
-import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload } from 'lucide-react';
+import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload, Download } from 'lucide-react';
 import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
   updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
@@ -24,6 +24,7 @@ import { CompleteIterationModal } from '../components/CompleteIterationModal';
 import { CreateWorkItemModal } from '../components/CreateWorkItemModal';
 import { EditWorkItemModal } from '../components/EditWorkItemModal';
 import { ImportJiraModal } from '../components/ImportJiraModal';
+import { ExportJiraCsvModal } from '../components/ExportJiraCsvModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { addRecentPage } from '@/lib/recentPages';
@@ -64,6 +65,7 @@ export function BacklogPage() {
   const [completeIteration, setCompleteIteration] = useState<Iteration | null>(null);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // DnD
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null);
@@ -409,9 +411,14 @@ export function BacklogPage() {
             <Sparkles className="h-4 w-4 mr-2" /> {t('atpa.suggestButton')}
           </Button>
           {isTeamAdmin && (
-            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" /> Import from Jira
-            </Button>
+            <>
+              <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" /> Import from Jira
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
+                <Download className="h-4 w-4 mr-2" /> Export to CSV
+              </Button>
+            </>
           )}
           <CreateIterationModal teamId={tid} onCreated={loadData} />
           <Button size="sm" onClick={() => setCreateItemOpen(true)}>
@@ -575,6 +582,14 @@ export function BacklogPage() {
         members={team.members}
         iterations={iterations}
         onImported={loadData}
+      />
+
+      <ExportJiraCsvModal
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        groups={groups}
+        iterations={iterations}
+        members={team.members}
       />
     </div>
   );
