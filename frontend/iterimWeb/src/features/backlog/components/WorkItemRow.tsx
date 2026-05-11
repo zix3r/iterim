@@ -1,8 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, User, Lock, ArrowRight } from 'lucide-react';
+import { User, Lock, ArrowRight } from 'lucide-react';
 import type { WorkItem } from '@/lib/api';
 import { TagBadge } from '@/components/shared/TagBadge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   Story: { label: 'STORY', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
@@ -29,9 +30,11 @@ interface Props {
   item: WorkItem;
   readOnly?: boolean;
   onClick: (item: WorkItem) => void;
+  isSelected?: boolean;
+  onToggleSelection?: (id: number) => void;
 }
 
-export function WorkItemRow({ item, readOnly = false, onClick }: Props) {
+export function WorkItemRow({ item, readOnly = false, onClick, isSelected = false, onToggleSelection }: Props) {
   const {
     attributes,
     listeners,
@@ -55,22 +58,28 @@ export function WorkItemRow({ item, readOnly = false, onClick }: Props) {
 
   return (
     <div
-      ref={setNodeRef}
+      ref={readOnly ? undefined : setNodeRef}
       style={style}
-      className={`flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-card hover:bg-muted/40 transition-colors group cursor-pointer ${isDragging ? 'opacity-50 shadow-lg ring-2 ring-primary/30' : ''
-        }`}
-      onClick={() => onClick(item)}
+      // PAKEITIMAS: Uždėti attributes ir listeners ant konteinerio (jei ne readOnly).
+      {...(readOnly ? {} : attributes)}
+      {...(readOnly ? {} : listeners)}
+      className={`flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-card transition-colors group ${
+        readOnly ? '' : 'cursor-grab active:cursor-grabbing hover:bg-muted/40'
+      } ${isDragging ? 'opacity-50 shadow-lg ring-2 ring-primary/30 z-10' : ''}`}
     >
-      {/* Drag handle */}
+      {/* Checkbox (rodomas, jei ne readOnly) */}
       {!readOnly && (
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          onClick={(e) => e.stopPropagation()}
+        <div 
+          className="shrink-0 flex items-center justify-center cursor-default"
+          // Sustabdome draginimą ir atidarymą kai spaudžiame Checkbox
+          onPointerDown={(e) => e.stopPropagation()} 
         >
-          <GripVertical className="h-4 w-4" />
-        </button>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelection?.(item.id)}
+            aria-label={`Select ${item.title}`}
+          />
+        </div>
       )}
 
       {/* Type badge */}
@@ -78,8 +87,19 @@ export function WorkItemRow({ item, readOnly = false, onClick }: Props) {
         {typeConfig.label}
       </span>
 
-      {/* Title */}
-      <span className="flex-1 min-w-0 text-sm font-medium truncate">{item.title}</span>
+      
+      {/* Title - Pataisyta: leidžiame tempti per vidurį */}
+      <div className="flex-1 min-w-0 flex items-center">
+        <span
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(item);
+          }}
+          className="text-sm font-medium truncate hover:underline text-left cursor-pointer"
+        >
+          {item.title}
+        </span>
+      </div>
 
       {/* Tags */}
       {item.tags && item.tags.length > 0 && (

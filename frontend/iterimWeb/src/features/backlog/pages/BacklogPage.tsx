@@ -8,7 +8,13 @@ import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
-import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload, Download } from 'lucide-react';
+import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload, Download, X, MoveRight } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   getWorkItemsGrouped, getIterationsByTeam, getTeamById, getOrganizationById, getOrgTags,
   updateWorkItem, reorderWorkItems, type WorkItem, type Iteration, type TeamDetail, type OrganizationDetail, type BacklogGroup, type Tag,
@@ -67,8 +73,10 @@ export function BacklogPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
-  // DnD
+  // DnD & Selection
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]); // NAUJA: Masiniam žymėjimui
+  
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
@@ -122,7 +130,6 @@ export function BacklogPage() {
 
       if (foundItem) {
         setEditItem(foundItem);
-        // Clear the param so it doesn't reopen on every render/navigation
         const newParams = new URLSearchParams(searchParams);
         newParams.delete('item');
         setSearchParams(newParams, { replace: true });
@@ -139,6 +146,54 @@ export function BacklogPage() {
       });
     }
   }, [team, orgId, productId, teamId]);
+
+  // ── Multi-select & Bulk Move Logic ─────────────────────
+  
+  const toggleSelection = (id: number) => {
+    setSelectedItemIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkMove = async (targetIterationId: number | null) => {
+    setIsLoading(true);
+    try {
+      // Randame visus pasirinktus items iš grupių
+      const itemsToMove: WorkItem[] = [];
+      groups.forEach(g => {
+        g.workItems.forEach(wi => {
+          if (selectedItemIds.includes(wi.id)) itemsToMove.push(wi);
+        });
+      });
+
+      await Promise.all(itemsToMove.map(async item => {
+        const newStatus = (item.status === 'Backlog' && targetIterationId !== null)
+          ? STATUS_MAP['Todo']
+          : (item.status === 'Todo' && targetIterationId === null)
+            ? STATUS_MAP['Backlog']
+            : STATUS_MAP[item.status] ?? 0;
+
+        await updateWorkItem(item.id, {
+          title: item.title,
+          description: item.description ?? undefined,
+          type: TYPE_MAP[item.type] ?? 0,
+          priority: PRIORITY_MAP[item.priority] ?? 1,
+          status: newStatus,
+          points: item.points ?? undefined,
+          assignedTo: item.assignedTo,
+          iterationId: targetIterationId,
+        });
+      }));
+      
+      setSelectedItemIds([]);
+      toast({ title: t('common.success'), description: `Moved ${itemsToMove.length} items successfully.` });
+      await loadData();
+    } catch {
+      toast({ variant: 'error', title: t('common.error'), description: 'Failed to bulk move items.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // ── Filter logic ───────────────────────────────────────
 
@@ -164,7 +219,6 @@ export function BacklogPage() {
   const groupedIterationIds = new Set(groups.filter(g => g.iterationId !== null).map(g => g.iterationId));
   const emptyIterations = iterations.filter(i => !groupedIterationIds.has(i.id) && i.status !== 'Completed');
 
-  // Skaičiuojame ar visiškai tuščia (nėra nei užduočių, nei iteracijų)
   const totalItems = groups.reduce((acc, g) => acc + g.workItems.length, 0);
   const isCompletelyEmpty = totalItems === 0 && iterations.length === 0;
 
@@ -184,7 +238,6 @@ export function BacklogPage() {
     if (!draggedItem) return;
 
     const overId = over.id.toString();
-
     let targetIterationId: number | null = null;
     let targetWorkItemId: number | null = null;
 
@@ -204,6 +257,15 @@ export function BacklogPage() {
 
     const sameIteration = draggedItem.iterationId === targetIterationId;
 
+    // Jei tempiame pažymėtą elementą ir pažymėtų yra daugiau nei 1 – vykdomas BULK MOVE
+    const isMultiDrag = selectedItemIds.includes(draggedItem.id) && selectedItemIds.length > 1;
+
+    if (isMultiDrag && !sameIteration) {
+      handleBulkMove(targetIterationId);
+      return;
+    }
+
+    // Single item logic
     if (sameIteration && targetWorkItemId !== null) {
       const group = groups.find(g => g.iterationId === targetIterationId);
       if (!group) return;
@@ -290,42 +352,25 @@ export function BacklogPage() {
 
   // ── Render ─────────────────────────────────────────────
 
-  // 1. SKELETON BŪSENA
   if (isLoading) {
     return (
       <div className="p-6 max-w-6xl mx-auto space-y-6">
-        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
+        <Skeleton className="h-4 w-64 mb-6" />
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-32" />
           </div>
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-32 rounded-md" />
-            <Skeleton className="h-9 w-28 rounded-md" />
-          </div>
         </div>
-        
-        {/* Filters Skeleton */}
-        <div className="flex gap-4 mb-8">
-           <Skeleton className="h-9 w-full max-w-sm rounded-md" />
-           <Skeleton className="h-9 w-32 rounded-md" />
-           <Skeleton className="h-9 w-32 rounded-md" />
-        </div>
-
-        {/* Sections Skeleton */}
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full rounded-md" /> {/* Section header */}
-          <Skeleton className="h-16 w-full rounded-md" /> {/* Work item */}
-          <Skeleton className="h-16 w-full rounded-md" /> {/* Work item */}
-          <Skeleton className="h-10 w-full rounded-md mt-6" /> {/* Next section */}
+        <div className="space-y-4 mt-8">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-16 w-full rounded-md" />
           <Skeleton className="h-16 w-full rounded-md" />
         </div>
       </div>
     );
   }
 
-  // 2. KLAIDOS BŪSENA
   if (error || !team || !org) {
     return (
       <div className="p-8 max-w-2xl mx-auto mt-12">
@@ -349,9 +394,6 @@ export function BacklogPage() {
     (member) => member.userId === team.currentUserId && member.role === 'Admin'
   );
 
-  // ATPA tikslo iteracija: prioritetas Active, tada pirma Planning.
-  // Naudoja jau gautus duomenis, todėl SuggestionsPanel niekad neatsidaro
-  // su `null` iteracija.
   const suggestionsTarget: Iteration | null =
     iterations.find((i) => i.status === 'Active') ??
     iterations.find((i) => i.status === 'Planning') ??
@@ -373,12 +415,14 @@ export function BacklogPage() {
       onCompleteIteration={setCompleteIteration}
       onWorkItemClick={setEditItem}
       onRefresh={loadData}
+      // NAUJA: Perduodame žymėjimo būseną
+      selectedIds={selectedItemIds}
+      onToggleSelection={toggleSelection}
     />
   );
 
-  // 3. SĖKMINGA BŪSENA
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6 relative">
       <Breadcrumbs
         items={[
           { label: 'Dashboard', href: '/dashboard' },
@@ -397,10 +441,6 @@ export function BacklogPage() {
           <p className="text-muted-foreground">{team.name}</p>
         </div>
         <div className="flex items-center gap-2">
-          {/*
-            ATPA siūlymai aktualūs tik kai yra Planning ar Active iteracija — kitaip
-            mygtukas išjungiamas su tooltip'u, paaiškinančiu kodėl.
-          */}
           <Button
             size="sm"
             variant="outline"
@@ -455,8 +495,7 @@ export function BacklogPage() {
             onTagChange={setTagFilter}
             onSearchChange={setSearchQuery}
           />
-
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+<div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
             <span>🟦 {t('backlog.typeStory')}</span>
             <span>🟨 {t('backlog.typeTask')}</span>
             <span>🟥 {t('backlog.typeBug')}</span>
@@ -476,13 +515,14 @@ export function BacklogPage() {
             </span>
           </div>
 
+          {/* Čia eina tavo esamas <DndContext> */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="space-y-4">
+            <div className="space-y-4 pb-20"> {/* pb-20 prideda vietos apačioje dėl toolbar */}
               {activeGroup && renderSection(
                 iterations.find(i => i.id === activeGroup.iterationId) ?? null,
                 activeGroup.workItems,
@@ -513,18 +553,22 @@ export function BacklogPage() {
 
             <DragOverlay>
               {activeItem ? (
-                <div className="flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-card shadow-lg opacity-90">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded
-                      ${activeItem.type === 'Story' ? 'bg-blue-100 text-blue-700' :
-                      activeItem.type === 'Bug' ? 'bg-red-100 text-red-700' :
-                        'bg-amber-100 text-amber-700'}`}>
-                    {activeItem.type.toUpperCase()}
-                  </span>
-                  <span className="text-sm font-medium truncate">{activeItem.title}</span>
-                  {activeItem.points && (
-                    <span className="text-xs font-mono font-semibold bg-secondary/50 px-1.5 py-0.5 rounded">
-                      {activeItem.points}
-                    </span>
+                <div className="flex items-center gap-3 px-3 py-2.5 border rounded-lg bg-card shadow-lg opacity-90 cursor-grabbing">
+                  {selectedItemIds.includes(activeItem.id) && selectedItemIds.length > 1 ? (
+                    <div className="flex items-center gap-2 font-semibold text-primary">
+                      <ListTodo className="h-5 w-5" />
+                      Moving {selectedItemIds.length} items
+                    </div>
+                  ) : (
+                    <>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded
+                          ${activeItem.type === 'Story' ? 'bg-blue-100 text-blue-700' :
+                          activeItem.type === 'Bug' ? 'bg-red-100 text-red-700' :
+                            'bg-amber-100 text-amber-700'}`}>
+                        {activeItem.type.toUpperCase()}
+                      </span>
+                      <span className="text-sm font-medium truncate">{activeItem.title}</span>
+                    </>
                   )}
                 </div>
               ) : null}
@@ -533,64 +577,50 @@ export function BacklogPage() {
         </>
       )}
 
+      {/* NAUJA: Plaukiojantis Bulk Actions meniu apatinėje ekrano dalyje */}
+      {selectedItemIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground border shadow-xl rounded-full px-4 py-3 flex items-center gap-4 z-50 animate-in slide-in-from-bottom-10">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full">
+              {selectedItemIds.length}
+            </span>
+            <span className="text-sm font-medium">selected</span>
+          </div>
+          <div className="h-4 w-px bg-border" />
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="secondary" className="gap-2">
+                <MoveRight className="h-4 w-4" /> Move to...
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuItem onClick={() => handleBulkMove(null)}>
+                Backlog
+              </DropdownMenuItem>
+              {iterations.filter(i => i.status !== 'Completed').map(it => (
+                <DropdownMenuItem key={it.id} onClick={() => handleBulkMove(it.id)}>
+                  {it.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="h-4 w-px bg-border" />
+          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => setSelectedItemIds([])}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       {/* Modals */}
-      <CreateWorkItemModal
-        teamId={tid}
-        orgId={Number(orgId)}
-        members={members}
-        open={createItemOpen}
-        onOpenChange={setCreateItemOpen}
-        onCreated={loadData}
-      />
-
-      <EditWorkItemModal
-        item={editItem}
-        orgId={Number(orgId)}
-        members={members}
-        canTransferWorkItem={canTransferWorkItems}
-        open={!!editItem}
-        onOpenChange={(v) => { if (!v) setEditItem(null); }}
-        onUpdated={loadData}
-      />
-
-      <EditIterationModal
-        iteration={editIteration}
-        open={!!editIteration}
-        onOpenChange={(v) => { if (!v) setEditIteration(null); }}
-        onUpdated={loadData}
-      />
-
-      <CompleteIterationModal
-        iteration={completeIteration}
-        otherIterations={iterations}
-        open={!!completeIteration}
-        onOpenChange={(v) => { if (!v) setCompleteIteration(null); }}
-        onCompleted={loadData}
-      />
-
-      <SuggestionsPanel
-        iteration={suggestionsTarget}
-        open={suggestionsOpen}
-        onOpenChange={setSuggestionsOpen}
-        onApplied={() => loadData()}
-      />
-
-      <ImportJiraModal
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        teamId={tid}
-        members={team.members}
-        iterations={iterations}
-        onImported={loadData}
-      />
-
-      <ExportJiraCsvModal
-        open={exportOpen}
-        onOpenChange={setExportOpen}
-        groups={groups}
-        iterations={iterations}
-        members={team.members}
-      />
+      <CreateWorkItemModal teamId={tid} orgId={Number(orgId)} members={members} open={createItemOpen} onOpenChange={setCreateItemOpen} onCreated={loadData} />
+      <EditWorkItemModal item={editItem} orgId={Number(orgId)} members={members} canTransferWorkItem={canTransferWorkItems} open={!!editItem} onOpenChange={(v) => { if (!v) setEditItem(null); }} onUpdated={loadData} />
+      <EditIterationModal iteration={editIteration} open={!!editIteration} onOpenChange={(v) => { if (!v) setEditIteration(null); }} onUpdated={loadData} />
+      <CompleteIterationModal iteration={completeIteration} otherIterations={iterations} open={!!completeIteration} onOpenChange={(v) => { if (!v) setCompleteIteration(null); }} onCompleted={loadData} />
+      <SuggestionsPanel iteration={suggestionsTarget} open={suggestionsOpen} onOpenChange={setSuggestionsOpen} onApplied={() => loadData()} />
+      <ImportJiraModal open={importOpen} onOpenChange={setImportOpen} teamId={tid} members={team.members} iterations={iterations} onImported={loadData} />
+      <ExportJiraCsvModal open={exportOpen} onOpenChange={setExportOpen} groups={groups} iterations={iterations} members={team.members} />
     </div>
   );
 }

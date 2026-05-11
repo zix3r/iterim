@@ -18,11 +18,15 @@ interface Props {
   onCompleteIteration?: (iteration: Iteration) => void;
   onWorkItemClick: (item: WorkItem) => void;
   onRefresh: () => void;
+  // NAUJI PROPSAI:
+  selectedIds?: number[];
+  onToggleSelection?: (id: number) => void;
 }
 
 export function IterationSection({
   iteration, workItems, isBacklog = false, readOnly = false,
   onEditIteration, onCompleteIteration, onWorkItemClick, onRefresh,
+  selectedIds = [], onToggleSelection,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -173,7 +177,15 @@ export function IterationSection({
               </p>
             ) : (
               workItems.map((item) => (
-                <WorkItemRow key={item.id} item={item} readOnly={readOnly} onClick={onWorkItemClick} />
+                <WorkItemRow 
+                  key={item.id} 
+                  item={item} 
+                  readOnly={readOnly} 
+                  onClick={onWorkItemClick}
+                  // PAKEITIMAS: perduodame state mygtukams
+                  isSelected={selectedIds.includes(item.id)}
+                  onToggleSelection={onToggleSelection}
+                />
               ))
             )}
           </SortableContext>
