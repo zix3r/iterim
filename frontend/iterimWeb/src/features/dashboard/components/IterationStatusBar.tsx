@@ -1,3 +1,5 @@
+import { useLanguage } from '@/context/LanguageContext';
+
 const STATUS_ORDER = ['Done', 'InProgress', 'Review', 'Todo', 'Backlog'];
 
 const STATUS_COLOR: Record<string, string> = {
@@ -8,12 +10,31 @@ const STATUS_COLOR: Record<string, string> = {
   Backlog: 'bg-zinc-500',
 };
 
+const STATUS_TEXT: Record<string, string> = {
+  Done: 'text-emerald-700 dark:text-emerald-300',
+  InProgress: 'text-blue-700 dark:text-blue-300',
+  Review: 'text-violet-700 dark:text-violet-300',
+  Todo: 'text-amber-700 dark:text-amber-300',
+  Backlog: 'text-muted-foreground',
+};
+
 interface Props {
   byStatus?: Record<string, number>;
   progress?: number;
+  iterationId?: number;
 }
 
 export function IterationStatusBar({ byStatus, progress }: Props) {
+  const { t } = useLanguage();
+
+  const STATUS_LABEL: Record<string, string> = {
+    Done: t('board.done'),
+    InProgress: t('board.inProgress'),
+    Review: t('board.review'),
+    Todo: t('board.todo'),
+    Backlog: 'Backlog',
+  };
+
   const entries: Array<[string, number]> = [];
 
   if (byStatus) {
@@ -29,16 +50,36 @@ export function IterationStatusBar({ byStatus, progress }: Props) {
   const total = entries.reduce((sum, [, count]) => sum + count, 0);
 
   if (total > 0) {
+    const completed = byStatus?.Done ?? 0;
+
     return (
-      <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted gap-px">
-        {entries.map(([status, count]) => (
-          <div
-            key={status}
-            className={STATUS_COLOR[status] ?? 'bg-zinc-600'}
-            style={{ width: `${(count / total) * 100}%` }}
-            title={`${status}: ${count}`}
-          />
-        ))}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex h-2 overflow-hidden rounded-full bg-muted gap-px">
+            {entries.map(([status, count]) => (
+              <div
+                key={status}
+                className={STATUS_COLOR[status] ?? 'bg-zinc-600'}
+                style={{ width: `${(count / total) * 100}%` }}
+                title={`${STATUS_LABEL[status] ?? status}: ${count} pts`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-muted-foreground shrink-0">
+            {completed}/{total}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {entries.map(([status, count]) => (
+            <div key={status} className="flex items-center gap-1 text-[10px]">
+              <span className={`inline-block h-1.5 w-1.5 rounded-sm ${STATUS_COLOR[status] ?? 'bg-zinc-600'}`} />
+              <span className={STATUS_TEXT[status] ?? 'text-muted-foreground'}>
+                {STATUS_LABEL[status] ?? status}
+              </span>
+              <span className="text-muted-foreground">({count})</span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

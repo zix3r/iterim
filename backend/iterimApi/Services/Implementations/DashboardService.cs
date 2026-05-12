@@ -25,7 +25,7 @@ public class DashboardService : IDashboardService
             .Where(o => o.Members.Any(m => m.UserId == userId && m.Status == OrgMemberStatus.Active))
             .Include(o => o.Products)
                 .ThenInclude(p => p.Teams)
-                     .ThenInclude(t => t.Iterations.Where(i => i.StartDate <= today && i.EndDate >= today)) // Filter for active iteration
+                     .ThenInclude(t => t.Iterations.Where(i => i.Status == IterationStatus.Active))
             .Include(o => o.Products)
                 .ThenInclude(p => p.Teams)
                     .ThenInclude(t => t.WorkItems) // Needed for progress calculation if not stored on Iteration
@@ -57,7 +57,7 @@ public class DashboardService : IDashboardService
                         var completedPoints = sprintItems.Where(w => w.Status == WorkItemStatus.Done).Sum(w => w.Points ?? 0);
                         var byStatus = sprintItems
                             .GroupBy(w => w.Status.ToString())
-                            .ToDictionary(g => g.Key, g => g.Count());
+                            .ToDictionary(g => g.Key, g => g.Sum(w => w.Points ?? 0));
                         
                         // Avoid division by zero
                         double progress = totalPoints > 0 ? (double)completedPoints / totalPoints * 100 : 0;
@@ -101,7 +101,7 @@ public class DashboardService : IDashboardService
             .Include(w => w.Iteration)
             .Where(w => w.AssignedTo != null && teamMemberIds.Contains(w.AssignedTo.Value) && w.Status != WorkItemStatus.Done)
             // Only show items in active iterations or valid date range
-            .Where(w => w.Iteration != null && (w.Iteration.Status == IterationStatus.Active || (w.Iteration.StartDate <= today && w.Iteration.EndDate >= today)))
+            .Where(w => w.Iteration != null && w.Iteration.Status == IterationStatus.Active)
             .OrderByDescending(w => w.UpdatedAt)
             .Take(10)
             .Select(w => new DashboardWorkItemDto
