@@ -65,6 +65,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .OrderByDescending(wi => wi.CreatedAt)
             .ToListAsync();
 
@@ -87,6 +88,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .OrderBy(wi => wi.Position)
             .ThenByDescending(wi => wi.CreatedAt)
             .ToListAsync();
@@ -124,6 +126,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -449,6 +452,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -887,7 +891,8 @@ public class WorkItemService : IWorkItemService
                 CreatedAt = wit.Tag.CreatedAt
             }).ToList(),
             BlockerCount = wi.BlockedBy.Count,
-            BlocksCount = wi.Blocks.Count
+            BlocksCount = wi.Blocks.Count,
+            CommentCount = wi.Comments.Count
         };
     }
 }

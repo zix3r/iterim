@@ -26,7 +26,7 @@ function blockerToDepForModal(b: BoardBlocker): WorkItemDependency {
   };
 }
 import { TagBadge } from '@/components/shared/TagBadge';
-import { Lock } from 'lucide-react';
+import { Lock, MessageSquare } from 'lucide-react';
 import { DependencyDetailModal } from '@/features/backlog/components/DependencyDetailModal';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -133,6 +133,15 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
             {item.points !== null && (
               <span className="text-xs font-mono font-semibold bg-secondary/50 px-1.5 py-0.5 rounded text-muted-foreground">
                 {item.points}
+              </span>
+            )}
+            {item.commentCount > 0 && (
+              <span
+                className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
+                title={`${item.commentCount} comment${item.commentCount === 1 ? '' : 's'}`}
+              >
+                <MessageSquare className="h-2.5 w-2.5" />
+                {item.commentCount}
               </span>
             )}
           </div>

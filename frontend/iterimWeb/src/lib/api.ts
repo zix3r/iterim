@@ -171,6 +171,7 @@ export interface WorkItem {
   tags: Tag[];
   blockerCount: number;
   blocksCount: number;
+  commentCount: number;
   teamName?: string;
 }
 
@@ -969,6 +970,7 @@ export interface BoardWorkItem {
   assignedMember: BoardAssignedMember | null;
   tags: Tag[];
   blockers: BoardBlocker[];
+  commentCount: number;
 }
 
 export interface BoardColumn {
@@ -1735,4 +1737,59 @@ export const getQuarterPlan = (
   fetchWithAuth(`/teams/${teamId}/quarter-plan?start=${start}&end=${end}`).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
+  });
+
+// ── Comment Types ─────────────────────────────────────────────
+
+export interface WorkItemComment {
+  id: number;
+  workItemId: number;
+  authorId: number;
+  authorUserId: number;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+}
+
+export interface UpdateCommentRequest {
+  content: string;
+}
+
+// ── Comment API ───────────────────────────────────────────────
+
+export const getWorkItemComments = (workItemId: number): Promise<WorkItemComment[]> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createWorkItemComment = (workItemId: number, data: CreateCommentRequest): Promise<WorkItemComment> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateWorkItemComment = (workItemId: number, commentId: number, data: UpdateCommentRequest): Promise<WorkItemComment> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments/${commentId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteWorkItemComment = (workItemId: number, commentId: number): Promise<void> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments/${commentId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
   });

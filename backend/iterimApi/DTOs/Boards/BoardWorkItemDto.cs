@@ -11,6 +11,7 @@ public class BoardWorkItemDto
     public AssignedMemberDto? AssignedMember { get; set; }
     public List<TagDto> Tags { get; set; } = [];
     public List<BoardBlockerDto> Blockers { get; set; } = [];
+    public int CommentCount { get; set; }
 }
 
 public class AssignedMemberDto

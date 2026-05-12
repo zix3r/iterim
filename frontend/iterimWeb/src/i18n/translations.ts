@@ -54,6 +54,13 @@ export type TranslationKey =
   | 'common.openMenu'
   | 'common.unauthorized'
   | 'common.notFound'
+  | 'common.justNow'
+  | 'common.minuteAgo'
+  | 'common.minutesAgo'
+  | 'common.hourAgo'
+  | 'common.hoursAgo'
+  | 'common.dayAgo'
+  | 'common.daysAgo'
 
   // Header
   | 'header.themeToggle.toLight'
@@ -434,6 +441,18 @@ export type TranslationKey =
   | 'backlog.dragHere'
   | 'backlog.showCompleted'
   | 'backlog.completedCount'
+  | 'backlog.comments'
+  | 'backlog.commentsLoading'
+  | 'backlog.commentsEmpty'
+  | 'backlog.commentsEdited'
+  | 'backlog.commentsPlaceholder'
+  | 'backlog.commentsPosting'
+  | 'backlog.commentsPost'
+  | 'backlog.commentsDeleteTitle'
+  | 'backlog.commentsDeleteDesc'
+  | 'backlog.commentsFailedAdd'
+  | 'backlog.commentsFailedUpdate'
+  | 'backlog.commentsFailedDelete'
 
   // ATPA – Automatinis Task'ų Priskyrimo Algoritmas
   | 'atpa.suggestButton'
@@ -699,6 +718,13 @@ export const translations: Record<Language, Translations> = {
     'common.openMenu': 'Atidaryti meniu',
     'common.unauthorized': 'Neturite prieigos teisių',
     'common.notFound': 'Nerasta',
+    'common.justNow': 'ką tik',
+    'common.minuteAgo': 'prieš 1 min.',
+    'common.minutesAgo': 'prieš {n} min.',
+    'common.hourAgo': 'prieš 1 val.',
+    'common.hoursAgo': 'prieš {n} val.',
+    'common.dayAgo': 'prieš 1 d.',
+    'common.daysAgo': 'prieš {n} d.',
 
     // Header
     'header.themeToggle.toLight': 'Pakeisti į šviesųjį režimą',
@@ -1079,6 +1105,18 @@ export const translations: Record<Language, Translations> = {
     'backlog.dragHere': 'Tempkite elementus čia, kad suplanuotumėte šią iteraciją',
     'backlog.showCompleted': 'Rodyti užbaigtas',
     'backlog.completedCount': 'užbaigtos',
+    'backlog.comments': 'Komentarai',
+    'backlog.commentsLoading': 'Kraunami komentarai…',
+    'backlog.commentsEmpty': 'Dar nėra komentarų',
+    'backlog.commentsEdited': '(redaguota)',
+    'backlog.commentsPlaceholder': 'Parašykite komentarą… (Ctrl+Enter)',
+    'backlog.commentsPosting': 'Skelbiama…',
+    'backlog.commentsPost': 'Komentuoti',
+    'backlog.commentsDeleteTitle': 'Ištrinti komentarą?',
+    'backlog.commentsDeleteDesc': 'Šio veiksmo negalima bus atšaukti.',
+    'backlog.commentsFailedAdd': 'Nepavyko pridėti komentaro',
+    'backlog.commentsFailedUpdate': 'Nepavyko atnaujinti komentaro',
+    'backlog.commentsFailedDelete': 'Nepavyko ištrinti komentaro',
 
     // ATPA
     'atpa.suggestButton': 'Siūlyti priskyrimus',
@@ -1341,6 +1379,13 @@ export const translations: Record<Language, Translations> = {
     'common.openMenu': 'Open menu',
     'common.unauthorized': 'You are not authorized',
     'common.notFound': 'Not found',
+    'common.justNow': 'just now',
+    'common.minuteAgo': '1 minute ago',
+    'common.minutesAgo': '{n} minutes ago',
+    'common.hourAgo': '1 hour ago',
+    'common.hoursAgo': '{n} hours ago',
+    'common.dayAgo': '1 day ago',
+    'common.daysAgo': '{n} days ago',
 
     // Header
     'header.themeToggle.toLight': 'Switch to light mode',
@@ -1721,6 +1766,18 @@ export const translations: Record<Language, Translations> = {
     'backlog.dragHere': 'Drag items here to plan this iteration',
     'backlog.showCompleted': 'Show completed',
     'backlog.completedCount': 'completed',
+    'backlog.comments': 'Comments',
+    'backlog.commentsLoading': 'Loading comments…',
+    'backlog.commentsEmpty': 'No comments yet',
+    'backlog.commentsEdited': '(edited)',
+    'backlog.commentsPlaceholder': 'Write a comment… (Ctrl+Enter to submit)',
+    'backlog.commentsPosting': 'Posting…',
+    'backlog.commentsPost': 'Comment',
+    'backlog.commentsDeleteTitle': 'Delete comment?',
+    'backlog.commentsDeleteDesc': 'This action cannot be undone.',
+    'backlog.commentsFailedAdd': 'Failed to add comment',
+    'backlog.commentsFailedUpdate': 'Failed to update comment',
+    'backlog.commentsFailedDelete': 'Failed to delete comment',
 
     // ATPA
     'atpa.suggestButton': 'Suggest assignments',

@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { User, Lock, ArrowRight } from 'lucide-react';
+import { User, Lock, ArrowRight, MessageSquare } from 'lucide-react';
 import type { WorkItem } from '@/lib/api';
 import { TagBadge } from '@/components/shared/TagBadge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -130,6 +130,17 @@ export function WorkItemRow({ item, readOnly = false, onClick, isSelected = fals
         >
           <ArrowRight className="h-2.5 w-2.5" />
           {item.blocksCount}
+        </span>
+      )}
+
+      {/* Comment count */}
+      {item.commentCount > 0 && (
+        <span
+          className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded shrink-0 bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
+          title={`${item.commentCount} comment${item.commentCount === 1 ? '' : 's'}`}
+        >
+          <MessageSquare className="h-2.5 w-2.5" />
+          {item.commentCount}
         </span>
       )}
 

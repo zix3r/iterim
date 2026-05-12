@@ -13,7 +13,9 @@ import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 import { ArrowRightLeft, Trash2 } from 'lucide-react';
 import { DependencySection } from './DependencySection';
+import { CommentSection } from './CommentSection';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/features/auth/context/AuthContext';
 import { TransferWorkItemModal } from './TransferWorkItemModal';
 
 const STATUS_OPTIONS = [
@@ -65,6 +67,8 @@ interface EditWorkItemFormValues {
 }
 
 export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = false, open, onOpenChange, onUpdated }: Props) {
+  const { user } = useAuth();
+  const isTeamLeader = members.some((m) => m.userId === user?.id && m.role === 'Admin');
   const [isLoading, setIsLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
@@ -336,6 +340,12 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
           {item && (
             <div className="border-t pt-4">
               <DependencySection workItemId={item.id} />
+            </div>
+          )}
+
+          {item && (
+            <div className="border-t pt-4">
+              <CommentSection workItemId={item.id} isTeamLeader={isTeamLeader} />
             </div>
           )}
 
