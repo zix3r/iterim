@@ -61,7 +61,7 @@ export function IterationStatusBar({ byStatus, progress }: Props) {
                 key={status}
                 className={STATUS_COLOR[status] ?? 'bg-zinc-600'}
                 style={{ width: `${(count / total) * 100}%` }}
-                title={`${STATUS_LABEL[status] ?? status}: ${count} pts`}
+                title={`${STATUS_LABEL[status] ?? status}: ${count} tasks`}
               />
             ))}
           </div>
