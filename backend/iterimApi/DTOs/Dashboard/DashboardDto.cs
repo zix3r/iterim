@@ -4,6 +4,7 @@ public class DashboardDto
 {
     public List<DashboardOrganizationDto> Organizations { get; set; } = [];
     public List<DashboardWorkItemDto> MyWork { get; set; } = [];
+    public List<DashboardBlockedWorkItemDto> BlockedWork { get; set; } = [];
     public List<DashboardActivityDto> RecentActivity { get; set; } = [];
 }
 
@@ -59,6 +60,35 @@ public class DashboardWorkItemDto
     public string ProductName { get; set; } = string.Empty;
     public int TeamId { get; set; }
     public string TeamName { get; set; } = string.Empty;
+}
+
+public class DashboardBlockerDto
+{
+    public int WorkItemId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public bool IsDone { get; set; }
+    public int TeamId { get; set; }
+    public string TeamName { get; set; } = string.Empty;
+    public int ProductId { get; set; }
+    public int OrganizationId { get; set; }
+}
+
+public class DashboardBlockedWorkItemDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty;
+    public string StatusName { get; set; } = string.Empty;
+    public int? Points { get; set; }
+    public int OrganizationId { get; set; }
+    public string OrganizationName { get; set; } = string.Empty;
+    public int ProductId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public int TeamId { get; set; }
+    public string TeamName { get; set; } = string.Empty;
+    public List<DashboardBlockerDto> Blockers { get; set; } = [];
+    public int UnfinishedBlockerCount { get; set; }
 }
 
 public class DashboardActivityDto

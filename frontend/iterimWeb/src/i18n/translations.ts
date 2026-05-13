@@ -230,6 +230,12 @@ export type TranslationKey =
   | 'dashboard.activity.createdItem'
   | 'dashboard.activity.updatedItem'
   | 'dashboard.activity.commented'
+  | 'dashboard.blockedWork'
+  | 'dashboard.noBlockedWork'
+  | 'dashboard.blockedBy'
+  | 'dashboard.blockerDone'
+  | 'dashboard.blockerNotDone'
+  | 'dashboard.unfinishedBlockers'
 
   // Organizations
   | 'organizations.title'
@@ -918,6 +924,12 @@ export const translations: Record<Language, Translations> = {
     'dashboard.activity.createdItem': 'sukūrė naują elementą',
     'dashboard.activity.updatedItem': 'atnaujino elementą',
     'dashboard.activity.commented': 'paliko komentarą',
+    'dashboard.blockedWork': 'Blokuojami darbai',
+    'dashboard.noBlockedWork': 'Šiuo metu jūsų darbai nėra blokuojami.',
+    'dashboard.blockedBy': 'Blokuoja',
+    'dashboard.blockerDone': 'Užbaigta',
+    'dashboard.blockerNotDone': 'Neužbaigta',
+    'dashboard.unfinishedBlockers': 'neužbaigti blokeriai',
 
     // Organizations
     'organizations.title': 'Organizacijos',
@@ -1603,6 +1615,12 @@ export const translations: Record<Language, Translations> = {
     'dashboard.activity.createdItem': 'created a new item',
     'dashboard.activity.updatedItem': 'updated an item',
     'dashboard.activity.commented': 'commented',
+    'dashboard.blockedWork': 'Blocked Work',
+    'dashboard.noBlockedWork': 'None of your work items are currently blocked.',
+    'dashboard.blockedBy': 'Blocked by',
+    'dashboard.blockerDone': 'Done',
+    'dashboard.blockerNotDone': 'Not done',
+    'dashboard.unfinishedBlockers': 'unfinished blockers',
 
     // Organizations
     'organizations.title': 'Organizations',

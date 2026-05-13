@@ -125,6 +125,52 @@ public class DashboardService : IDashboardService
             })
             .ToListAsync();
 
+        // 2b. Blocked Work — items assigned to user that have at least one unfinished blocker
+        var blockedItemsRaw = await _context.WorkItems
+            .AsNoTracking()
+            .Include(w => w.Team).ThenInclude(t => t.Product).ThenInclude(p => p.Organization)
+            .Include(w => w.BlockedBy).ThenInclude(d => d.BlockerWorkItem)
+                .ThenInclude(b => b.Team).ThenInclude(t => t.Product)
+            .Where(w =>
+                w.AssignedTo != null &&
+                teamMemberIds.Contains(w.AssignedTo.Value) &&
+                w.Status != WorkItemStatus.Done &&
+                w.BlockedBy.Any(d => d.BlockerWorkItem.Status != WorkItemStatus.Done))
+            .OrderByDescending(w => w.UpdatedAt)
+            .Take(20)
+            .ToListAsync();
+
+        var blockedWork = blockedItemsRaw.Select(w => new DashboardBlockedWorkItemDto
+        {
+            Id = w.Id,
+            Title = w.Title,
+            TypeName = w.Type.ToString(),
+            StatusName = w.Status.ToString(),
+            Points = w.Points,
+            OrganizationId = w.Team.Product.OrganizationId,
+            OrganizationName = w.Team.Product.Organization.Name,
+            ProductId = w.Team.ProductId,
+            ProductName = w.Team.Product.Name,
+            TeamId = w.TeamId,
+            TeamName = w.Team.Name,
+            Blockers = w.BlockedBy
+                .Select(d => new DashboardBlockerDto
+                {
+                    WorkItemId = d.BlockerWorkItem.Id,
+                    Title = d.BlockerWorkItem.Title,
+                    Status = d.BlockerWorkItem.Status.ToString(),
+                    IsDone = d.BlockerWorkItem.Status == WorkItemStatus.Done,
+                    TeamId = d.BlockerWorkItem.TeamId,
+                    TeamName = d.BlockerWorkItem.Team.Name,
+                    ProductId = d.BlockerWorkItem.Team.ProductId,
+                    OrganizationId = d.BlockerWorkItem.Team.Product.OrganizationId
+                })
+                .OrderBy(b => b.IsDone)
+                .ThenBy(b => b.Title)
+                .ToList(),
+            UnfinishedBlockerCount = w.BlockedBy.Count(d => d.BlockerWorkItem.Status != WorkItemStatus.Done)
+        }).ToList();
+
         // 3. Recent Activity
         // Find recent history items in user's organizations
         // We need the org IDs first
@@ -159,6 +205,7 @@ public class DashboardService : IDashboardService
         {
             Organizations = dashboardOrgs,
             MyWork = myWork,
+            BlockedWork = blockedWork,
             RecentActivity = recentActivity
         };
     }

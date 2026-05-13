@@ -752,6 +752,33 @@ export interface DashboardWorkItem {
   teamName: string;
 }
 
+export interface DashboardBlocker {
+  workItemId: number;
+  title: string;
+  status: string;
+  isDone: boolean;
+  teamId: number;
+  teamName: string;
+  productId: number;
+  organizationId: number;
+}
+
+export interface DashboardBlockedWorkItem {
+  id: number;
+  title: string;
+  typeName: string;
+  statusName: string;
+  points: number | null;
+  organizationId: number;
+  organizationName: string;
+  productId: number;
+  productName: string;
+  teamId: number;
+  teamName: string;
+  blockers: DashboardBlocker[];
+  unfinishedBlockerCount: number;
+}
+
 export interface DashboardActivity {
   id: number;
   workItemTitle: string;
@@ -769,6 +796,7 @@ export interface DashboardActivity {
 export interface DashboardData {
   organizations: DashboardOrganization[];
   myWork: DashboardWorkItem[];
+  blockedWork: DashboardBlockedWorkItem[];
   recentActivity: DashboardActivity[];
 }
 
