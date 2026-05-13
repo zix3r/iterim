@@ -29,6 +29,8 @@ public class AppDbContext : DbContext
     public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
     public DbSet<WorkItemDependency> WorkItemDependencies => Set<WorkItemDependency>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<RetroItem> RetroItems => Set<RetroItem>();
+    public DbSet<RetroVote> RetroVotes => Set<RetroVote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +76,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<MemberAbsence>()
             .Property(ma => ma.ReasonDetails)
             .HasMaxLength(500);
+
+        modelBuilder.Entity<RetroItem>()
+            .Property(ri => ri.Column)
+            .HasConversion<string>()
+            .HasMaxLength(32);
 
         // ── User ────────────────────────────────────────────
         modelBuilder.Entity<User>(entity =>
@@ -444,6 +451,48 @@ public class AppDbContext : DbContext
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── RetroItem ────────────────────────────────────────
+        modelBuilder.Entity<RetroItem>(entity =>
+        {
+            entity.HasIndex(ri => ri.IterationId);
+            entity.HasIndex(ri => new { ri.IterationId, ri.Column });
+
+            entity.Property(ri => ri.Content)
+                .IsRequired()
+                .HasMaxLength(2000);
+
+            entity.HasOne(ri => ri.Iteration)
+                .WithMany()
+                .HasForeignKey(ri => ri.IterationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Restrict on author so deleting a User doesn't silently nuke retro
+            // history; it forces an explicit cleanup path.
+            entity.HasOne(ri => ri.User)
+                .WithMany()
+                .HasForeignKey(ri => ri.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── RetroVote ────────────────────────────────────────
+        modelBuilder.Entity<RetroVote>(entity =>
+        {
+            // Enforces "one vote per user per card" — the toggle endpoint
+            // becomes idempotent and we can compute counts safely.
+            entity.HasIndex(rv => new { rv.RetroItemId, rv.UserId }).IsUnique();
+            entity.HasIndex(rv => rv.UserId);
+
+            entity.HasOne(rv => rv.RetroItem)
+                .WithMany(ri => ri.Votes)
+                .HasForeignKey(rv => rv.RetroItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rv => rv.User)
+                .WithMany()
+                .HasForeignKey(rv => rv.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -28,6 +28,7 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganizationsPage';
 import { QuarterPlanPage } from './features/teams/pages/QuarterPlanPage';
+import { RetroPage } from '@/features/retro/pages/RetroPage';
 
 // Maršrutai, kuriuose nerodomas Header/AdminLayout — jiems reikia
 // atskiro plūduriuojančio kalbos perjungiklio.
@@ -94,6 +95,10 @@ function App() {
               <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
               <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
               <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
+              <Route
+                path="/org/:orgId/products/:productId/teams/:teamId/iterations/:iterationId/retro"
+                element={<RetroPage />}
+              />
               <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
               <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
               <Route path="/org/:orgId/products/:productId/teams/:teamId/quarter" element={<QuarterPlanPage />} />

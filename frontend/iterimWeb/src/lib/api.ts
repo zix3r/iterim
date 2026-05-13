@@ -1793,3 +1793,103 @@ export const deleteWorkItemComment = (workItemId: number, commentId: number): Pr
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
+
+// ── Retrospective Types ───────────────────────────────────────
+
+/** Matches backend `RetroColumn` enum (string-serialized). */
+export type RetroColumnName = 'WentWell' | 'DidntGoWell' | 'ActionItem';
+
+export interface RetroItem {
+  id: number;
+  iterationId: number;
+  userId: number;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  column: RetroColumnName;
+  content: string;
+  voteCount: number;
+  /** True if the requesting user has voted for this card. */
+  hasVoted: boolean;
+  /** True if the requesting user authored this card (controls Edit/Delete UI). */
+  isOwn: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RetroBoard {
+  iterationId: number;
+  teamId: number;
+  iterationName: string | null;
+  iterationStatus: string;       // "Planning" | "Active" | "Completed"
+  /** True when the iteration is Completed — FE must hide controls. */
+  isReadOnly: boolean;
+  items: RetroItem[];
+}
+
+export interface CreateRetroItemRequest {
+  column: RetroColumnName;
+  content: string;
+}
+
+export interface UpdateRetroItemRequest {
+  content: string;
+}
+
+// ── Retrospective API ─────────────────────────────────────────
+
+export const getRetroBoard = (teamId: number, iterationId: number): Promise<RetroBoard> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createRetroItem = (
+  teamId: number,
+  iterationId: number,
+  data: CreateRetroItemRequest,
+): Promise<RetroItem> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateRetroItem = (
+  teamId: number,
+  iterationId: number,
+  itemId: number,
+  data: UpdateRetroItemRequest,
+): Promise<RetroItem> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteRetroItem = (
+  teamId: number,
+  iterationId: number,
+  itemId: number,
+): Promise<void> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+/** Toggles the caller's vote — returns the updated card (one vote/user/card). */
+export const toggleRetroVote = (
+  teamId: number,
+  iterationId: number,
+  itemId: number,
+): Promise<RetroItem> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}/vote`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });

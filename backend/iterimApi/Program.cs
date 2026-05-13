@@ -100,6 +100,7 @@ builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IAdminOrganizationService, AdminOrganizationService>();
 builder.Services.AddScoped<IAtpaService, AtpaService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IRetroService, RetroService>();
 builder.Services.AddHostedService<NotificationCleanupService>();
 
 

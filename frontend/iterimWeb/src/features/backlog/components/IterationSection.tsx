@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import { Link, useParams } from 'react-router';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ChevronDown, ChevronRight, Play, CheckCircle2, Pencil, Trash2, LayoutList } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, CheckCircle2, Pencil, Trash2, LayoutList, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { startIteration, deleteIteration } from '@/lib/api';
@@ -33,6 +34,17 @@ export function IterationSection({
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const { t } = useLanguage();
+  // IterationSection is always rendered inside the team/iterations route, so
+  // these params are guaranteed to be present — used only for the retro link.
+  const { orgId, productId, teamId } = useParams();
+  const retroPath =
+    iteration && orgId && productId && teamId
+      ? `/org/${orgId}/products/${productId}/teams/${teamId}/iterations/${iteration.id}/retro`
+      : null;
+  const showRetroButton =
+    !isBacklog &&
+    retroPath !== null &&
+    (iteration?.status === 'Active' || iteration?.status === 'Completed');
 
   // Droppable zone for drag-and-drop
   const droppableId = isBacklog ? 'backlog' : `iteration-${iteration?.id}`;
@@ -115,6 +127,19 @@ export function IterationSection({
           </span>
         )}
 
+        {/* Retro link — always available for Active or Completed iterations,
+            including the Completed (read-only) section so completed retros stay accessible. */}
+        {showRetroButton && retroPath && readOnly && (
+          <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
+            <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+              <Link to={retroPath}>
+                <MessageSquare className="h-3 w-3 mr-1" />
+                {t('retro.button')}
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {/* Actions (stop propagation so clicks don't toggle collapse) */}
         {!isBacklog && !readOnly && iteration && (
           <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
@@ -158,6 +183,14 @@ export function IterationSection({
                   <Pencil className="h-3 w-3" />
                 </Button>
               </>
+            )}
+            {showRetroButton && retroPath && (
+              <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                <Link to={retroPath}>
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  {t('retro.button')}
+                </Link>
+              </Button>
             )}
           </div>
         )}

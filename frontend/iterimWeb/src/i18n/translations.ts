@@ -669,6 +669,30 @@ export type TranslationKey =
   | 'shared.confirmTitle'
   | 'shared.confirmMessage'
 
+  // Retrospective
+  | 'retro.title'
+  | 'retro.button'
+  | 'retro.readOnlyBanner'
+  | 'retro.columnWentWell'
+  | 'retro.columnDidntGoWell'
+  | 'retro.columnActionItem'
+  | 'retro.addCard'
+  | 'retro.contentPlaceholder'
+  | 'retro.contentRequired'
+  | 'retro.empty'
+  | 'retro.votes'
+  | 'retro.vote'
+  | 'retro.unvote'
+  | 'retro.editCard'
+  | 'retro.deleteCard'
+  | 'retro.deleteConfirm'
+  | 'retro.failedLoad'
+  | 'retro.failedCreate'
+  | 'retro.failedUpdate'
+  | 'retro.failedDelete'
+  | 'retro.failedVote'
+  | 'retro.iterationNotStarted'
+
   // Kalbų pavadinimai
   | 'language.lt'
   | 'language.en';
@@ -1333,6 +1357,30 @@ export const translations: Record<Language, Translations> = {
     'shared.confirmTitle': 'Patvirtinkite veiksmą',
     'shared.confirmMessage': 'Ar tikrai norite tęsti?',
 
+    // Retrospective
+    'retro.title': 'Retrospektyva',
+    'retro.button': 'Retrospektyva',
+    'retro.readOnlyBanner': 'Iteracija užbaigta — retrospektyva tik skaitymui.',
+    'retro.columnWentWell': 'Kas pavyko gerai',
+    'retro.columnDidntGoWell': 'Kas nepavyko',
+    'retro.columnActionItem': 'Veiksmai kitam sprintui',
+    'retro.addCard': 'Pridėti kortelę',
+    'retro.contentPlaceholder': 'Įveskite mintį…',
+    'retro.contentRequired': 'Kortelės turinys negali būti tuščias.',
+    'retro.empty': 'Šiame stulpelyje dar nėra kortelių.',
+    'retro.votes': 'balsai',
+    'retro.vote': 'Balsuoti',
+    'retro.unvote': 'Atšaukti balsą',
+    'retro.editCard': 'Redaguoti kortelę',
+    'retro.deleteCard': 'Ištrinti kortelę',
+    'retro.deleteConfirm': 'Ar tikrai norite ištrinti šią kortelę?',
+    'retro.failedLoad': 'Nepavyko įkelti retrospektyvos.',
+    'retro.failedCreate': 'Nepavyko pridėti kortelės.',
+    'retro.failedUpdate': 'Nepavyko atnaujinti kortelės.',
+    'retro.failedDelete': 'Nepavyko ištrinti kortelės.',
+    'retro.failedVote': 'Nepavyko balsuoti.',
+    'retro.iterationNotStarted': 'Retrospektyva pasiekiama tik aktyvioms ar užbaigtoms iteracijoms.',
+
     // Kalbų pavadinimai
     'language.lt': 'Lietuvių',
     'language.en': 'Anglų',
@@ -1993,6 +2041,30 @@ export const translations: Record<Language, Translations> = {
     'shared.errorContact': 'If the error persists, please contact support.',
     'shared.confirmTitle': 'Confirm action',
     'shared.confirmMessage': 'Are you sure you want to continue?',
+
+    // Retrospective
+    'retro.title': 'Retrospective',
+    'retro.button': 'Retrospective',
+    'retro.readOnlyBanner': 'Iteration is completed — retrospective is read-only.',
+    'retro.columnWentWell': 'Went Well',
+    'retro.columnDidntGoWell': "Didn't Go Well",
+    'retro.columnActionItem': 'Action Items',
+    'retro.addCard': 'Add card',
+    'retro.contentPlaceholder': 'Type your note…',
+    'retro.contentRequired': 'Card content cannot be empty.',
+    'retro.empty': 'No cards in this column yet.',
+    'retro.votes': 'votes',
+    'retro.vote': 'Vote',
+    'retro.unvote': 'Remove vote',
+    'retro.editCard': 'Edit card',
+    'retro.deleteCard': 'Delete card',
+    'retro.deleteConfirm': 'Are you sure you want to delete this card?',
+    'retro.failedLoad': 'Failed to load the retrospective.',
+    'retro.failedCreate': 'Failed to add the card.',
+    'retro.failedUpdate': 'Failed to update the card.',
+    'retro.failedDelete': 'Failed to delete the card.',
+    'retro.failedVote': 'Failed to vote.',
+    'retro.iterationNotStarted': 'The retrospective is only available for active or completed iterations.',
 
     // Language names
     'language.lt': 'Lithuanian',
