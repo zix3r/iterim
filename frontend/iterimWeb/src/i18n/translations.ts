@@ -535,6 +535,7 @@ export type TranslationKey =
   | 'board.cannotMoveBlocked'
   | 'board.failedLoad'
   | 'board.failedMove'
+  | 'board.noTags'
 
   // Metrics
   | 'metrics.title'
@@ -1229,6 +1230,7 @@ export const translations: Record<Language, Translations> = {
     'board.cannotMoveBlocked': 'Negalima perkelti užblokuoto elemento.',
     'board.failedLoad': 'Nepavyko įkelti lentos.',
     'board.failedMove': 'Nepavyko perkelti elemento.',
+    'board.noTags': 'Žymų nėra',
 
     // Metrics
     'metrics.title': 'Metrikos',
@@ -1920,6 +1922,7 @@ export const translations: Record<Language, Translations> = {
     'board.cannotMoveBlocked': 'Cannot move a blocked item.',
     'board.failedLoad': 'Failed to load board.',
     'board.failedMove': 'Failed to move item.',
+    'board.noTags': 'No tags',
 
     // Metrics
     'metrics.title': 'Metrics',

@@ -131,15 +131,20 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
               {item.commentCount}
             </span>
           )}
-          {item.tags && item.tags.length > 0 && (
-            <div className="flex items-center gap-0.5 min-w-0">
-              {item.tags.slice(0, 2).map(tag => (
+        </div>
+
+        <div className="mt-1 flex items-center gap-0.5 flex-wrap min-w-0">
+          {item.tags && item.tags.length > 0 ? (
+            <>
+              {item.tags.slice(0, 3).map(tag => (
                 <TagBadge key={tag.id} tag={tag} size="xs" />
               ))}
-              {item.tags.length > 2 && (
-                <span className="text-[9px] text-muted-foreground">+{item.tags.length - 2}</span>
+              {item.tags.length > 3 && (
+                <span className="text-[9px] text-muted-foreground">+{item.tags.length - 3}</span>
               )}
-            </div>
+            </>
+          ) : (
+            <span className="text-[10px] text-muted-foreground italic">{t('board.noTags')}</span>
           )}
         </div>
 
