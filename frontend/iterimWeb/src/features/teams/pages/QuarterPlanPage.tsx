@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { CalendarOff, CalendarRange } from 'lucide-react';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { getQuarterPlan, getTeamById } from '@/lib/api';
 import type { QuarterPlan, TeamDetail } from '@/lib/api';
+import { addRecentPage } from '@/lib/recentPages';
 
 // --- Pagalbinės datos funkcijos ---
 const getQuarterDates = (year: number, quarter: 1 | 2 | 3 | 4) => {
@@ -54,6 +54,16 @@ export function QuarterPlanPage() {
     loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    if (team && orgId && productId && teamId) {
+      addRecentPage({
+        path: `/org/${orgId}/products/${productId}/teams/${teamId}/quarter`,
+        label: `${team.name} — Quarter Plan`,
+        iconType: 'Team',
+      });
+    }
+  }, [team, orgId, productId, teamId]);
+
   const setQuarter = (q: 1 | 2 | 3 | 4) => {
     const dates = getQuarterDates(currentYear, q);
     setStartDate(dates.start);
@@ -70,15 +80,6 @@ export function QuarterPlanPage() {
 
   return (
     <div className="p-8 space-y-6 max-w-[1600px] mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: 'Products', href: `/org/${orgId}/products` },
-          { label: team?.productName || 'Product', href: `/org/${orgId}/products/${productId}` },
-          { label: team?.name || 'Team', href: `/org/${orgId}/products/${productId}/teams/${teamId}` },
-          { label: 'Quarterly Plan' },
-        ]}
-      />
-
       {/* Antraštė ir filtrai */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

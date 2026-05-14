@@ -188,7 +188,7 @@ export function NotificationDropdown() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-muted-foreground hover:text-foreground hover:bg-accent"
+          className="relative h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent"
           title={t('header.notifications')}
           aria-label={
             unreadCount > 0
@@ -201,7 +201,7 @@ export function NotificationDropdown() {
               : t('header.notifications')
           }
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
             <span
               className={cn(

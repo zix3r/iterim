@@ -74,7 +74,7 @@ export function BreadcrumbSwitcher() {
   const sep = <ChevronRight className="h-3.5 w-3.5 text-zinc-400 shrink-0" />;
 
   return (
-    <div className="flex h-11 items-center px-6 md:px-8 gap-1 text-sm bg-white border-b border-zinc-200">
+    <div className="flex h-8 items-center px-4 md:px-6 gap-1 text-xs bg-white border-b border-zinc-200">
       {/* Desktop */}
       <div className="hidden md:flex items-center gap-1">
         <BreadcrumbSegment

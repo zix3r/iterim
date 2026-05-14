@@ -29,7 +29,9 @@ export function RecentPages() {
     await clearRecentPages();
   };
 
-  if (pages.length === 0) {
+  const visiblePages = pages.slice(0, 5);
+
+  if (visiblePages.length === 0) {
     return null;
   }
 
@@ -57,7 +59,7 @@ export function RecentPages() {
         </Button>
       </div>
       <nav className="space-y-1">
-        {pages.map((p, idx) => (
+        {visiblePages.map((p, idx) => (
           <NavLink
             key={`${p.path}-${idx}`}
             to={p.path}

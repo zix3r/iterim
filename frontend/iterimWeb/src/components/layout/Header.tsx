@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router';
 import { Menu, Moon, Shield, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { SidebarContent } from './Sidebar';
@@ -40,27 +40,27 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex h-14 items-center px-4 md:px-6 gap-4">
+      <div className="flex h-12 items-center px-3 md:px-4 gap-2">
 
         {/* Mobile menu */}
         <div className="md:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5 text-muted-foreground" />
+              <Button variant="ghost" size="icon" className="md:hidden h-8 w-8">
+                <Menu className="h-4 w-4 text-muted-foreground" />
                 <span className="sr-only">{t('header.openMenu')}</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80 p-0">
+            <SheetContent side="left" className="w-[17.5rem] p-0">
               <SheetTitle className="sr-only">{t('header.navigation')}</SheetTitle>
               <SidebarContent />
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Logo - Naudojame originalų spalvotą vite.svg žaibą */}
-        <Link to="/dashboard" className="flex items-center gap-2 font-bold text-xl text-foreground tracking-tight">
-          <img src="/vite.svg" alt="Iterim Logo" className="w-6 h-6" />
+        {/* Logo */}
+        <Link to="/dashboard" className="flex items-center gap-1.5 font-bold text-base text-foreground tracking-tight">
+          <img src="/vite.svg" alt="Iterim Logo" className="w-5 h-5" />
           Iterim
         </Link>
 
@@ -71,25 +71,25 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent"
             onClick={handleThemeToggle}
             title={resolvedTheme === 'dark' ? t('header.themeToggle.toLight') : t('header.themeToggle.toDark')}
           >
-            {resolvedTheme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             <span className="sr-only">{t('header.themeToggle.srLabel')}</span>
           </Button>
 
-          <LanguageToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
+          <LanguageToggle className="h-9 px-2.5 text-muted-foreground hover:text-foreground hover:bg-accent" />
 
           {user?.role === 'Admin' && (
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent"
               onClick={() => navigate('/admin')}
               title={t('header.adminPanel')}
             >
-              <Shield className="h-5 w-5" />
+              <Shield className="h-4 w-4" />
             </Button>
           )}
 
@@ -97,9 +97,10 @@ export function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full ml-1">
-                <Avatar className="h-9 w-9 border border-border">
-                  <AvatarFallback className="bg-muted text-foreground font-semibold">{initials}</AvatarFallback>
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                <Avatar className="h-8 w-8 border border-border">
+                  <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name ?? ''} />
+                  <AvatarFallback className="bg-muted text-foreground text-xs font-semibold">{initials}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>

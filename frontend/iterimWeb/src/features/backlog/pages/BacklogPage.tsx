@@ -1,14 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams, Link } from 'react-router';
 import {
   DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
-import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload, Download, X, MoveRight } from 'lucide-react';
+import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload, Download, X, MoveRight, LayoutGrid, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -423,24 +422,34 @@ export function BacklogPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 relative">
-      <Breadcrumbs
-        items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: org.name, href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
-          { label: team.productName, href: `/org/${orgId}/products/${productId}` },
-          { label: 'Teams', href: `/org/${orgId}/products/${productId}/teams` },
-          { label: team.name, href: `/org/${orgId}/products/${productId}/teams/${teamId}` },
-          { label: 'Backlog' },
-        ]}
-      />
-
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-3xl font-bold">{t('backlog.title')}</h1>
-          <p className="text-muted-foreground">{team.name}</p>
+          <p className="text-muted-foreground truncate">{team.name}</p>
         </div>
         <div className="flex items-center gap-2">
+          {isTeamAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="px-2" aria-label="More actions">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setImportOpen(true)}>
+                  <Upload className="h-4 w-4 mr-2" /> Import from Jira
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setExportOpen(true)}>
+                  <Download className="h-4 w-4 mr-2" /> Export to CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <Button asChild size="sm" variant="outline">
+            <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/board`}>
+              <LayoutGrid className="h-4 w-4 mr-2" /> {t('products.board')}
+            </Link>
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -450,16 +459,6 @@ export function BacklogPage() {
           >
             <Sparkles className="h-4 w-4 mr-2" /> {t('atpa.suggestButton')}
           </Button>
-          {isTeamAdmin && (
-            <>
-              <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-                <Upload className="h-4 w-4 mr-2" /> Import from Jira
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setExportOpen(true)}>
-                <Download className="h-4 w-4 mr-2" /> Export to CSV
-              </Button>
-            </>
-          )}
           <CreateIterationModal teamId={tid} onCreated={loadData} />
           <Button size="sm" onClick={() => setCreateItemOpen(true)}>
             <Plus className="h-4 w-4 mr-2" /> {t('backlog.addItem')}
@@ -607,7 +606,7 @@ export function BacklogPage() {
           </DropdownMenu>
 
           <div className="h-4 w-px bg-border" />
-          <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => setSelectedItemIds([])}>
+          <Button size="icon-sm" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => setSelectedItemIds([])}>
             <X className="h-4 w-4" />
           </Button>
         </div>

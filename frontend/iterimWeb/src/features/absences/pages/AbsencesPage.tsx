@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { AlertCircle, CalendarOff } from 'lucide-react';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { getOrganizationAbsences, getOrganizationById } from '@/lib/api';
 import type { MemberAbsence, OrganizationDetail, AbsenceFilters } from '@/lib/api';
@@ -126,14 +125,6 @@ export function AbsencesPage() {
 
   return (
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: organization.name, href: `/org/${orgId}` },
-          { label: t('absences.title') },
-        ]}
-      />
-
       <div className="flex justify-between items-start gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold">{t('absences.title')}</h1>
