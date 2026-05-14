@@ -7,7 +7,7 @@ import { getActiveBoard, getTeamById, getOrganizationById, getWorkItemById, type
 import { EditWorkItemModal } from '@/features/backlog/components/EditWorkItemModal';
 import { useToast } from '@/components/ui/toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, LayoutGrid, LayoutList } from 'lucide-react';
+import { AlertCircle, LayoutGrid, LayoutList, ListTodo } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -123,11 +123,19 @@ export function BoardPage() {
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="flex flex-col h-full px-4 py-3 max-w-[1600px] mx-auto space-y-3 overflow-hidden">
-      <div className="flex-shrink-0 flex items-baseline gap-3">
-        <h1 className="text-xl font-bold">{t('board.title')}</h1>
-        <p className="text-sm text-muted-foreground truncate">
-          {boardData?.iteration.name ? boardData.iteration.name : team.name}
-        </p>
+      <div className="flex-shrink-0 flex items-center justify-between gap-3">
+        <div className="flex items-baseline gap-3 min-w-0">
+          <h1 className="text-xl font-bold">{t('board.title')}</h1>
+          <p className="text-sm text-muted-foreground truncate">
+            {boardData?.iteration.name ? boardData.iteration.name : team.name}
+          </p>
+        </div>
+        <Button asChild size="sm" variant="outline">
+          <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
+            <ListTodo className="h-4 w-4 mr-2" />
+            {t('products.backlog')}
+          </Link>
+        </Button>
       </div>
 
       <div className="flex-1 min-h-0">
