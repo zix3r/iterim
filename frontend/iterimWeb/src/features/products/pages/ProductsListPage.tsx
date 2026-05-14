@@ -4,7 +4,6 @@ import { getProductsByOrganization, getOrganizationById } from '@/lib/api';
 import type { Product, OrganizationDetail } from '@/lib/api';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { CreateProductModal } from '@/features/products/components/CreateProductModal';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Package, AlertCircleIcon } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
@@ -60,8 +59,6 @@ export function ProductsListPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-6 max-w-6xl mx-auto">
-        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
-        
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" /> {/* Title */}
@@ -100,14 +97,6 @@ export function ProductsListPage() {
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: organization.name, href: `/org/${orgId}` },
-          { label: t('products.title') }
-        ]}
-      />
-
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{t('products.title')}</h1>

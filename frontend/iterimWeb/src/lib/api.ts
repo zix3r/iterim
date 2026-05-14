@@ -993,6 +993,7 @@ export interface BoardBlocker {
 export interface BoardWorkItem {
   id: number;
   title: string;
+  description: string | null;
   type: string;
   points: number | null;
   assignedMember: BoardAssignedMember | null;

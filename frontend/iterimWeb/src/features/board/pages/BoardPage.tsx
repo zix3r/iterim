@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { KanbanBoard } from '../components/KanbanBoard';
@@ -81,8 +80,7 @@ export function BoardPage() {
   // 1. SKELETON BŪSENA
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full p-6 max-w-[1600px] mx-auto space-y-6">
-        <Skeleton className="h-4 w-64 mb-2" /> {/* Breadcrumbs */}
+      <div className="flex flex-col h-full px-4 py-3 max-w-[1600px] mx-auto space-y-3">
         <div>
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-48" />
@@ -124,27 +122,15 @@ export function BoardPage() {
 
   // 3. SĖKMINGA BŪSENA
   return (
-    <div className="flex flex-col h-full p-6 max-w-[1600px] mx-auto space-y-6 overflow-hidden">
-      <Breadcrumbs
-        items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: org.name, href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
-          { label: team.productName, href: `/org/${orgId}/products/${productId}` },
-          { label: 'Teams', href: `/org/${orgId}/products/${productId}/teams` },
-          { label: team.name, href: `/org/${orgId}/products/${productId}/teams/${teamId}` },
-          { label: 'Active Iteration board' },
-        ]}
-      />
-
-      <div className="flex-shrink-0">
-        <h1 className="text-3xl font-bold">{t('board.title')}</h1>
-        <p className="text-muted-foreground">
+    <div className="flex flex-col h-full px-4 py-3 max-w-[1600px] mx-auto space-y-3 overflow-hidden">
+      <div className="flex-shrink-0 flex items-baseline gap-3">
+        <h1 className="text-xl font-bold">{t('board.title')}</h1>
+        <p className="text-sm text-muted-foreground truncate">
           {boardData?.iteration.name ? boardData.iteration.name : team.name}
         </p>
       </div>
 
-      <div className="flex-1 min-h-0 pt-4">
+      <div className="flex-1 min-h-0">
         {!boardData ? (
            <EmptyState
              title={t('board.noActiveIteration')}

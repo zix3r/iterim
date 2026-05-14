@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { AlertCircle, ArrowLeft, Lightbulb, Lock, ThumbsDown, ThumbsUp } from 'lucide-react';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/ui/toast';
@@ -198,18 +197,6 @@ export function RetroPage() {
 
   // ── Render ────────────────────────────────────────────────────────────
 
-  const breadcrumbs = useMemo(
-    () => [
-      { label: t('dashboard.title'), href: '/dashboard' },
-      {
-        label: t('products.iterations'),
-        href: `/org/${orgId}/products/${productId}/teams/${teamId}/iterations`,
-      },
-      { label: t('retro.title') },
-    ],
-    [t, orgId, productId, teamId],
-  );
-
   if (isLoading) {
     return (
       <div className="p-6 max-w-[1600px] mx-auto space-y-4">
@@ -249,7 +236,6 @@ export function RetroPage() {
   if (board.iterationStatus === 'Planning') {
     return (
       <div className="p-8 max-w-2xl mx-auto mt-12">
-        <Breadcrumbs items={breadcrumbs} />
         <div className="mt-6 rounded-xl border bg-muted/20 p-6 text-center space-y-3">
           <Lightbulb className="mx-auto h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{t('retro.iterationNotStarted')}</p>
@@ -266,8 +252,6 @@ export function RetroPage() {
 
   return (
     <div className="flex flex-col p-6 max-w-[1600px] mx-auto gap-4">
-      <Breadcrumbs items={breadcrumbs} />
-
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{t('retro.title')}</h1>

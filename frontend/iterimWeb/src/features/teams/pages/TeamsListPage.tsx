@@ -4,7 +4,6 @@ import { getTeamsByProduct, getProductById } from '@/lib/api';
 import type { Team, ProductDetail } from '@/lib/api';
 import { TeamCard } from '@/features/teams/components/TeamCard';
 import { CreateTeamModal } from '@/features/teams/components/CreateTeamModal';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Users, AlertCircleIcon } from 'lucide-react';
 import { addRecentPage } from '@/lib/recentPages';
@@ -60,8 +59,6 @@ export function TeamsListPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-6 max-w-6xl mx-auto">
-        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
-        
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" /> {/* Title */}
@@ -100,16 +97,6 @@ export function TeamsListPage() {
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-6xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: product.organizationName, href: `/org/${orgId}` },
-          { label: t('products.title'), href: `/org/${orgId}/products` },
-          { label: product.name, href: `/org/${orgId}/products/${productId}` },
-          { label: t('teams.title') }
-        ]}
-      />
-
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{t('teams.title')}</h1>

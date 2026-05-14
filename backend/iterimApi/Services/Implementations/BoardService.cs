@@ -76,6 +76,7 @@ namespace iterimApi.Services.Implementations
                     {
                         Id = wi.Id,
                         Title = wi.Title,
+                        Description = wi.Description,
                         Type = wi.Type.ToString(),
                         Points = wi.Points,
                         CommentCount = wi.Comments.Count,

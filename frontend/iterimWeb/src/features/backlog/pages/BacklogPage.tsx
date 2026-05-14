@@ -6,7 +6,6 @@ import {
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Button } from '@/components/ui/button';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { Plus, History, AlertCircle, ListTodo, Sparkles, Upload, Download, X, MoveRight } from 'lucide-react';
 import {
@@ -423,18 +422,6 @@ export function BacklogPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 relative">
-      <Breadcrumbs
-        items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: org.name, href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
-          { label: team.productName, href: `/org/${orgId}/products/${productId}` },
-          { label: 'Teams', href: `/org/${orgId}/products/${productId}/teams` },
-          { label: team.name, href: `/org/${orgId}/products/${productId}/teams/${teamId}` },
-          { label: 'Backlog' },
-        ]}
-      />
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('backlog.title')}</h1>

@@ -8,7 +8,6 @@ import { AddTeamMemberModal } from '@/features/teams/components/AddTeamMemberMod
 import { EditTeamModal } from '@/features/teams/components/EditTeamModal';
 import { WorkScheduleEditor } from '@/features/teams/components/WorkScheduleEditor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon, TagIcon, ClockIcon } from 'lucide-react';
@@ -182,8 +181,6 @@ export function TeamDetailPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-6 max-w-5xl mx-auto">
-        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
-        
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-2 flex-1">
             <Skeleton className="h-10 w-64" /> {/* Title */}
@@ -251,17 +248,6 @@ export function TeamDetailPage() {
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: organization.name, href: `/org/${orgId}` },
-          { label: t('products.title'), href: `/org/${orgId}/products` },
-          { label: team.productName, href: `/org/${orgId}/products/${productId}` },
-          { label: t('teams.title'), href: `/org/${orgId}/products/${productId}/teams` },
-          { label: team.name }
-        ]}
-      />
-
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
           <div>
