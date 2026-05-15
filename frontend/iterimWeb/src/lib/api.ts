@@ -1406,7 +1406,7 @@ export const searchWorkItems = (q: string): Promise<WorkItem[]> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
-  // ── Admin API ──────────────────────────────────────────
+// ── Admin API ──────────────────────────────────────────
 
 export interface AdminOrganizationListDto {
   id: number;
@@ -1464,7 +1464,7 @@ export const deleteAdminOrganization = (orgId: number): Promise<void> =>
   fetchWithAuth(`/admin/organizations/manage/${orgId}`, { method: 'DELETE' }).then(async r => { // PRIDĖTA /manage
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
-  export interface UpdateTeamMemberScheduleDto {
+export interface UpdateTeamMemberScheduleDto {
   scheduleType: 'FullTime' | 'PartTime' | 'Custom';
   weeklyHours: number;
 }
@@ -1720,7 +1720,7 @@ export const updateNotificationPreferences = (
   }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
-  // ── Quarter Planning Types ──────────────────────────────────────────
+// ── Quarter Planning Types ──────────────────────────────────────────
 
 export interface IterationSummaryDto {
   id: number;
@@ -1919,6 +1919,131 @@ export const toggleRetroVote = (
   fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}/vote`, {
     method: 'POST',
   }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// ── Feedback ─────────────────────────────────────────────────
+
+export type FeedbackReason =
+  | 'MissingFunctionality'
+  | 'EasyToGetLost'
+  | 'DifficultToStart'
+  | 'MissingIntegration'
+  | 'NotVisuallyAppealing'
+  | 'NotUpToStandards'
+  | 'TooExpensive'
+  | 'Other'
+  | 'UnmentionedFlaw';
+
+export interface CreateFeedbackPayload {
+  language: string;
+  sprintsUsed: number;
+  overallRating: number;
+  wasSatisfied: boolean;
+  dissatisfactionReasons: FeedbackReason[];
+  missedFunctionalities?: string;
+  hardestToFind?: string;
+  daysToGetUsedTo?: number;
+  missedIntegrations?: string;
+  acceptableMonthlyPricePerUser?: number;
+  otherReasonDescription?: string;
+  unmentionedFlawDescription?: string;
+  mostUsefulFeature?: string;
+  encounteredBugs: boolean;
+  bugContext?: string;
+  wouldTryAgain: boolean;
+}
+
+export interface FeedbackItem {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  language: string;
+  sprintsUsed: number;
+  overallRating: number;
+  wasSatisfied: boolean;
+  dissatisfactionReasons: FeedbackReason[];
+  missedFunctionalities?: string | null;
+  hardestToFind?: string | null;
+  daysToGetUsedTo?: number | null;
+  missedIntegrations?: string | null;
+  acceptableMonthlyPricePerUser?: number | null;
+  otherReasonDescription?: string | null;
+  unmentionedFlawDescription?: string | null;
+  mostUsefulFeature?: string | null;
+  encounteredBugs: boolean;
+  bugContext?: string | null;
+  wouldTryAgain: boolean;
+  isReviewed: boolean;
+  createdAt: string;
+  reviewedByUserName?: string | null;
+  reviewedAt?: string | null;
+}
+
+export interface FeedbackListResponse {
+  items: FeedbackItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface FeedbackSummary {
+  totalCount: number;
+  reviewedCount: number;
+  unreviewedCount: number;
+  averageRating: number;
+  averageSprintsUsed: number;
+  satisfiedCount: number;
+  unsatisfiedCount: number;
+  encounteredBugsCount: number;
+  wouldTryAgainCount: number;
+  dissatisfactionReasonCounts: Record<string, number>;
+  ratingDistribution: Record<string, number>;
+}
+
+export const createFeedback = (payload: CreateFeedbackPayload): Promise<FeedbackItem> =>
+  fetchWithAuth('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export interface AdminFeedbackFilters {
+  page?: number;
+  pageSize?: number;
+  reviewed?: boolean;
+  satisfied?: boolean;
+  bugs?: boolean;
+  wouldTryAgain?: boolean;
+}
+
+export const getAdminFeedback = (filters: AdminFeedbackFilters = {}): Promise<FeedbackListResponse> => {
+  const params = new URLSearchParams();
+  if (filters.page) params.set('page', String(filters.page));
+  if (filters.pageSize) params.set('pageSize', String(filters.pageSize));
+  if (filters.reviewed !== undefined) params.set('reviewed', String(filters.reviewed));
+  if (filters.satisfied !== undefined) params.set('satisfied', String(filters.satisfied));
+  if (filters.bugs !== undefined) params.set('bugs', String(filters.bugs));
+  if (filters.wouldTryAgain !== undefined) params.set('wouldTryAgain', String(filters.wouldTryAgain));
+  const qs = params.toString();
+  return fetchWithAuth(`/admin/feedback${qs ? `?${qs}` : ''}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+};
+
+export const getAdminFeedbackSummary = (): Promise<FeedbackSummary> =>
+  fetchWithAuth('/admin/feedback/summary').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const toggleFeedbackReviewed = (id: number): Promise<FeedbackItem> =>
+  fetchWithAuth(`/admin/feedback/${id}/review`, { method: 'PATCH' }).then(async (r) => {
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });

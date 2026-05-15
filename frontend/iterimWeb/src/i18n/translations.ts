@@ -629,6 +629,7 @@ export type TranslationKey =
   | 'admin.systemTitle'
   | 'admin.sidebarUsers'
   | 'admin.sidebarSystem'
+  | 'admin.sidebarFeedback'
   | 'admin.allUsers'
   | 'admin.addUser'
   | 'admin.editUser'
@@ -653,6 +654,75 @@ export type TranslationKey =
   | 'admin.totalProducts'
   | 'admin.failedLoad'
   | 'admin.search'
+
+  // Feedback (vartotojo forma)
+  | 'feedback.headerTitle'
+  | 'feedback.headerSubtitle'
+  | 'feedback.headerButton'
+  | 'feedback.section.usage'
+  | 'feedback.section.satisfaction'
+  | 'feedback.section.reasons'
+  | 'feedback.section.followUps'
+  | 'feedback.section.usefulFeature'
+  | 'feedback.section.bugs'
+  | 'feedback.section.future'
+  | 'feedback.field.sprintsUsed'
+  | 'feedback.field.sprintsUsedHint'
+  | 'feedback.field.overallRating'
+  | 'feedback.field.wasSatisfied'
+  | 'feedback.field.dissatisfactionReasons'
+  | 'feedback.field.missedFunctionalities'
+  | 'feedback.field.hardestToFind'
+  | 'feedback.field.daysToGetUsedTo'
+  | 'feedback.field.missedIntegrations'
+  | 'feedback.field.acceptablePrice'
+  | 'feedback.field.acceptablePriceHint'
+  | 'feedback.field.otherReason'
+  | 'feedback.field.unmentionedFlaw'
+  | 'feedback.field.mostUsefulFeature'
+  | 'feedback.field.encounteredBugs'
+  | 'feedback.field.bugContext'
+  | 'feedback.field.wouldTryAgain'
+  | 'feedback.reason.MissingFunctionality'
+  | 'feedback.reason.EasyToGetLost'
+  | 'feedback.reason.DifficultToStart'
+  | 'feedback.reason.MissingIntegration'
+  | 'feedback.reason.NotVisuallyAppealing'
+  | 'feedback.reason.NotUpToStandards'
+  | 'feedback.reason.TooExpensive'
+  | 'feedback.reason.Other'
+  | 'feedback.reason.UnmentionedFlaw'
+  | 'feedback.yes'
+  | 'feedback.no'
+  | 'feedback.submit'
+  | 'feedback.submitting'
+  | 'feedback.successToast'
+  | 'feedback.errorToast'
+  | 'feedback.validationError'
+
+  // Feedback (admin)
+  | 'feedback.admin.title'
+  | 'feedback.admin.summary.total'
+  | 'feedback.admin.summary.reviewed'
+  | 'feedback.admin.summary.avgRating'
+  | 'feedback.admin.summary.avgSprints'
+  | 'feedback.admin.summary.satisfied'
+  | 'feedback.admin.summary.wouldTryAgain'
+  | 'feedback.admin.summary.bugs'
+  | 'feedback.admin.charts.satisfaction'
+  | 'feedback.admin.charts.reasons'
+  | 'feedback.admin.charts.ratings'
+  | 'feedback.admin.filter.all'
+  | 'feedback.admin.filter.reviewed'
+  | 'feedback.admin.filter.unreviewed'
+  | 'feedback.admin.filter.satisfied'
+  | 'feedback.admin.filter.unsatisfied'
+  | 'feedback.admin.filter.withBugs'
+  | 'feedback.admin.filter.withoutBugs'
+  | 'feedback.admin.markReviewed'
+  | 'feedback.admin.markUnreviewed'
+  | 'feedback.admin.reviewedBy'
+  | 'feedback.admin.empty'
 
   // Layout
   | 'layout.breadcrumbHome'
@@ -1324,6 +1394,7 @@ export const translations: Record<Language, Translations> = {
     'admin.systemTitle': 'Sistemos informacija',
     'admin.sidebarUsers': 'Vartotojai',
     'admin.sidebarSystem': 'Sistema',
+    'admin.sidebarFeedback': 'Atsiliepimai',
     'admin.allUsers': 'Visi vartotojai',
     'admin.addUser': 'Pridėti vartotoją',
     'admin.editUser': 'Redaguoti vartotoją',
@@ -1348,6 +1419,75 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Iš viso produktų',
     'admin.failedLoad': 'Nepavyko įkelti duomenų.',
     'admin.search': 'Ieškoti vartotojų…',
+
+     // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
+    'feedback.headerTitle': 'Atsiliepimo forma',
+    'feedback.headerSubtitle': 'Pasidalinkite savo patirtimi naudojant Iterim. Jūsų atsiliepimas padės mums tobulinti sistemą.',
+    'feedback.headerButton': 'Atsiliepimas',
+    'feedback.section.usage': 'Naudojimas',
+    'feedback.section.satisfaction': 'Pasitenkinimas',
+    'feedback.section.reasons': 'Pasirinkite priežastis',
+    'feedback.section.followUps': 'Papildomi klausimai',
+    'feedback.section.usefulFeature': 'Naudingiausia funkcija',
+    'feedback.section.bugs': 'Klaidos',
+    'feedback.section.future': 'Ateitis',
+    'feedback.field.sprintsUsed': 'Kiek sprintų naudojotės Iterim?',
+    'feedback.field.sprintsUsedHint': 'Įveskite skaičių (pvz. 2)',
+    'feedback.field.overallRating': 'Bendras įvertinimas',
+    'feedback.field.wasSatisfied': 'Ar likote patenkinti sistema?',
+    'feedback.field.dissatisfactionReasons': 'Kodėl nelikote patenkinti? (galima rinktis kelias)',
+    'feedback.field.missedFunctionalities': 'Kokių funkcionalumų pasigedote?',
+    'feedback.field.hardestToFind': 'Kurias funkcijas buvo sunkiausia surasti?',
+    'feedback.field.daysToGetUsedTo': 'Kiek darbo dienų užtruko priprasti?',
+    'feedback.field.missedIntegrations': 'Kokios programos integracijos pasigedote?',
+    'feedback.field.acceptablePrice': 'Kiek būtų jums priimtina sistemos kaina?',
+    'feedback.field.acceptablePriceHint': 'EUR per mėnesį už vartotoją',
+    'feedback.field.otherReason': 'Aprašykite plačiau',
+    'feedback.field.unmentionedFlaw': 'Įveskite trūkumą, kuris nebuvo paminėtas',
+    'feedback.field.mostUsefulFeature': 'Kuri funkcija jums buvo naudingiausia? (neprivaloma)',
+    'feedback.field.encounteredBugs': 'Ar susidūrėte su klaidomis (bug\'ais)?',
+    'feedback.field.bugContext': 'Ką darėte, kai sistema nustojo veikti taip, kaip turėtų?',
+    'feedback.field.wouldTryAgain': 'Ar pamėgintumėte naudotis šia sistema po keleto atnaujinimų?',
+    'feedback.reason.MissingFunctionality': 'Trūko funkcionalumų',
+    'feedback.reason.EasyToGetLost': 'Buvo lengva pasimesti',
+    'feedback.reason.DifficultToStart': 'Buvo sunku pradėti naudotis',
+    'feedback.reason.MissingIntegration': 'Trūko kritinės programos integracijos',
+    'feedback.reason.NotVisuallyAppealing': 'Nebuvo patraukli akiai',
+    'feedback.reason.NotUpToStandards': 'Neatitiko įmonės standartų',
+    'feedback.reason.TooExpensive': 'Per brangu',
+    'feedback.reason.Other': 'Kita',
+    'feedback.reason.UnmentionedFlaw': 'Nepaminėtas trūkumas',
+    'feedback.yes': 'Taip',
+    'feedback.no': 'Ne',
+    'feedback.submit': 'Pateikti atsiliepimą',
+    'feedback.submitting': 'Siunčiama...',
+    'feedback.successToast': 'Ačiū už atsiliepimą!',
+    'feedback.errorToast': 'Nepavyko pateikti atsiliepimo',
+    'feedback.validationError': 'Užpildykite visus privalomus laukus',
+
+    // Feedback (admin) — AI vertimas, prašome peržiūrėti
+    'feedback.admin.title': 'Atsiliepimai',
+    'feedback.admin.summary.total': 'Iš viso',
+    'feedback.admin.summary.reviewed': 'Peržiūrėta',
+    'feedback.admin.summary.avgRating': 'Vidutinis įvertinimas',
+    'feedback.admin.summary.avgSprints': 'Vid. sprintų naudota',
+    'feedback.admin.summary.satisfied': 'Patenkinti',
+    'feedback.admin.summary.wouldTryAgain': 'Pamėgintų vėl',
+    'feedback.admin.summary.bugs': 'Sutiko klaidų',
+    'feedback.admin.charts.satisfaction': 'Pasitenkinimas',
+    'feedback.admin.charts.reasons': 'Nepasitenkinimo priežastys',
+    'feedback.admin.charts.ratings': 'Įvertinimų pasiskirstymas',
+    'feedback.admin.filter.all': 'Visi',
+    'feedback.admin.filter.reviewed': 'Peržiūrėti',
+    'feedback.admin.filter.unreviewed': 'Neperžiūrėti',
+    'feedback.admin.filter.satisfied': 'Patenkinti',
+    'feedback.admin.filter.unsatisfied': 'Nepatenkinti',
+    'feedback.admin.filter.withBugs': 'Su klaidomis',
+    'feedback.admin.filter.withoutBugs': 'Be klaidų',
+    'feedback.admin.markReviewed': 'Pažymėti peržiūrėtu',
+    'feedback.admin.markUnreviewed': 'Pažymėti neperžiūrėtu',
+    'feedback.admin.reviewedBy': 'Peržiūrėjo',
+    'feedback.admin.empty': 'Atsiliepimų dar nėra',
 
     // Layout
     'layout.breadcrumbHome': 'Pradžia',
@@ -2016,6 +2156,7 @@ export const translations: Record<Language, Translations> = {
     'admin.systemTitle': 'System information',
     'admin.sidebarUsers': 'Users',
     'admin.sidebarSystem': 'System',
+    'admin.sidebarFeedback': 'Feedback',
     'admin.allUsers': 'All users',
     'admin.addUser': 'Add user',
     'admin.editUser': 'Edit user',
@@ -2040,6 +2181,75 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Total products',
     'admin.failedLoad': 'Failed to load data.',
     'admin.search': 'Search users…',
+
+    // Feedback (user form)
+    'feedback.headerTitle': 'Feedback form',
+    'feedback.headerSubtitle': 'Share your experience with Iterim. Your feedback helps us improve the system.',
+    'feedback.headerButton': 'Feedback',
+    'feedback.section.usage': 'Usage',
+    'feedback.section.satisfaction': 'Satisfaction',
+    'feedback.section.reasons': 'Select reasons',
+    'feedback.section.followUps': 'Follow-up questions',
+    'feedback.section.usefulFeature': 'Most useful feature',
+    'feedback.section.bugs': 'Bugs',
+    'feedback.section.future': 'Future',
+    'feedback.field.sprintsUsed': 'How many sprints did you use Iterim?',
+    'feedback.field.sprintsUsedHint': 'Enter a number (e.g. 2)',
+    'feedback.field.overallRating': 'Overall rating',
+    'feedback.field.wasSatisfied': 'Was your experience satisfying?',
+    'feedback.field.dissatisfactionReasons': 'Why were you dissatisfied? (select all that apply)',
+    'feedback.field.missedFunctionalities': 'What functionalities did you miss?',
+    'feedback.field.hardestToFind': 'Which functions were hardest to find?',
+    'feedback.field.daysToGetUsedTo': 'How many working days did it take to get used to it?',
+    'feedback.field.missedIntegrations': 'What program integration did you miss?',
+    'feedback.field.acceptablePrice': 'What price would be acceptable to you?',
+    'feedback.field.acceptablePriceHint': 'EUR per month per user',
+    'feedback.field.otherReason': 'Please describe',
+    'feedback.field.unmentionedFlaw': 'Please write down the flaw',
+    'feedback.field.mostUsefulFeature': 'Which feature was most useful to you? (optional)',
+    'feedback.field.encounteredBugs': 'Did you encounter any bugs?',
+    'feedback.field.bugContext': 'What were you doing when the bug occurred?',
+    'feedback.field.wouldTryAgain': 'Would you try Iterim again after a few updates?',
+    'feedback.reason.MissingFunctionality': 'Lacking in functionality',
+    'feedback.reason.EasyToGetLost': 'Easy to get lost',
+    'feedback.reason.DifficultToStart': 'Difficult to start using',
+    'feedback.reason.MissingIntegration': 'Lacked a critical program integration',
+    'feedback.reason.NotVisuallyAppealing': 'Too unappealing visually',
+    'feedback.reason.NotUpToStandards': 'Not up to company\'s standards',
+    'feedback.reason.TooExpensive': 'Too expensive',
+    'feedback.reason.Other': 'Other',
+    'feedback.reason.UnmentionedFlaw': 'A flaw not mentioned',
+    'feedback.yes': 'Yes',
+    'feedback.no': 'No',
+    'feedback.submit': 'Submit feedback',
+    'feedback.submitting': 'Submitting...',
+    'feedback.successToast': 'Thank you for your feedback!',
+    'feedback.errorToast': 'Failed to submit feedback',
+    'feedback.validationError': 'Please fill in all required fields',
+
+    // Feedback (admin)
+    'feedback.admin.title': 'Feedback',
+    'feedback.admin.summary.total': 'Total',
+    'feedback.admin.summary.reviewed': 'Reviewed',
+    'feedback.admin.summary.avgRating': 'Average rating',
+    'feedback.admin.summary.avgSprints': 'Avg. sprints used',
+    'feedback.admin.summary.satisfied': 'Satisfied',
+    'feedback.admin.summary.wouldTryAgain': 'Would try again',
+    'feedback.admin.summary.bugs': 'Encountered bugs',
+    'feedback.admin.charts.satisfaction': 'Satisfaction',
+    'feedback.admin.charts.reasons': 'Dissatisfaction reasons',
+    'feedback.admin.charts.ratings': 'Rating distribution',
+    'feedback.admin.filter.all': 'All',
+    'feedback.admin.filter.reviewed': 'Reviewed',
+    'feedback.admin.filter.unreviewed': 'Unreviewed',
+    'feedback.admin.filter.satisfied': 'Satisfied',
+    'feedback.admin.filter.unsatisfied': 'Unsatisfied',
+    'feedback.admin.filter.withBugs': 'With bugs',
+    'feedback.admin.filter.withoutBugs': 'Without bugs',
+    'feedback.admin.markReviewed': 'Mark as reviewed',
+    'feedback.admin.markUnreviewed': 'Mark as unreviewed',
+    'feedback.admin.reviewedBy': 'Reviewed by',
+    'feedback.admin.empty': 'No feedback yet',
 
     // Layout
     'layout.breadcrumbHome': 'Home',

@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { SidebarContent } from './Sidebar';
 import { NotificationDropdown } from './NotificationDropdown';
+import { MessageSquareText } from 'lucide-react';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -92,6 +93,16 @@ export function Header() {
               <Shield className="h-4 w-4" />
             </Button>
           )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-accent"
+            onClick={() => navigate('/feedback')}
+            title={t('feedback.headerButton')}
+          >
+            <MessageSquareText className="h-4 w-4" />
+          </Button>
 
           <NotificationDropdown />
 

@@ -102,6 +102,7 @@ builder.Services.AddScoped<IAtpaService, AtpaService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IRetroService, RetroService>();
 builder.Services.AddHostedService<NotificationCleanupService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
 
 // CORS — restrict methods and headers

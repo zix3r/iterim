@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
     public DbSet<WorkItemDependency> WorkItemDependencies => Set<WorkItemDependency>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Feedback> Feedbacks => Set<Feedback>();
     public DbSet<RetroItem> RetroItems => Set<RetroItem>();
     public DbSet<RetroVote> RetroVotes => Set<RetroVote>();
 
@@ -430,6 +431,35 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Feedback ─────────────────────────────────────────
+        modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.HasIndex(f => f.UserId);
+            entity.HasIndex(f => f.IsReviewed);
+            entity.HasIndex(f => f.CreatedAt);
+
+            entity.Property(f => f.Language).HasMaxLength(8);
+            entity.Property(f => f.DissatisfactionReasons).HasConversion<int>();
+            entity.Property(f => f.MissedFunctionalities).HasMaxLength(2000);
+            entity.Property(f => f.HardestToFind).HasMaxLength(2000);
+            entity.Property(f => f.MissedIntegrations).HasMaxLength(2000);
+            entity.Property(f => f.OtherReasonDescription).HasMaxLength(2000);
+            entity.Property(f => f.UnmentionedFlawDescription).HasMaxLength(2000);
+            entity.Property(f => f.MostUsefulFeature).HasMaxLength(2000);
+            entity.Property(f => f.BugContext).HasMaxLength(2000);
+            entity.Property(f => f.AcceptableMonthlyPricePerUser).HasPrecision(10, 2);
+
+            entity.HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(f => f.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(f => f.ReviewedBy)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── Notification ─────────────────────────────────────
