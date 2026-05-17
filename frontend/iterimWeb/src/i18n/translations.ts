@@ -54,6 +54,13 @@ export type TranslationKey =
   | 'common.openMenu'
   | 'common.unauthorized'
   | 'common.notFound'
+  | 'common.justNow'
+  | 'common.minuteAgo'
+  | 'common.minutesAgo'
+  | 'common.hourAgo'
+  | 'common.hoursAgo'
+  | 'common.dayAgo'
+  | 'common.daysAgo'
 
   // Header
   | 'header.themeToggle.toLight'
@@ -65,6 +72,41 @@ export type TranslationKey =
   | 'header.notifications'
   | 'header.openMenu'
   | 'header.navigation'
+
+  // Notifications
+  | 'notifications.dropdownTitle'
+  | 'notifications.markAllRead'
+  | 'notifications.empty'
+  | 'notifications.emptyDescription'
+  | 'notifications.loading'
+  | 'notifications.unreadBadge'
+  | 'notifications.workItemAssigned.title'
+  | 'notifications.workItemAssigned.message'
+  | 'notifications.blockerResolved.title'
+  | 'notifications.blockerResolved.message'
+  | 'notifications.addedToTeam.title'
+  | 'notifications.addedToTeam.message'
+  | 'notifications.addedToOrganization.title'
+  | 'notifications.addedToOrganization.message'
+  | 'notifications.passwordReset.title'
+  | 'notifications.passwordReset.message'
+  | 'notifications.preferences.title'
+  | 'notifications.preferences.description'
+  | 'notifications.preferences.master'
+  | 'notifications.preferences.masterDescription'
+  | 'notifications.preferences.workItemAssigned'
+  | 'notifications.preferences.blockerResolved'
+  | 'notifications.preferences.addedToTeam'
+  | 'notifications.preferences.addedToOrganization'
+  | 'notifications.preferences.passwordResetNote'
+  | 'notifications.preferences.savedToast'
+  | 'notifications.preferences.errorToast'
+
+  // Markdown
+  | 'markdown.helperText'
+  | 'markdown.tabEdit'
+  | 'markdown.tabPreview'
+  | 'markdown.emptyPlaceholder'
 
   // Vartotojo meniu
   | 'user.profile'
@@ -188,6 +230,12 @@ export type TranslationKey =
   | 'dashboard.activity.createdItem'
   | 'dashboard.activity.updatedItem'
   | 'dashboard.activity.commented'
+  | 'dashboard.blockedWork'
+  | 'dashboard.noBlockedWork'
+  | 'dashboard.blockedBy'
+  | 'dashboard.blockerDone'
+  | 'dashboard.blockerNotDone'
+  | 'dashboard.unfinishedBlockers'
 
   // Organizations
   | 'organizations.title'
@@ -233,6 +281,9 @@ export type TranslationKey =
   | 'organizations.roleUpdated'
   | 'organizations.failedRoleUpdate'
   | 'organizations.changeRoleConfirm'
+  | 'organizations.cannotChangeOwnRole'
+  | 'organizations.cannotChangeOwnerRole'
+  | 'organizations.cannotChangeOtherAdminRole'
   | 'organizations.email'
   | 'organizations.absence'
   | 'organizations.activeMembers'
@@ -308,6 +359,10 @@ export type TranslationKey =
   | 'teams.roleMember'
   | 'teams.roleAdmin'
   | 'teams.roleViewer'
+  | 'teams.cannotChangeOwnRole'
+  | 'teams.cannotChangeCreatorRole'
+  | 'teams.cannotChangeOtherAdminRole'
+  | 'teams.roleCreator'
   | 'teams.information'
   | 'teams.teamId'
   | 'teams.created'
@@ -316,6 +371,9 @@ export type TranslationKey =
   | 'teams.noMembers'
 
   // Backlog
+  | 'backlog.selected'
+  | 'backlog.moveTo'
+  | 'backlog.movingItems'
   | 'backlog.title'
   | 'backlog.addItem'
   | 'backlog.createItemTitle'
@@ -399,6 +457,18 @@ export type TranslationKey =
   | 'backlog.dragHere'
   | 'backlog.showCompleted'
   | 'backlog.completedCount'
+  | 'backlog.comments'
+  | 'backlog.commentsLoading'
+  | 'backlog.commentsEmpty'
+  | 'backlog.commentsEdited'
+  | 'backlog.commentsPlaceholder'
+  | 'backlog.commentsPosting'
+  | 'backlog.commentsPost'
+  | 'backlog.commentsDeleteTitle'
+  | 'backlog.commentsDeleteDesc'
+  | 'backlog.commentsFailedAdd'
+  | 'backlog.commentsFailedUpdate'
+  | 'backlog.commentsFailedDelete'
 
   // ATPA – Automatinis Task'ų Priskyrimo Algoritmas
   | 'atpa.suggestButton'
@@ -475,6 +545,7 @@ export type TranslationKey =
   | 'board.cannotMoveBlocked'
   | 'board.failedLoad'
   | 'board.failedMove'
+  | 'board.noTags'
 
   // Metrics
   | 'metrics.title'
@@ -568,6 +639,7 @@ export type TranslationKey =
   | 'admin.systemTitle'
   | 'admin.sidebarUsers'
   | 'admin.sidebarSystem'
+  | 'admin.sidebarFeedback'
   | 'admin.allUsers'
   | 'admin.addUser'
   | 'admin.editUser'
@@ -593,6 +665,75 @@ export type TranslationKey =
   | 'admin.failedLoad'
   | 'admin.search'
 
+  // Feedback (vartotojo forma)
+  | 'feedback.headerTitle'
+  | 'feedback.headerSubtitle'
+  | 'feedback.headerButton'
+  | 'feedback.section.usage'
+  | 'feedback.section.satisfaction'
+  | 'feedback.section.reasons'
+  | 'feedback.section.followUps'
+  | 'feedback.section.usefulFeature'
+  | 'feedback.section.bugs'
+  | 'feedback.section.future'
+  | 'feedback.field.sprintsUsed'
+  | 'feedback.field.sprintsUsedHint'
+  | 'feedback.field.overallRating'
+  | 'feedback.field.wasSatisfied'
+  | 'feedback.field.dissatisfactionReasons'
+  | 'feedback.field.missedFunctionalities'
+  | 'feedback.field.hardestToFind'
+  | 'feedback.field.daysToGetUsedTo'
+  | 'feedback.field.missedIntegrations'
+  | 'feedback.field.acceptablePrice'
+  | 'feedback.field.acceptablePriceHint'
+  | 'feedback.field.otherReason'
+  | 'feedback.field.unmentionedFlaw'
+  | 'feedback.field.mostUsefulFeature'
+  | 'feedback.field.encounteredBugs'
+  | 'feedback.field.bugContext'
+  | 'feedback.field.wouldTryAgain'
+  | 'feedback.reason.MissingFunctionality'
+  | 'feedback.reason.EasyToGetLost'
+  | 'feedback.reason.DifficultToStart'
+  | 'feedback.reason.MissingIntegration'
+  | 'feedback.reason.NotVisuallyAppealing'
+  | 'feedback.reason.NotUpToStandards'
+  | 'feedback.reason.TooExpensive'
+  | 'feedback.reason.Other'
+  | 'feedback.reason.UnmentionedFlaw'
+  | 'feedback.yes'
+  | 'feedback.no'
+  | 'feedback.submit'
+  | 'feedback.submitting'
+  | 'feedback.successToast'
+  | 'feedback.errorToast'
+  | 'feedback.validationError'
+
+  // Feedback (admin)
+  | 'feedback.admin.title'
+  | 'feedback.admin.summary.total'
+  | 'feedback.admin.summary.reviewed'
+  | 'feedback.admin.summary.avgRating'
+  | 'feedback.admin.summary.avgSprints'
+  | 'feedback.admin.summary.satisfied'
+  | 'feedback.admin.summary.wouldTryAgain'
+  | 'feedback.admin.summary.bugs'
+  | 'feedback.admin.charts.satisfaction'
+  | 'feedback.admin.charts.reasons'
+  | 'feedback.admin.charts.ratings'
+  | 'feedback.admin.filter.all'
+  | 'feedback.admin.filter.reviewed'
+  | 'feedback.admin.filter.unreviewed'
+  | 'feedback.admin.filter.satisfied'
+  | 'feedback.admin.filter.unsatisfied'
+  | 'feedback.admin.filter.withBugs'
+  | 'feedback.admin.filter.withoutBugs'
+  | 'feedback.admin.markReviewed'
+  | 'feedback.admin.markUnreviewed'
+  | 'feedback.admin.reviewedBy'
+  | 'feedback.admin.empty'
+
   // Layout
   | 'layout.breadcrumbHome'
   | 'layout.breadcrumbOrganizations'
@@ -614,6 +755,30 @@ export type TranslationKey =
   | 'shared.errorContact'
   | 'shared.confirmTitle'
   | 'shared.confirmMessage'
+
+  // Retrospective
+  | 'retro.title'
+  | 'retro.button'
+  | 'retro.readOnlyBanner'
+  | 'retro.columnWentWell'
+  | 'retro.columnDidntGoWell'
+  | 'retro.columnActionItem'
+  | 'retro.addCard'
+  | 'retro.contentPlaceholder'
+  | 'retro.contentRequired'
+  | 'retro.empty'
+  | 'retro.votes'
+  | 'retro.vote'
+  | 'retro.unvote'
+  | 'retro.editCard'
+  | 'retro.deleteCard'
+  | 'retro.deleteConfirm'
+  | 'retro.failedLoad'
+  | 'retro.failedCreate'
+  | 'retro.failedUpdate'
+  | 'retro.failedDelete'
+  | 'retro.failedVote'
+  | 'retro.iterationNotStarted'
 
   // Kalbų pavadinimai
   | 'language.lt'
@@ -664,6 +829,13 @@ export const translations: Record<Language, Translations> = {
     'common.openMenu': 'Atidaryti meniu',
     'common.unauthorized': 'Neturite prieigos teisių',
     'common.notFound': 'Nerasta',
+    'common.justNow': 'ką tik',
+    'common.minuteAgo': 'prieš 1 min.',
+    'common.minutesAgo': 'prieš {n} min.',
+    'common.hourAgo': 'prieš 1 val.',
+    'common.hoursAgo': 'prieš {n} val.',
+    'common.dayAgo': 'prieš 1 d.',
+    'common.daysAgo': 'prieš {n} d.',
 
     // Header
     'header.themeToggle.toLight': 'Pakeisti į šviesųjį režimą',
@@ -675,6 +847,41 @@ export const translations: Record<Language, Translations> = {
     'header.notifications': 'Pranešimai',
     'header.openMenu': 'Atidaryti meniu',
     'header.navigation': 'Navigacija',
+
+    // Notifications (TODO: translate to Lithuanian)
+    'notifications.dropdownTitle': 'Notifications',
+    'notifications.markAllRead': 'Mark all as read',
+    'notifications.empty': 'No notifications yet',
+    'notifications.emptyDescription': "We'll let you know when something happens.",
+    'notifications.loading': 'Loading...',
+    'notifications.unreadBadge': '{count} unread',
+    'notifications.workItemAssigned.title': 'Work item assigned',
+    'notifications.workItemAssigned.message': 'You\'ve been assigned to work item: "{workItemTitle}".',
+    'notifications.blockerResolved.title': 'Work item unblocked',
+    'notifications.blockerResolved.message': 'Work item "{workItemTitle}" has been unblocked — the blocking work item "{blockerTitle}" was completed.',
+    'notifications.addedToTeam.title': 'Added to team',
+    'notifications.addedToTeam.message': 'You\'ve been added to the team "{teamName}".',
+    'notifications.addedToOrganization.title': 'Invited to organization',
+    'notifications.addedToOrganization.message': 'You\'ve been invited to the organization "{organizationName}".',
+    'notifications.passwordReset.title': 'Password reset',
+    'notifications.passwordReset.message': 'An administrator has initiated a password reset for your account. Check your email for the reset link.',
+    'notifications.preferences.title': 'Notifications',
+    'notifications.preferences.description': 'Choose which notifications you want to receive.',
+    'notifications.preferences.master': 'Enable notifications',
+    'notifications.preferences.masterDescription': "Master switch — when off, you won't receive any notifications.",
+    'notifications.preferences.workItemAssigned': 'Work item assignments',
+    'notifications.preferences.blockerResolved': 'Blocker resolved',
+    'notifications.preferences.addedToTeam': 'Added to a team',
+    'notifications.preferences.addedToOrganization': 'Added to an organization',
+    'notifications.preferences.passwordResetNote': "Password reset notifications can't be turned off.",
+    'notifications.preferences.savedToast': 'Notification preferences saved',
+    'notifications.preferences.errorToast': 'Could not save preferences',
+
+    // Markdown (TODO: translate to Lithuanian)
+    'markdown.helperText': 'Supports Markdown formatting',
+    'markdown.tabEdit': 'Edit',
+    'markdown.tabPreview': 'Preview',
+    'markdown.emptyPlaceholder': 'Click to add a description...',
 
     // Vartotojo meniu
     'user.profile': 'Profilis',
@@ -798,6 +1005,12 @@ export const translations: Record<Language, Translations> = {
     'dashboard.activity.createdItem': 'sukūrė naują elementą',
     'dashboard.activity.updatedItem': 'atnaujino elementą',
     'dashboard.activity.commented': 'paliko komentarą',
+    'dashboard.blockedWork': 'Blokuojami darbai',
+    'dashboard.noBlockedWork': 'Šiuo metu jūsų darbai nėra blokuojami.',
+    'dashboard.blockedBy': 'Blokuoja',
+    'dashboard.blockerDone': 'Užbaigta',
+    'dashboard.blockerNotDone': 'Neužbaigta',
+    'dashboard.unfinishedBlockers': 'neužbaigti blokeriai',
 
     // Organizations
     'organizations.title': 'Organizacijos',
@@ -843,6 +1056,9 @@ export const translations: Record<Language, Translations> = {
     'organizations.roleUpdated': 'Nario rolė sėkmingai atnaujinta',
     'organizations.failedRoleUpdate': 'Nepavyko atnaujinti nario rolės.',
     'organizations.changeRoleConfirm': 'Ar tikrai norite pakeisti šio nario rolę?',
+    'organizations.cannotChangeOwnRole': 'Savo paties rolės keisti negalite',
+    'organizations.cannotChangeOwnerRole': 'Savininko rolės pakeisti negalima',
+    'organizations.cannotChangeOtherAdminRole': 'Šio administratoriaus rolės sumažinti gali tik savininkas arba tas, kuris šią rolę jam suteikė',
     'organizations.email': 'El. paštas',
     'organizations.absence': 'Pravaikšta',
     'organizations.activeMembers': 'Aktyvūs nariai',
@@ -918,6 +1134,10 @@ export const translations: Record<Language, Translations> = {
     'teams.roleMember': 'Narys',
     'teams.roleAdmin': 'Administratorius',
     'teams.roleViewer': 'Stebėtojas',
+    'teams.cannotChangeOwnRole': 'Savo paties rolės keisti negalite',
+    'teams.cannotChangeCreatorRole': 'Komandos kūrėjo rolės pakeisti negalima',
+    'teams.cannotChangeOtherAdminRole': 'Šio administratoriaus rolės sumažinti gali tik komandos / produkto kūrėjas arba tas, kuris šią rolę jam suteikė',
+    'teams.roleCreator': 'Kūrėjas',
     'teams.information': 'Komandos informacija',
     'teams.teamId': 'Komandos ID',
     'teams.created': 'Sukurta',
@@ -926,6 +1146,9 @@ export const translations: Record<Language, Translations> = {
     'teams.noMembers': 'Šioje komandoje narių dar nėra.',
 
     // Backlog
+    'backlog.selected': 'pasirinkta',
+    'backlog.moveTo': 'Perkelti į...',
+    'backlog.movingItems': 'Perkeliama elementų:',
     'backlog.title': 'Darbų sąrašas',
     'backlog.addItem': 'Pridėti darbo elementą',
     'backlog.createItemTitle': 'Sukurti darbo elementą',
@@ -1009,6 +1232,18 @@ export const translations: Record<Language, Translations> = {
     'backlog.dragHere': 'Tempkite elementus čia, kad suplanuotumėte šią iteraciją',
     'backlog.showCompleted': 'Rodyti užbaigtas',
     'backlog.completedCount': 'užbaigtos',
+    'backlog.comments': 'Komentarai',
+    'backlog.commentsLoading': 'Kraunami komentarai…',
+    'backlog.commentsEmpty': 'Dar nėra komentarų',
+    'backlog.commentsEdited': '(redaguota)',
+    'backlog.commentsPlaceholder': 'Parašykite komentarą… (Ctrl+Enter)',
+    'backlog.commentsPosting': 'Skelbiama…',
+    'backlog.commentsPost': 'Komentuoti',
+    'backlog.commentsDeleteTitle': 'Ištrinti komentarą?',
+    'backlog.commentsDeleteDesc': 'Šio veiksmo negalima bus atšaukti.',
+    'backlog.commentsFailedAdd': 'Nepavyko pridėti komentaro',
+    'backlog.commentsFailedUpdate': 'Nepavyko atnaujinti komentaro',
+    'backlog.commentsFailedDelete': 'Nepavyko ištrinti komentaro',
 
     // ATPA
     'atpa.suggestButton': 'Siūlyti priskyrimus',
@@ -1085,6 +1320,7 @@ export const translations: Record<Language, Translations> = {
     'board.cannotMoveBlocked': 'Negalima perkelti užblokuoto elemento.',
     'board.failedLoad': 'Nepavyko įkelti lentos.',
     'board.failedMove': 'Nepavyko perkelti elemento.',
+    'board.noTags': 'Žymų nėra',
 
     // Metrics
     'metrics.title': 'Metrikos',
@@ -1178,6 +1414,7 @@ export const translations: Record<Language, Translations> = {
     'admin.systemTitle': 'Sistemos informacija',
     'admin.sidebarUsers': 'Vartotojai',
     'admin.sidebarSystem': 'Sistema',
+    'admin.sidebarFeedback': 'Atsiliepimai',
     'admin.allUsers': 'Visi vartotojai',
     'admin.addUser': 'Pridėti vartotoją',
     'admin.editUser': 'Redaguoti vartotoją',
@@ -1203,6 +1440,75 @@ export const translations: Record<Language, Translations> = {
     'admin.failedLoad': 'Nepavyko įkelti duomenų.',
     'admin.search': 'Ieškoti vartotojų…',
 
+     // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
+    'feedback.headerTitle': 'Atsiliepimo forma',
+    'feedback.headerSubtitle': 'Pasidalinkite savo patirtimi naudojant Iterim. Jūsų atsiliepimas padės mums tobulinti sistemą.',
+    'feedback.headerButton': 'Atsiliepimas',
+    'feedback.section.usage': 'Naudojimas',
+    'feedback.section.satisfaction': 'Pasitenkinimas',
+    'feedback.section.reasons': 'Pasirinkite priežastis',
+    'feedback.section.followUps': 'Papildomi klausimai',
+    'feedback.section.usefulFeature': 'Naudingiausia funkcija',
+    'feedback.section.bugs': 'Klaidos',
+    'feedback.section.future': 'Ateitis',
+    'feedback.field.sprintsUsed': 'Kiek sprintų naudojotės Iterim?',
+    'feedback.field.sprintsUsedHint': 'Įveskite skaičių (pvz. 2)',
+    'feedback.field.overallRating': 'Bendras įvertinimas',
+    'feedback.field.wasSatisfied': 'Ar likote patenkinti sistema?',
+    'feedback.field.dissatisfactionReasons': 'Kodėl nelikote patenkinti? (galima rinktis kelias)',
+    'feedback.field.missedFunctionalities': 'Kokių funkcionalumų pasigedote?',
+    'feedback.field.hardestToFind': 'Kurias funkcijas buvo sunkiausia surasti?',
+    'feedback.field.daysToGetUsedTo': 'Kiek darbo dienų užtruko priprasti?',
+    'feedback.field.missedIntegrations': 'Kokios programos integracijos pasigedote?',
+    'feedback.field.acceptablePrice': 'Kiek būtų jums priimtina sistemos kaina?',
+    'feedback.field.acceptablePriceHint': 'EUR per mėnesį už vartotoją',
+    'feedback.field.otherReason': 'Aprašykite plačiau',
+    'feedback.field.unmentionedFlaw': 'Įveskite trūkumą, kuris nebuvo paminėtas',
+    'feedback.field.mostUsefulFeature': 'Kuri funkcija jums buvo naudingiausia? (neprivaloma)',
+    'feedback.field.encounteredBugs': 'Ar susidūrėte su klaidomis (bug\'ais)?',
+    'feedback.field.bugContext': 'Ką darėte, kai sistema nustojo veikti taip, kaip turėtų?',
+    'feedback.field.wouldTryAgain': 'Ar pamėgintumėte naudotis šia sistema po keleto atnaujinimų?',
+    'feedback.reason.MissingFunctionality': 'Trūko funkcionalumų',
+    'feedback.reason.EasyToGetLost': 'Buvo lengva pasimesti',
+    'feedback.reason.DifficultToStart': 'Buvo sunku pradėti naudotis',
+    'feedback.reason.MissingIntegration': 'Trūko kritinės programos integracijos',
+    'feedback.reason.NotVisuallyAppealing': 'Nebuvo patraukli akiai',
+    'feedback.reason.NotUpToStandards': 'Neatitiko įmonės standartų',
+    'feedback.reason.TooExpensive': 'Per brangu',
+    'feedback.reason.Other': 'Kita',
+    'feedback.reason.UnmentionedFlaw': 'Nepaminėtas trūkumas',
+    'feedback.yes': 'Taip',
+    'feedback.no': 'Ne',
+    'feedback.submit': 'Pateikti atsiliepimą',
+    'feedback.submitting': 'Siunčiama...',
+    'feedback.successToast': 'Ačiū už atsiliepimą!',
+    'feedback.errorToast': 'Nepavyko pateikti atsiliepimo',
+    'feedback.validationError': 'Užpildykite visus privalomus laukus',
+
+    // Feedback (admin) — AI vertimas, prašome peržiūrėti
+    'feedback.admin.title': 'Atsiliepimai',
+    'feedback.admin.summary.total': 'Iš viso',
+    'feedback.admin.summary.reviewed': 'Peržiūrėta',
+    'feedback.admin.summary.avgRating': 'Vidutinis įvertinimas',
+    'feedback.admin.summary.avgSprints': 'Vid. sprintų naudota',
+    'feedback.admin.summary.satisfied': 'Patenkinti',
+    'feedback.admin.summary.wouldTryAgain': 'Pamėgintų vėl',
+    'feedback.admin.summary.bugs': 'Sutiko klaidų',
+    'feedback.admin.charts.satisfaction': 'Pasitenkinimas',
+    'feedback.admin.charts.reasons': 'Nepasitenkinimo priežastys',
+    'feedback.admin.charts.ratings': 'Įvertinimų pasiskirstymas',
+    'feedback.admin.filter.all': 'Visi',
+    'feedback.admin.filter.reviewed': 'Peržiūrėti',
+    'feedback.admin.filter.unreviewed': 'Neperžiūrėti',
+    'feedback.admin.filter.satisfied': 'Patenkinti',
+    'feedback.admin.filter.unsatisfied': 'Nepatenkinti',
+    'feedback.admin.filter.withBugs': 'Su klaidomis',
+    'feedback.admin.filter.withoutBugs': 'Be klaidų',
+    'feedback.admin.markReviewed': 'Pažymėti peržiūrėtu',
+    'feedback.admin.markUnreviewed': 'Pažymėti neperžiūrėtu',
+    'feedback.admin.reviewedBy': 'Peržiūrėjo',
+    'feedback.admin.empty': 'Atsiliepimų dar nėra',
+
     // Layout
     'layout.breadcrumbHome': 'Pradžia',
     'layout.breadcrumbOrganizations': 'Organizacijos',
@@ -1224,6 +1530,30 @@ export const translations: Record<Language, Translations> = {
     'shared.errorContact': 'Jei klaida kartojasi, susisiekite su Iterim administratoriais.',
     'shared.confirmTitle': 'Patvirtinkite veiksmą',
     'shared.confirmMessage': 'Ar tikrai norite tęsti?',
+
+    // Retrospective
+    'retro.title': 'Retrospektyva',
+    'retro.button': 'Retrospektyva',
+    'retro.readOnlyBanner': 'Iteracija užbaigta — retrospektyva tik skaitymui.',
+    'retro.columnWentWell': 'Kas pavyko gerai',
+    'retro.columnDidntGoWell': 'Kas nepavyko',
+    'retro.columnActionItem': 'Veiksmai kitam sprintui',
+    'retro.addCard': 'Pridėti kortelę',
+    'retro.contentPlaceholder': 'Įveskite mintį…',
+    'retro.contentRequired': 'Kortelės turinys negali būti tuščias.',
+    'retro.empty': 'Šiame stulpelyje dar nėra kortelių.',
+    'retro.votes': 'balsai',
+    'retro.vote': 'Balsuoti',
+    'retro.unvote': 'Atšaukti balsą',
+    'retro.editCard': 'Redaguoti kortelę',
+    'retro.deleteCard': 'Ištrinti kortelę',
+    'retro.deleteConfirm': 'Ar tikrai norite ištrinti šią kortelę?',
+    'retro.failedLoad': 'Nepavyko įkelti retrospektyvos.',
+    'retro.failedCreate': 'Nepavyko pridėti kortelės.',
+    'retro.failedUpdate': 'Nepavyko atnaujinti kortelės.',
+    'retro.failedDelete': 'Nepavyko ištrinti kortelės.',
+    'retro.failedVote': 'Nepavyko balsuoti.',
+    'retro.iterationNotStarted': 'Retrospektyva pasiekiama tik aktyvioms ar užbaigtoms iteracijoms.',
 
     // Kalbų pavadinimai
     'language.lt': 'Lietuvių',
@@ -1271,6 +1601,13 @@ export const translations: Record<Language, Translations> = {
     'common.openMenu': 'Open menu',
     'common.unauthorized': 'You are not authorized',
     'common.notFound': 'Not found',
+    'common.justNow': 'just now',
+    'common.minuteAgo': '1 minute ago',
+    'common.minutesAgo': '{n} minutes ago',
+    'common.hourAgo': '1 hour ago',
+    'common.hoursAgo': '{n} hours ago',
+    'common.dayAgo': '1 day ago',
+    'common.daysAgo': '{n} days ago',
 
     // Header
     'header.themeToggle.toLight': 'Switch to light mode',
@@ -1282,6 +1619,41 @@ export const translations: Record<Language, Translations> = {
     'header.notifications': 'Notifications',
     'header.openMenu': 'Open menu',
     'header.navigation': 'Navigation',
+
+    // Notifications
+    'notifications.dropdownTitle': 'Notifications',
+    'notifications.markAllRead': 'Mark all as read',
+    'notifications.empty': 'No notifications yet',
+    'notifications.emptyDescription': "We'll let you know when something happens.",
+    'notifications.loading': 'Loading...',
+    'notifications.unreadBadge': '{count} unread',
+    'notifications.workItemAssigned.title': 'Work item assigned',
+    'notifications.workItemAssigned.message': 'You\'ve been assigned to work item: "{workItemTitle}".',
+    'notifications.blockerResolved.title': 'Work item unblocked',
+    'notifications.blockerResolved.message': 'Work item "{workItemTitle}" has been unblocked — the blocking work item "{blockerTitle}" was completed.',
+    'notifications.addedToTeam.title': 'Added to team',
+    'notifications.addedToTeam.message': 'You\'ve been added to the team "{teamName}".',
+    'notifications.addedToOrganization.title': 'Invited to organization',
+    'notifications.addedToOrganization.message': 'You\'ve been invited to the organization "{organizationName}".',
+    'notifications.passwordReset.title': 'Password reset',
+    'notifications.passwordReset.message': 'An administrator has initiated a password reset for your account. Check your email for the reset link.',
+    'notifications.preferences.title': 'Notifications',
+    'notifications.preferences.description': 'Choose which notifications you want to receive.',
+    'notifications.preferences.master': 'Enable notifications',
+    'notifications.preferences.masterDescription': "Master switch — when off, you won't receive any notifications.",
+    'notifications.preferences.workItemAssigned': 'Work item assignments',
+    'notifications.preferences.blockerResolved': 'Blocker resolved',
+    'notifications.preferences.addedToTeam': 'Added to a team',
+    'notifications.preferences.addedToOrganization': 'Added to an organization',
+    'notifications.preferences.passwordResetNote': "Password reset notifications can't be turned off.",
+    'notifications.preferences.savedToast': 'Notification preferences saved',
+    'notifications.preferences.errorToast': 'Could not save preferences',
+
+    // Markdown
+    'markdown.helperText': 'Supports Markdown formatting',
+    'markdown.tabEdit': 'Edit',
+    'markdown.tabPreview': 'Preview',
+    'markdown.emptyPlaceholder': 'Click to add a description...',
 
     // User menu
     'user.profile': 'Profile',
@@ -1405,6 +1777,12 @@ export const translations: Record<Language, Translations> = {
     'dashboard.activity.createdItem': 'created a new item',
     'dashboard.activity.updatedItem': 'updated an item',
     'dashboard.activity.commented': 'commented',
+    'dashboard.blockedWork': 'Blocked Work',
+    'dashboard.noBlockedWork': 'None of your work items are currently blocked.',
+    'dashboard.blockedBy': 'Blocked by',
+    'dashboard.blockerDone': 'Done',
+    'dashboard.blockerNotDone': 'Not done',
+    'dashboard.unfinishedBlockers': 'unfinished blockers',
 
     // Organizations
     'organizations.title': 'Organizations',
@@ -1450,6 +1828,9 @@ export const translations: Record<Language, Translations> = {
     'organizations.roleUpdated': 'Member role updated successfully',
     'organizations.failedRoleUpdate': 'Failed to update member role.',
     'organizations.changeRoleConfirm': "Are you sure you want to change this member's role?",
+    'organizations.cannotChangeOwnRole': 'You cannot change your own role',
+    'organizations.cannotChangeOwnerRole': "The owner's role cannot be changed",
+    'organizations.cannotChangeOtherAdminRole': 'Only the owner or the admin who granted this role can change it',
     'organizations.email': 'Email',
     'organizations.absence': 'Absence',
     'organizations.activeMembers': 'Active Members',
@@ -1525,6 +1906,10 @@ export const translations: Record<Language, Translations> = {
     'teams.roleMember': 'Member',
     'teams.roleAdmin': 'Admin',
     'teams.roleViewer': 'Viewer',
+    'teams.cannotChangeOwnRole': 'You cannot change your own role',
+    'teams.cannotChangeCreatorRole': "The team creator's role cannot be changed",
+    'teams.cannotChangeOtherAdminRole': 'Only the team creator, the product creator, or the admin who granted this role can change it',
+    'teams.roleCreator': 'Creator',
     'teams.information': 'Team Information',
     'teams.teamId': 'Team ID',
     'teams.created': 'Created',
@@ -1533,6 +1918,9 @@ export const translations: Record<Language, Translations> = {
     'teams.noMembers': 'No members in this team yet.',
 
     // Backlog
+    'backlog.selected': 'selected',
+    'backlog.moveTo': 'Move to...',
+    'backlog.movingItems': 'Moving items:',
     'backlog.title': 'Backlog',
     'backlog.addItem': 'Add work item',
     'backlog.createItemTitle': 'Create work item',
@@ -1616,6 +2004,18 @@ export const translations: Record<Language, Translations> = {
     'backlog.dragHere': 'Drag items here to plan this iteration',
     'backlog.showCompleted': 'Show completed',
     'backlog.completedCount': 'completed',
+    'backlog.comments': 'Comments',
+    'backlog.commentsLoading': 'Loading comments…',
+    'backlog.commentsEmpty': 'No comments yet',
+    'backlog.commentsEdited': '(edited)',
+    'backlog.commentsPlaceholder': 'Write a comment… (Ctrl+Enter to submit)',
+    'backlog.commentsPosting': 'Posting…',
+    'backlog.commentsPost': 'Comment',
+    'backlog.commentsDeleteTitle': 'Delete comment?',
+    'backlog.commentsDeleteDesc': 'This action cannot be undone.',
+    'backlog.commentsFailedAdd': 'Failed to add comment',
+    'backlog.commentsFailedUpdate': 'Failed to update comment',
+    'backlog.commentsFailedDelete': 'Failed to delete comment',
 
     // ATPA
     'atpa.suggestButton': 'Suggest assignments',
@@ -1692,6 +2092,7 @@ export const translations: Record<Language, Translations> = {
     'board.cannotMoveBlocked': 'Cannot move a blocked item.',
     'board.failedLoad': 'Failed to load board.',
     'board.failedMove': 'Failed to move item.',
+    'board.noTags': 'No tags',
 
     // Metrics
     'metrics.title': 'Metrics',
@@ -1785,6 +2186,7 @@ export const translations: Record<Language, Translations> = {
     'admin.systemTitle': 'System information',
     'admin.sidebarUsers': 'Users',
     'admin.sidebarSystem': 'System',
+    'admin.sidebarFeedback': 'Feedback',
     'admin.allUsers': 'All users',
     'admin.addUser': 'Add user',
     'admin.editUser': 'Edit user',
@@ -1810,6 +2212,75 @@ export const translations: Record<Language, Translations> = {
     'admin.failedLoad': 'Failed to load data.',
     'admin.search': 'Search users…',
 
+    // Feedback (user form)
+    'feedback.headerTitle': 'Feedback form',
+    'feedback.headerSubtitle': 'Share your experience with Iterim. Your feedback helps us improve the system.',
+    'feedback.headerButton': 'Feedback',
+    'feedback.section.usage': 'Usage',
+    'feedback.section.satisfaction': 'Satisfaction',
+    'feedback.section.reasons': 'Select reasons',
+    'feedback.section.followUps': 'Follow-up questions',
+    'feedback.section.usefulFeature': 'Most useful feature',
+    'feedback.section.bugs': 'Bugs',
+    'feedback.section.future': 'Future',
+    'feedback.field.sprintsUsed': 'How many sprints did you use Iterim?',
+    'feedback.field.sprintsUsedHint': 'Enter a number (e.g. 2)',
+    'feedback.field.overallRating': 'Overall rating',
+    'feedback.field.wasSatisfied': 'Was your experience satisfying?',
+    'feedback.field.dissatisfactionReasons': 'Why were you dissatisfied? (select all that apply)',
+    'feedback.field.missedFunctionalities': 'What functionalities did you miss?',
+    'feedback.field.hardestToFind': 'Which functions were hardest to find?',
+    'feedback.field.daysToGetUsedTo': 'How many working days did it take to get used to it?',
+    'feedback.field.missedIntegrations': 'What program integration did you miss?',
+    'feedback.field.acceptablePrice': 'What price would be acceptable to you?',
+    'feedback.field.acceptablePriceHint': 'EUR per month per user',
+    'feedback.field.otherReason': 'Please describe',
+    'feedback.field.unmentionedFlaw': 'Please write down the flaw',
+    'feedback.field.mostUsefulFeature': 'Which feature was most useful to you? (optional)',
+    'feedback.field.encounteredBugs': 'Did you encounter any bugs?',
+    'feedback.field.bugContext': 'What were you doing when the bug occurred?',
+    'feedback.field.wouldTryAgain': 'Would you try Iterim again after a few updates?',
+    'feedback.reason.MissingFunctionality': 'Lacking in functionality',
+    'feedback.reason.EasyToGetLost': 'Easy to get lost',
+    'feedback.reason.DifficultToStart': 'Difficult to start using',
+    'feedback.reason.MissingIntegration': 'Lacked a critical program integration',
+    'feedback.reason.NotVisuallyAppealing': 'Too unappealing visually',
+    'feedback.reason.NotUpToStandards': 'Not up to company\'s standards',
+    'feedback.reason.TooExpensive': 'Too expensive',
+    'feedback.reason.Other': 'Other',
+    'feedback.reason.UnmentionedFlaw': 'A flaw not mentioned',
+    'feedback.yes': 'Yes',
+    'feedback.no': 'No',
+    'feedback.submit': 'Submit feedback',
+    'feedback.submitting': 'Submitting...',
+    'feedback.successToast': 'Thank you for your feedback!',
+    'feedback.errorToast': 'Failed to submit feedback',
+    'feedback.validationError': 'Please fill in all required fields',
+
+    // Feedback (admin)
+    'feedback.admin.title': 'Feedback',
+    'feedback.admin.summary.total': 'Total',
+    'feedback.admin.summary.reviewed': 'Reviewed',
+    'feedback.admin.summary.avgRating': 'Average rating',
+    'feedback.admin.summary.avgSprints': 'Avg. sprints used',
+    'feedback.admin.summary.satisfied': 'Satisfied',
+    'feedback.admin.summary.wouldTryAgain': 'Would try again',
+    'feedback.admin.summary.bugs': 'Encountered bugs',
+    'feedback.admin.charts.satisfaction': 'Satisfaction',
+    'feedback.admin.charts.reasons': 'Dissatisfaction reasons',
+    'feedback.admin.charts.ratings': 'Rating distribution',
+    'feedback.admin.filter.all': 'All',
+    'feedback.admin.filter.reviewed': 'Reviewed',
+    'feedback.admin.filter.unreviewed': 'Unreviewed',
+    'feedback.admin.filter.satisfied': 'Satisfied',
+    'feedback.admin.filter.unsatisfied': 'Unsatisfied',
+    'feedback.admin.filter.withBugs': 'With bugs',
+    'feedback.admin.filter.withoutBugs': 'Without bugs',
+    'feedback.admin.markReviewed': 'Mark as reviewed',
+    'feedback.admin.markUnreviewed': 'Mark as unreviewed',
+    'feedback.admin.reviewedBy': 'Reviewed by',
+    'feedback.admin.empty': 'No feedback yet',
+
     // Layout
     'layout.breadcrumbHome': 'Home',
     'layout.breadcrumbOrganizations': 'Organizations',
@@ -1831,6 +2302,30 @@ export const translations: Record<Language, Translations> = {
     'shared.errorContact': 'If the error persists, please contact support.',
     'shared.confirmTitle': 'Confirm action',
     'shared.confirmMessage': 'Are you sure you want to continue?',
+
+    // Retrospective
+    'retro.title': 'Retrospective',
+    'retro.button': 'Retrospective',
+    'retro.readOnlyBanner': 'Iteration is completed — retrospective is read-only.',
+    'retro.columnWentWell': 'Went Well',
+    'retro.columnDidntGoWell': "Didn't Go Well",
+    'retro.columnActionItem': 'Action Items',
+    'retro.addCard': 'Add card',
+    'retro.contentPlaceholder': 'Type your note…',
+    'retro.contentRequired': 'Card content cannot be empty.',
+    'retro.empty': 'No cards in this column yet.',
+    'retro.votes': 'votes',
+    'retro.vote': 'Vote',
+    'retro.unvote': 'Remove vote',
+    'retro.editCard': 'Edit card',
+    'retro.deleteCard': 'Delete card',
+    'retro.deleteConfirm': 'Are you sure you want to delete this card?',
+    'retro.failedLoad': 'Failed to load the retrospective.',
+    'retro.failedCreate': 'Failed to add the card.',
+    'retro.failedUpdate': 'Failed to update the card.',
+    'retro.failedDelete': 'Failed to delete the card.',
+    'retro.failedVote': 'Failed to vote.',
+    'retro.iterationNotStarted': 'The retrospective is only available for active or completed iterations.',
 
     // Language names
     'language.lt': 'Lithuanian',

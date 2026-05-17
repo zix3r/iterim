@@ -1,10 +1,14 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using iterimApi.Data;
 using iterimApi.DTOs.WorkItems;
 using iterimApi.Exceptions;
+using iterimApi.Models.Entities;
+using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace iterimApi.Controllers;
 
@@ -13,10 +17,12 @@ namespace iterimApi.Controllers;
 public class WorkItemsController : ControllerBase
 {
     private readonly IWorkItemService _workItemService;
+    private readonly AppDbContext _db;
 
-    public WorkItemsController(IWorkItemService workItemService)
+    public WorkItemsController(IWorkItemService workItemService, AppDbContext db)
     {
         _workItemService = workItemService;
+        _db = db;
     }
 
     /// <summary>
@@ -348,6 +354,244 @@ public class WorkItemsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred while reordering", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Bulk import work items from a Jira CSV export.
+    /// POST /api/teams/:teamId/workitems/bulk
+    /// Requires team admin role.
+    /// </summary>
+    [HttpPost("api/teams/{teamId}/workitems/bulk")]
+    public async Task<IActionResult> BulkCreateWorkItems(int teamId, [FromBody] BulkCreateWorkItemsDto dto)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var userId = GetUserId();
+            var count = await _workItemService.BulkCreateWorkItemsAsync(teamId, dto, userId);
+            return Ok(new { importedCount = count });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while importing work items", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get all comments for a work item.
+    /// GET /api/workitems/:id/comments
+    /// </summary>
+    [HttpGet("api/workitems/{id}/comments")]
+    public async Task<IActionResult> GetComments(int id)
+    {
+        try
+        {
+            var userId = GetUserId();
+            var workItem = await _db.WorkItems
+                .Include(wi => wi.Team).ThenInclude(t => t.Product)
+                .FirstOrDefaultAsync(wi => wi.Id == id);
+
+            if (workItem == null)
+                return NotFound(new { message = "Work item not found" });
+
+            var isMember = await _db.OrganizationMembers
+                .AnyAsync(om =>
+                    om.UserId == userId &&
+                    om.OrganizationId == workItem.Team.Product.OrganizationId &&
+                    om.Status == OrgMemberStatus.Active);
+
+            if (!isMember)
+                return StatusCode(403, new { message = "You are not a member of this organization" });
+
+            var comments = await _db.WorkItemComments
+                .Where(c => c.WorkItemId == id && c.ParentCommentId == null)
+                .Include(c => c.Author).ThenInclude(om => om.User)
+                .OrderBy(c => c.CreatedAt)
+                .Select(c => new WorkItemCommentDto
+                {
+                    Id = c.Id,
+                    WorkItemId = c.WorkItemId,
+                    AuthorId = c.AuthorId,
+                    AuthorUserId = c.Author.UserId,
+                    AuthorName = c.Author.User.Name,
+                    AuthorAvatarUrl = c.Author.User.AvatarUrl,
+                    Content = c.Message,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
+                })
+                .ToListAsync();
+
+            return Ok(comments);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while retrieving comments", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Add a comment to a work item.
+    /// POST /api/workitems/:id/comments
+    /// </summary>
+    [HttpPost("api/workitems/{id}/comments")]
+    public async Task<IActionResult> AddComment(int id, [FromBody] CreateWorkItemCommentDto dto)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var userId = GetUserId();
+            var workItem = await _db.WorkItems
+                .Include(wi => wi.Team).ThenInclude(t => t.Product)
+                .FirstOrDefaultAsync(wi => wi.Id == id);
+
+            if (workItem == null)
+                return NotFound(new { message = "Work item not found" });
+
+            var author = await _db.OrganizationMembers
+                .Include(om => om.User)
+                .FirstOrDefaultAsync(om =>
+                    om.UserId == userId &&
+                    om.OrganizationId == workItem.Team.Product.OrganizationId &&
+                    om.Status == OrgMemberStatus.Active);
+
+            if (author == null)
+                return StatusCode(403, new { message = "You are not a member of this organization" });
+
+            var now = DateTime.UtcNow;
+            var comment = new WorkItemComment
+            {
+                WorkItemId = id,
+                AuthorId = author.Id,
+                Message = dto.Content.Trim(),
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+
+            _db.WorkItemComments.Add(comment);
+            await _db.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetComments), new { id }, new WorkItemCommentDto
+            {
+                Id = comment.Id,
+                WorkItemId = comment.WorkItemId,
+                AuthorId = comment.AuthorId,
+                AuthorUserId = author.UserId,
+                AuthorName = author.User.Name,
+                AuthorAvatarUrl = author.User.AvatarUrl,
+                Content = comment.Message,
+                CreatedAt = comment.CreatedAt,
+                UpdatedAt = comment.UpdatedAt,
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while adding the comment", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Edit a comment (only the author can edit).
+    /// PUT /api/workitems/:id/comments/:commentId
+    /// </summary>
+    [HttpPut("api/workitems/{id}/comments/{commentId}")]
+    public async Task<IActionResult> EditComment(int id, int commentId, [FromBody] UpdateWorkItemCommentDto dto)
+    {
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
+
+        try
+        {
+            var userId = GetUserId();
+            var comment = await _db.WorkItemComments
+                .Include(c => c.Author).ThenInclude(om => om.User)
+                .FirstOrDefaultAsync(c => c.Id == commentId && c.WorkItemId == id);
+
+            if (comment == null)
+                return NotFound(new { message = "Comment not found" });
+
+            if (comment.Author.UserId != userId)
+                return StatusCode(403, new { message = "Only the author can edit this comment" });
+
+            comment.Message = dto.Content.Trim();
+            comment.UpdatedAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(new WorkItemCommentDto
+            {
+                Id = comment.Id,
+                WorkItemId = comment.WorkItemId,
+                AuthorId = comment.AuthorId,
+                AuthorUserId = comment.Author.UserId,
+                AuthorName = comment.Author.User.Name,
+                AuthorAvatarUrl = comment.Author.User.AvatarUrl,
+                Content = comment.Message,
+                CreatedAt = comment.CreatedAt,
+                UpdatedAt = comment.UpdatedAt,
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while editing the comment", error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Delete a comment (author or org admin).
+    /// DELETE /api/workitems/:id/comments/:commentId
+    /// </summary>
+    [HttpDelete("api/workitems/{id}/comments/{commentId}")]
+    public async Task<IActionResult> DeleteComment(int id, int commentId)
+    {
+        try
+        {
+            var userId = GetUserId();
+            var comment = await _db.WorkItemComments
+                .Include(c => c.WorkItem).ThenInclude(wi => wi.Team).ThenInclude(t => t.Product)
+                .Include(c => c.Author)
+                .FirstOrDefaultAsync(c => c.Id == commentId && c.WorkItemId == id);
+
+            if (comment == null)
+                return NotFound(new { message = "Comment not found" });
+
+            var isAuthor = comment.Author.UserId == userId;
+
+            if (!isAuthor)
+            {
+                var isTeamLeader = await _db.TeamMembers
+                    .AnyAsync(tm =>
+                        tm.TeamId == comment.WorkItem.TeamId &&
+                        tm.OrgMember.UserId == userId &&
+                        tm.Role == TeamMemberRole.Admin);
+
+                if (!isTeamLeader)
+                    return StatusCode(403, new { message = "Only the author or a team leader can delete this comment" });
+            }
+
+            _db.WorkItemComments.Remove(comment);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { message = "Comment deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred while deleting the comment", error = ex.Message });
         }
     }
 

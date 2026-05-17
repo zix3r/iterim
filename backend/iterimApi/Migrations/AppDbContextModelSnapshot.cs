@@ -17,10 +17,104 @@ namespace iterimApi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.15")
+                .HasAnnotation("ProductVersion", "9.0.16")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("iterimApi.Models.Entities.Feedback", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("AcceptableMonthlyPricePerUser")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("BugContext")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("DaysToGetUsedTo")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DissatisfactionReasons")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EncounteredBugs")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("HardestToFind")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<bool>("IsReviewed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.Property<string>("MissedFunctionalities")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("MissedIntegrations")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("MostUsefulFeature")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("OtherReasonDescription")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<int>("OverallRating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("ReviewedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SprintsUsed")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UnmentionedFlawDescription")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("WasSatisfied")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("WouldTryAgain")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsReviewed");
+
+                    b.HasIndex("ReviewedBy");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Feedbacks");
+                });
 
             modelBuilder.Entity("iterimApi.Models.Entities.Iteration", b =>
                 {
@@ -126,6 +220,66 @@ namespace iterimApi.Migrations
                     b.ToTable("MemberAbsences");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("MessageKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("MessageParams")
+                        .HasColumnType("json");
+
+                    b.Property<string>("RelatedUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("TitleKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "IsRead");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Organization", b =>
                 {
                     b.Property<int>("Id")
@@ -229,6 +383,9 @@ namespace iterimApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("RoleGrantedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -247,6 +404,8 @@ namespace iterimApi.Migrations
                     b.HasIndex("InvitedBy");
 
                     b.HasIndex("OrganizationId");
+
+                    b.HasIndex("RoleGrantedByUserId");
 
                     b.HasIndex("UpdatedByUserId");
 
@@ -387,6 +546,74 @@ namespace iterimApi.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.RetroItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Column")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("IterationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IterationId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("IterationId", "Column");
+
+                    b.ToTable("RetroItems");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.RetroVote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("RetroItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("RetroItemId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("RetroVotes");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -483,6 +710,9 @@ namespace iterimApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("RoleGrantedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("ScheduleType")
                         .HasColumnType("int");
 
@@ -503,6 +733,8 @@ namespace iterimApi.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("OrgMemberId");
+
+                    b.HasIndex("RoleGrantedByUserId");
 
                     b.HasIndex("TeamId");
 
@@ -569,6 +801,31 @@ namespace iterimApi.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<bool>("NotificationsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NotifyOnAddedToOrganization")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NotifyOnAddedToTeam")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NotifyOnBlockerResolved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("NotifyOnWorkItemAssigned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -588,6 +845,9 @@ namespace iterimApi.Migrations
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<int?>("RoleGrantedByUserId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Theme")
                         .IsRequired()
@@ -803,6 +1063,24 @@ namespace iterimApi.Migrations
                     b.ToTable("WorkItemTags");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.Feedback", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.User", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("iterimApi.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Iteration", b =>
                 {
                     b.HasOne("iterimApi.Models.Entities.User", "CreatedByUser")
@@ -857,6 +1135,17 @@ namespace iterimApi.Migrations
                     b.Navigation("UpdatedByUser");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.Notification", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Organization", b =>
                 {
                     b.HasOne("iterimApi.Models.Entities.User", "CreatedByUser")
@@ -900,6 +1189,11 @@ namespace iterimApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("iterimApi.Models.Entities.User", "RoleGrantedByUser")
+                        .WithMany()
+                        .HasForeignKey("RoleGrantedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("iterimApi.Models.Entities.User", "UpdatedByUser")
                         .WithMany()
                         .HasForeignKey("UpdatedByUserId")
@@ -914,6 +1208,8 @@ namespace iterimApi.Migrations
                     b.Navigation("InvitedByUser");
 
                     b.Navigation("Organization");
+
+                    b.Navigation("RoleGrantedByUser");
 
                     b.Navigation("UpdatedByUser");
 
@@ -988,6 +1284,44 @@ namespace iterimApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.RetroItem", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.Iteration", "Iteration")
+                        .WithMany()
+                        .HasForeignKey("IterationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Iteration");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("iterimApi.Models.Entities.RetroVote", b =>
+                {
+                    b.HasOne("iterimApi.Models.Entities.RetroItem", "RetroItem")
+                        .WithMany("Votes")
+                        .HasForeignKey("RetroItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("iterimApi.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RetroItem");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Tag", b =>
                 {
                     b.HasOne("iterimApi.Models.Entities.Organization", "Organization")
@@ -1040,6 +1374,11 @@ namespace iterimApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("iterimApi.Models.Entities.User", "RoleGrantedByUser")
+                        .WithMany()
+                        .HasForeignKey("RoleGrantedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("iterimApi.Models.Entities.Team", "Team")
                         .WithMany("Members")
                         .HasForeignKey("TeamId")
@@ -1055,6 +1394,8 @@ namespace iterimApi.Migrations
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("OrgMember");
+
+                    b.Navigation("RoleGrantedByUser");
 
                     b.Navigation("Team");
 
@@ -1244,6 +1585,11 @@ namespace iterimApi.Migrations
                     b.Navigation("Teams");
                 });
 
+            modelBuilder.Entity("iterimApi.Models.Entities.RetroItem", b =>
+                {
+                    b.Navigation("Votes");
+                });
+
             modelBuilder.Entity("iterimApi.Models.Entities.Tag", b =>
                 {
                     b.Navigation("TeamMemberTags");
@@ -1269,6 +1615,8 @@ namespace iterimApi.Migrations
 
             modelBuilder.Entity("iterimApi.Models.Entities.User", b =>
                 {
+                    b.Navigation("Notifications");
+
                     b.Navigation("OrganizationMemberships");
 
                     b.Navigation("PinnedTeams");

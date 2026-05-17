@@ -4,6 +4,7 @@ using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Implementations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace iterimApi.Tests;
@@ -25,7 +26,8 @@ public class WorkItemDependencyTests
     private static WorkItemService CreateWorkItemService(AppDbContext db)
     {
         var depService = new WorkItemDependencyService(db);
-        return new WorkItemService(db, depService);
+        var notifications = new NotificationService(db, NullLogger<NotificationService>.Instance);
+        return new WorkItemService(db, depService, notifications);
     }
 
     private static async Task<(Organization org, Product product, Team team, User user, OrganizationMember orgMember, TeamMember teamMember)>

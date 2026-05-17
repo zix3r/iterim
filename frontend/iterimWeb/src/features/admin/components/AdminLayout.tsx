@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Shield, Users, Activity, ArrowLeft, Moon, Sun, Building2 } from 'lucide-react';
+import { Shield, Users, Activity, ArrowLeft, Moon, Sun, Building2, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,8 +9,8 @@ import { updateMyTheme } from '@/lib/api';
 
 const ADMIN_TABS: { labelKey: TranslationKey; path: string; icon: typeof Users }[] = [
   { labelKey: 'admin.sidebarUsers', path: '/admin/users', icon: Users },
-  
   { labelKey: 'Organizations' as TranslationKey, path: '/admin/organizations', icon: Building2 },
+  { labelKey: 'admin.sidebarFeedback', path: '/admin/feedback', icon: MessageSquareText },
   { labelKey: 'admin.sidebarSystem', path: '/admin/system', icon: Activity },
 ];
 
@@ -65,11 +65,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={tab.path}
                 to={tab.path}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  isActive
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${isActive
                     ? 'border-zinc-900 text-zinc-900'
                     : 'border-transparent text-zinc-500 hover:text-zinc-700 hover:border-zinc-300'
-                }`}
+                  }`}
               >
                 <tab.icon className="h-4 w-4" />
                 {t(tab.labelKey)}

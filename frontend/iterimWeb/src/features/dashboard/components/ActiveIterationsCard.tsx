@@ -82,7 +82,6 @@ export function ActiveIterationsCard() {
                 <IterationStatusBar
                   byStatus={row.sprint.byStatus}
                   progress={row.sprint.progress}
-                  iterationId={row.sprint.id}
                 />
               </div>
             ))}

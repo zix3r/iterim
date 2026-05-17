@@ -6,11 +6,13 @@ public class BoardWorkItemDto
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public string Type { get; set; } = string.Empty;
     public int? Points { get; set; }
     public AssignedMemberDto? AssignedMember { get; set; }
     public List<TagDto> Tags { get; set; } = [];
     public List<BoardBlockerDto> Blockers { get; set; } = [];
+    public int CommentCount { get; set; }
 }
 
 public class AssignedMemberDto

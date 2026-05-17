@@ -27,6 +27,10 @@ import { AdminSystemPage } from '@/features/admin/pages/AdminSystemPage';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { AdminOrganizationsPage } from '@/features/admin/pages/AdminOrganizationsPage';
+import { AdminFeedbackPage } from '@/features/admin/pages/AdminFeedbackPage';
+import { FeedbackPage } from '@/features/feedback/pages/FeedbackPage';
+import { QuarterPlanPage } from './features/teams/pages/QuarterPlanPage';
+import { RetroPage } from '@/features/retro/pages/RetroPage';
 
 // Maršrutai, kuriuose nerodomas Header/AdminLayout — jiems reikia
 // atskiro plūduriuojančio kalbos perjungiklio.
@@ -62,45 +66,52 @@ function App() {
         <ToastProvider>
           <FloatingLanguageToggle />
           <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/check-email" element={<CheckEmailPage />} />
-          <Route path="/confirm-email" element={<ConfirmEmailPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/check-email" element={<CheckEmailPage />} />
+            <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            {/* Admin — own layout, no sidebar */}
-            <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
-            <Route path="/admin/users" element={<AdminUsersPage />} />
-            <Route path="/admin/system" element={<AdminSystemPage />} />
-            <Route path="/admin/organizations" element={<AdminOrganizationsPage />} />
-            <Route
-              element={
-                <MyTeamsTreeProvider>
-                  <MainLayout />
-                </MyTeamsTreeProvider>
-              }
-            >
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/org/:orgId" element={<OrganizationPage />} />
-              <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
-              <Route path="/org/:orgId/products" element={<ProductsListPage />} />
-              <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
-              <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
-              <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
-              <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
-              <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
-              <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
-              <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute />}>
+              {/* Admin — own layout, no sidebar */}
+              <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+              <Route path="/admin/users" element={<AdminUsersPage />} />
+              <Route path="/admin/system" element={<AdminSystemPage />} />
+              <Route path="/admin/organizations" element={<AdminOrganizationsPage />} />
+              <Route path="/admin/feedback" element={<AdminFeedbackPage />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
+              <Route
+                element={
+                  <MyTeamsTreeProvider>
+                    <MainLayout />
+                  </MyTeamsTreeProvider>
+                }
+              >
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/org/:orgId" element={<OrganizationPage />} />
+                <Route path="/org/:orgId/absences" element={<AbsencesPage />} />
+                <Route path="/org/:orgId/products" element={<ProductsListPage />} />
+                <Route path="/org/:orgId/products/:productId" element={<ProductPage />} />
+                <Route path="/org/:orgId/products/:productId/teams" element={<TeamsListPage />} />
+                <Route path="/org/:orgId/products/:productId/teams/:teamId" element={<TeamDetailPage />} />
+                <Route path="/org/:orgId/products/:productId/teams/:teamId/backlog" element={<BacklogPage />} />
+                <Route path="/org/:orgId/products/:productId/teams/:teamId/iterations" element={<BacklogPage />} />
+                <Route
+                  path="/org/:orgId/products/:productId/teams/:teamId/iterations/:iterationId/retro"
+                  element={<RetroPage />}
+                />
+                <Route path="/org/:orgId/products/:productId/teams/:teamId/board" element={<BoardPage />} />
+                <Route path="/org/:orgId/products/:productId/teams/:teamId/metrics" element={<MetricsPage />} />
+                <Route path="/org/:orgId/products/:productId/teams/:teamId/quarter" element={<QuarterPlanPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Default redirect */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </ToastProvider>
       </ErrorBoundary>

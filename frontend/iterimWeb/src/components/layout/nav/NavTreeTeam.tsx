@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router';
-import { Users2, ClipboardList, LayoutGrid, BarChart2 } from 'lucide-react';
+// Pridėta CalendarRange ikona
+import { Users2, ClipboardList, LayoutGrid, BarChart2, CalendarRange } from 'lucide-react';
 import { useNavExpansion } from '@/hooks/useNavExpansion';
 import { NavRow } from './NavRow';
 import type { DashboardTeam } from '@/lib/api';
@@ -34,6 +35,15 @@ export function NavTreeTeam({ team, orgId, productId }: Props) {
         <div className="space-y-0.5">
           <NavRow to={`${base}/backlog`} label={t('layout.breadcrumbBacklog')} icon={ClipboardList} depth={5} />
           <NavRow to={`${base}/board`} label={t('layout.breadcrumbBoard')} icon={LayoutGrid} depth={5} />
+          
+          {/* NAUJAS MYGTUKAS: Quarter Plan */}
+          <NavRow 
+            to={`${base}/quarter`} 
+            label="Quarter Plan" 
+            icon={CalendarRange} 
+            depth={5} 
+          />
+
           <NavRow to={`${base}/metrics`} label={t('layout.breadcrumbMetrics')} icon={BarChart2} depth={5} />
         </div>
       )}

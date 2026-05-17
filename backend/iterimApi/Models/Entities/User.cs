@@ -10,7 +10,18 @@ public class User
     public string? AvatarUrl { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.User;
+    // Vartotojas, kuris suteikė globalią Admin rolę (jei kažkada bus įdiegtas
+    // endpoint'as keisti UserRole). Tik tas, kuris suteikė, gali sumažinti.
+    public int? RoleGrantedByUserId { get; set; }
     public string Theme { get; set; } = "light";
+
+    // ── Notification preferences ─────────────────────────
+    public bool NotificationsEnabled { get; set; } = true;
+    public bool NotifyOnWorkItemAssigned { get; set; } = true;
+    public bool NotifyOnBlockerResolved { get; set; } = true;
+    public bool NotifyOnAddedToTeam { get; set; } = true;
+    public bool NotifyOnAddedToOrganization { get; set; } = true;
+
     public bool IsBlocked { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -24,6 +35,7 @@ public class User
     public ICollection<OrganizationMember> OrganizationMemberships { get; set; } = [];
     public ICollection<RecentPage> RecentPages { get; set; } = [];
     public ICollection<PinnedTeam> PinnedTeams { get; set; } = [];
+    public ICollection<Notification> Notifications { get; set; } = [];  
 
     // ── Email confirmation ───────────────────────────────
     public bool IsEmailConfirmed { get; set; } = false;

@@ -20,6 +20,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = new iterimApi.Helpers.JsonPreserveCasePolicy();
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 builder.Services.AddOpenApi();
@@ -98,6 +99,10 @@ builder.Services.AddScoped<IRecentPageService, RecentPageService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IAdminOrganizationService, AdminOrganizationService>();
 builder.Services.AddScoped<IAtpaService, AtpaService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IRetroService, RetroService>();
+builder.Services.AddHostedService<NotificationCleanupService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
 
 // CORS — restrict methods and headers

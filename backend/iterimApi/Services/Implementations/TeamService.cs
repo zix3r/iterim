@@ -5,16 +5,19 @@ using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using iterimApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using iterimApi.DTOs.Planning;
 
 namespace iterimApi.Services.Implementations;
 
 public class TeamService : ITeamService
 {
     private readonly AppDbContext _db;
+    private readonly INotificationService _notifications;
 
-    public TeamService(AppDbContext db)
+    public TeamService(AppDbContext db, INotificationService notifications)
     {
         _db = db;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<TeamDto>> GetTeamsByProductAsync(int productId, int userId)
@@ -64,6 +67,125 @@ public class TeamService : ITeamService
 
         return teams;
     }
+   public async Task<QuarterPlanDto> GetQuarterPlanAsync(int teamId, DateOnly start, DateOnly end)
+{
+    var result = new QuarterPlanDto();
+
+    // 1. Gauname Iteracijas
+    var iterations = await _db.Iterations
+        .Where(i => i.TeamId == teamId && i.StartDate <= end && i.EndDate >= start)
+        .OrderBy(i => i.StartDate)
+        .ToListAsync();
+
+    if (!iterations.Any())
+        return result;
+
+    var iterationIds = iterations.Select(i => i.Id).ToList();
+
+    // 2. Gauname Work Items
+    var workItems = await _db.WorkItems
+        .Where(w => w.TeamId == teamId && w.IterationId.HasValue && iterationIds.Contains(w.IterationId.Value))
+        .ToListAsync();
+
+    // 3. Gauname komandos narius ir absences
+    var teamMembers = await _db.TeamMembers
+        .Include(tm => tm.OrgMember)
+        .Where(tm => tm.TeamId == teamId)
+        .ToListAsync();
+        
+    var orgMemberIds = teamMembers.Select(tm => tm.OrgMemberId).ToList();
+    
+    var absences = await _db.MemberAbsences
+        .Where(a => orgMemberIds.Contains(a.OrgMemberId) && a.FromDate <= end && a.ToDate >= start)
+        .ToListAsync();
+
+    // 4. Formuojame Iteration Summaries
+    foreach (var iter in iterations)
+    {
+        var iterItems = workItems.Where(w => w.IterationId == iter.Id).ToList();
+
+        // PATAISYTA: Naudojame WorkItemStatus Enums!
+        int totalSP = iterItems.Sum(w => w.Points ?? 0);
+        int doneSP = iterItems.Where(w => w.Status == WorkItemStatus.Done).Sum(w => w.Points ?? 0);
+        int inProgressSP = iterItems.Where(w => w.Status == WorkItemStatus.InProgress || w.Status == WorkItemStatus.Review).Sum(w => w.Points ?? 0);
+        int todoSP = iterItems.Where(w => w.Status == WorkItemStatus.Todo || w.Status == WorkItemStatus.Backlog).Sum(w => w.Points ?? 0);
+
+        result.Iterations.Add(new IterationSummaryDto
+        {
+            Id = iter.Id,
+            Name = iter.Name ?? string.Empty,
+            StartDate = iter.StartDate,
+            EndDate = iter.EndDate,
+            Status = iter.Status.ToString(), // PATAISYTA: Enum to string
+            TotalSP = totalSP,
+            DoneSP = doneSP,
+            InProgressSP = inProgressSP,
+            TodoSP = todoSP,
+            WorkItems = iterItems.Select(w => new QuarterWorkItemDto 
+            { 
+                Id = w.Id, 
+                Title = w.Title, 
+                Type = w.Type.ToString(),     // PATAISYTA: Enum to string
+                Status = w.Status.ToString(), // PATAISYTA: Enum to string
+                Points = w.Points 
+            }).ToList()
+        });
+
+        int totalWorkDaysInIter = CalculateWorkingDays(iter.StartDate, iter.EndDate);
+        int grossCapacity = totalWorkDaysInIter * teamMembers.Count;
+
+        int absenceDaysInIter = 0;
+        foreach (var abs in absences)
+        {
+            var overlapStart = abs.FromDate > iter.StartDate ? abs.FromDate : iter.StartDate;
+            var overlapEnd = abs.ToDate < iter.EndDate ? abs.ToDate : iter.EndDate;
+            
+            if (overlapStart <= overlapEnd)
+            {
+                absenceDaysInIter += CalculateWorkingDays(overlapStart, overlapEnd);
+            }
+        }
+
+        result.CapacityPerIteration.Add(new IterationCapacityDto
+        {
+            IterationId = iter.Id,
+            TotalWorkDays = grossCapacity,
+            TotalAbsenceDays = absenceDaysInIter,
+            NetCapacityDays = grossCapacity - absenceDaysInIter
+        });
+    }
+
+    // 5. Feature Spanning logika
+    result.FeatureSummaries = workItems
+        .Where(w => w.Type == WorkItemType.Story) // PATAISYTA: Naudojame WorkItemType Enum
+        .GroupBy(w => w.Title) 
+        .Where(g => g.Select(x => x.IterationId).Distinct().Count() > 1)
+        .Select(g => new FeatureSpanDto
+        {
+            WorkItemId = g.First().Id,
+            WorkItemTitle = g.Key,
+            Type = g.First().Type.ToString(), // PATAISYTA: Enum to string
+            StartIterationId = g.OrderBy(x => x.IterationId).First().IterationId ?? 0,
+            EndIterationId = g.OrderByDescending(x => x.IterationId).First().IterationId ?? 0,
+            TotalSP = g.Sum(x => x.Points ?? 0),
+            CompletionPercent = g.Sum(x => x.Points ?? 0) == 0 ? 0 : 
+                (int)((double)g.Where(x => x.Status == WorkItemStatus.Done).Sum(x => x.Points ?? 0) / g.Sum(x => x.Points ?? 0) * 100)
+        }).ToList();
+
+    return result;
+}
+
+// Pagalbinis metodas darbo dienoms skaičiuoti (be savaitgalių)
+private int CalculateWorkingDays(DateOnly start, DateOnly end)
+{
+    int count = 0;
+    for (var date = start; date <= end; date = date.AddDays(1))
+    {
+        if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+            count++;
+    }
+    return count;
+}
     public async Task UpdateMemberScheduleAsync(int teamId, int teamMemberId, UpdateTeamMemberScheduleDto dto, int userId)
     {
         var teamMember = await _db.TeamMembers
@@ -150,6 +272,8 @@ public class TeamService : ITeamService
                 UserEmail = m.OrgMember.User.Email,
                 Role = m.Role.ToString(),
                 CreatedAt = m.CreatedAt,
+                RoleGrantedByUserId = m.RoleGrantedByUserId,
+                CreatedByUserId = m.CreatedBy,
 
                 WeeklyHours = m.WeeklyHours,
                 ScheduleType = m.ScheduleType.ToString(),
@@ -217,7 +341,10 @@ public class TeamService : ITeamService
             CreatedBy = userId,
             UpdatedBy = userId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            // Komandos kūrėjas yra savaiminis admin — niekas „nesuteikė" rolės;
+            // savininko apsauga užtikrinama per Team.CreatedBy.
+            RoleGrantedByUserId = null
         };
         
         _db.TeamMembers.Add(creatorTeamMember);
@@ -373,11 +500,28 @@ public class TeamService : ITeamService
             CreatedBy = userId,
             UpdatedBy = userId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            // Užfiksuojame, kas suteikė Admin rolę (jei iškart prisidedamas kaip Admin).
+            RoleGrantedByUserId = dto.Role == TeamMemberRole.Admin ? userId : (int?)null
         };
 
         _db.TeamMembers.Add(teamMember);
         await _db.SaveChangesAsync();
+
+        // ── Notification: user added to team ─────────────────────
+        if (orgMember.UserId != userId)
+        {
+            await _notifications.CreateAsync(
+                orgMember.UserId,
+                NotificationType.AddedToTeam,
+                "notifications.addedToTeam.title",
+                "notifications.addedToTeam.message",
+                new Dictionary<string, string>
+                {
+                    ["teamName"] = team.Name
+                },
+                $"/org/{team.Product.OrganizationId}/products/{team.ProductId}/teams/{team.Id}");
+        }
 
         return new TeamMemberDto
         {
@@ -388,7 +532,9 @@ public class TeamService : ITeamService
             UserName = orgMember.User.Name,
             UserEmail = orgMember.User.Email,
             Role = teamMember.Role.ToString(),
-            CreatedAt = teamMember.CreatedAt
+            CreatedAt = teamMember.CreatedAt,
+            RoleGrantedByUserId = teamMember.RoleGrantedByUserId,
+            CreatedByUserId = teamMember.CreatedBy
         };
     }
 
@@ -438,20 +584,60 @@ public class TeamService : ITeamService
             throw new KeyNotFoundException("Team member not found");
         }
 
-        // If trying to demote from Admin to Member, check if user is the team creator and the only admin
-        if (teamMember.Role == TeamMemberRole.Admin && dto.Role == TeamMemberRole.Member)
+        // ── Apsauga: narys negali keisti SAVO PATIES rolės ──────────
+        // Nei aukštyn (promote), nei žemyn (demote). Komandos narys, net
+        // ir būdamas admin, neturi teisės pats sau redaguoti rolės; tai
+        // turi padaryti kitas admin / komandos kūrėjas / produkto kūrėjas.
+        if (memberUserId == userId)
         {
-            var isTeamCreator = team.CreatedBy == memberUserId;
-            if (isTeamCreator)
-            {
-                // Count how many admins are in the team
-                var adminCount = await _db.TeamMembers
-                    .CountAsync(tm => tm.TeamId == teamId && tm.Role == TeamMemberRole.Admin);
+            throw new InvalidOperationException(
+                "Negalite pakeisti savo paties rolės komandoje.");
+        }
 
-                if (adminCount <= 1)
+        // ── Apsauga nuo savininko / kitų adminų DEMOTE'INIMO ─────────
+        // Sumažinti komandos admin rolę gali tik:
+        //   • komandos savininkas (Team.CreatedBy), arba
+        //   • produkto kūrėjas (Product.CreatedBy), arba
+        //   • tas admin, kuris pats šią rolę suteikė.
+        bool isDemotion = teamMember.Role == TeamMemberRole.Admin && dto.Role == TeamMemberRole.Member;
+        bool memberIsTeamCreator = team.CreatedBy == memberUserId;
+        bool requesterIsTeamCreator = team.CreatedBy == userId;
+
+        if (isDemotion)
+        {
+            if (memberIsTeamCreator && !requesterIsTeamCreator && !isProductCreator)
+            {
+                throw new UnauthorizedAccessException(
+                    "Komandos kūrėjo (savininko) rolės sumažinti negalima.");
+            }
+
+            if (!requesterIsTeamCreator && !isProductCreator)
+            {
+                // Audit fallback: jei senuose duomenyse RoleGrantedByUserId NULL,
+                // priimame TeamMember.CreatedBy — narį į komandą įtraukęs admin
+                // dažniausiai ir nustatė rolę.
+                int effectiveGranter = teamMember.RoleGrantedByUserId ?? teamMember.CreatedBy;
+                bool requesterGrantedRole = effectiveGranter == userId;
+
+                if (!requesterGrantedRole)
                 {
-                    throw new InvalidOperationException("Cannot demote the team creator from admin when they are the only admin. Add another admin first.");
+                    throw new UnauthorizedAccessException(
+                        "Sumažinti komandos administratoriaus rolę gali tik komandos kūrėjas, " +
+                        "produkto kūrėjas arba tas administratorius, kuris šią rolę suteikė.");
                 }
+            }
+        }
+
+        // Esama apsauga: jei demote'inamas team creator ir jis vienintelis admin
+        if (isDemotion && memberIsTeamCreator)
+        {
+            // Count how many admins are in the team
+            var adminCount = await _db.TeamMembers
+                .CountAsync(tm => tm.TeamId == teamId && tm.Role == TeamMemberRole.Admin);
+
+            if (adminCount <= 1)
+            {
+                throw new InvalidOperationException("Cannot demote the team creator from admin when they are the only admin. Add another admin first.");
             }
         }
 
@@ -459,6 +645,10 @@ public class TeamService : ITeamService
         teamMember.Role = dto.Role;
         teamMember.UpdatedBy = userId;
         teamMember.UpdatedAt = DateTime.UtcNow;
+        // Audit: kas suteikė naują rolę.
+        teamMember.RoleGrantedByUserId = dto.Role == TeamMemberRole.Admin
+            ? userId
+            : (int?)null;
 
         await _db.SaveChangesAsync();
 
@@ -471,7 +661,9 @@ public class TeamService : ITeamService
             UserName = teamMember.OrgMember.User.Name,
             UserEmail = teamMember.OrgMember.User.Email,
             Role = teamMember.Role.ToString(),
-            CreatedAt = teamMember.CreatedAt
+            CreatedAt = teamMember.CreatedAt,
+            RoleGrantedByUserId = teamMember.RoleGrantedByUserId,
+            CreatedByUserId = teamMember.CreatedBy
         };
     }
 

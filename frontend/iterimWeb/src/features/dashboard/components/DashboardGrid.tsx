@@ -1,17 +1,19 @@
 import { InvitationList } from '@/features/organizations/components/InvitationList';
 import { CreateOrganizationModal } from '@/features/organizations/components/CreateOrganizationModal';
 import { MyWorkWidget } from './MyWorkWidget';
+import { BlockedWorkWidget } from './BlockedWorkWidget';
 import { ActivityFeedWidget } from './ActivityFeedWidget';
 import { PinnedTeamsCard } from './PinnedTeamsCard';
 import { RecentPagesCard } from './RecentPagesCard';
 import { MyTeamsByOrgCard } from './MyTeamsByOrgCard';
 import { ActiveIterationsCard } from './ActiveIterationsCard';
-import type { DashboardWorkItem, DashboardActivity } from '@/lib/api';
+import type { DashboardWorkItem, DashboardActivity, DashboardBlockedWorkItem } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   firstName: string;
   myWork: DashboardWorkItem[];
+  blockedWork: DashboardBlockedWorkItem[];
   recentActivity: DashboardActivity[];
   onInvitationProcessed: () => void;
 }
@@ -24,7 +26,7 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationProcessed }: Props) {
+export function DashboardGrid({ firstName, myWork, blockedWork, recentActivity, onInvitationProcessed }: Props) {
   const { t, language } = useLanguage();
   const now = new Date();
   const hour = now.getHours();
@@ -64,6 +66,13 @@ export function DashboardGrid({ firstName, myWork, recentActivity, onInvitationP
           </div>
         </div>
       </section>
+
+      {blockedWork.length > 0 && (
+        <section>
+          <SectionHeader label={t('dashboard.blockedWork')} />
+          <BlockedWorkWidget blockedItems={blockedWork} />
+        </section>
+      )}
 
       <section>
         <SectionHeader label={t('dashboard.sectionWorkspace')} />

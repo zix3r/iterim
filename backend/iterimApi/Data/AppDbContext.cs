@@ -1,3 +1,4 @@
+using iterimApi.Migrations;
 using iterimApi.Models.Entities;
 using iterimApi.Models.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,10 @@ public class AppDbContext : DbContext
     public DbSet<WorkItemTag> WorkItemTags => Set<WorkItemTag>();
     public DbSet<TeamMemberTag> TeamMemberTags => Set<TeamMemberTag>();
     public DbSet<WorkItemDependency> WorkItemDependencies => Set<WorkItemDependency>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Feedback> Feedbacks => Set<Feedback>();
+    public DbSet<RetroItem> RetroItems => Set<RetroItem>();
+    public DbSet<RetroVote> RetroVotes => Set<RetroVote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -73,6 +78,11 @@ public class AppDbContext : DbContext
             .Property(ma => ma.ReasonDetails)
             .HasMaxLength(500);
 
+        modelBuilder.Entity<RetroItem>()
+            .Property(ri => ri.Column)
+            .HasConversion<string>()
+            .HasMaxLength(32);
+
         // ── User ────────────────────────────────────────────
         modelBuilder.Entity<User>(entity =>
         {
@@ -81,6 +91,13 @@ public class AppDbContext : DbContext
             entity.Property(u => u.Theme)
                 .HasMaxLength(16)
                 .HasDefaultValue("light");
+
+            // Notification preferences — default to true so existing rows stay opted in.
+            entity.Property(u => u.NotificationsEnabled).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnWorkItemAssigned).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnBlockerResolved).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnAddedToTeam).HasDefaultValue(true);
+            entity.Property(u => u.NotifyOnAddedToOrganization).HasDefaultValue(true);
         });
 
         // ── RefreshToken ────────────────────────────────────
@@ -152,6 +169,11 @@ public class AppDbContext : DbContext
             entity.HasOne(om => om.UpdatedByUser)
                 .WithMany()
                 .HasForeignKey(om => om.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(om => om.RoleGrantedByUser)
+                .WithMany()
+                .HasForeignKey(om => om.RoleGrantedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
@@ -232,6 +254,11 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(tm => tm.UpdatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(tm => tm.RoleGrantedByUser)
+                .WithMany()
+                .HasForeignKey(tm => tm.RoleGrantedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── Iteration ───────────────────────────────────────
@@ -413,6 +440,98 @@ public class AppDbContext : DbContext
             entity.HasOne(d => d.CreatedByMember)
                 .WithMany()
                 .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Feedback ─────────────────────────────────────────
+        modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.HasIndex(f => f.UserId);
+            entity.HasIndex(f => f.IsReviewed);
+            entity.HasIndex(f => f.CreatedAt);
+
+            entity.Property(f => f.Language).HasMaxLength(8);
+            entity.Property(f => f.DissatisfactionReasons).HasConversion<int>();
+            entity.Property(f => f.MissedFunctionalities).HasMaxLength(2000);
+            entity.Property(f => f.HardestToFind).HasMaxLength(2000);
+            entity.Property(f => f.MissedIntegrations).HasMaxLength(2000);
+            entity.Property(f => f.OtherReasonDescription).HasMaxLength(2000);
+            entity.Property(f => f.UnmentionedFlawDescription).HasMaxLength(2000);
+            entity.Property(f => f.MostUsefulFeature).HasMaxLength(2000);
+            entity.Property(f => f.BugContext).HasMaxLength(2000);
+            entity.Property(f => f.AcceptableMonthlyPricePerUser).HasPrecision(10, 2);
+
+            entity.HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(f => f.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(f => f.ReviewedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── Notification ─────────────────────────────────────
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasIndex(n => n.UserId);
+            entity.HasIndex(n => new { n.UserId, n.IsRead });
+            entity.HasIndex(n => new { n.UserId, n.CreatedAt });
+
+            entity.Property(n => n.Type).HasConversion<string>().HasMaxLength(50);
+            entity.Property(n => n.TitleKey).HasMaxLength(200);
+            entity.Property(n => n.MessageKey).HasMaxLength(200);
+            entity.Property(n => n.MessageParams).HasColumnType("json");
+            entity.Property(n => n.Title).HasMaxLength(200);
+            entity.Property(n => n.Message).HasMaxLength(1000);
+            entity.Property(n => n.RelatedUrl).HasMaxLength(500);
+
+            entity.HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── RetroItem ────────────────────────────────────────
+        modelBuilder.Entity<RetroItem>(entity =>
+        {
+            entity.HasIndex(ri => ri.IterationId);
+            entity.HasIndex(ri => new { ri.IterationId, ri.Column });
+
+            entity.Property(ri => ri.Content)
+                .IsRequired()
+                .HasMaxLength(2000);
+
+            entity.HasOne(ri => ri.Iteration)
+                .WithMany()
+                .HasForeignKey(ri => ri.IterationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Restrict on author so deleting a User doesn't silently nuke retro
+            // history; it forces an explicit cleanup path.
+            entity.HasOne(ri => ri.User)
+                .WithMany()
+                .HasForeignKey(ri => ri.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── RetroVote ────────────────────────────────────────
+        modelBuilder.Entity<RetroVote>(entity =>
+        {
+            // Enforces "one vote per user per card" — the toggle endpoint
+            // becomes idempotent and we can compute counts safely.
+            entity.HasIndex(rv => new { rv.RetroItemId, rv.UserId }).IsUnique();
+            entity.HasIndex(rv => rv.UserId);
+
+            entity.HasOne(rv => rv.RetroItem)
+                .WithMany(ri => ri.Votes)
+                .HasForeignKey(rv => rv.RetroItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rv => rv.User)
+                .WithMany()
+                .HasForeignKey(rv => rv.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

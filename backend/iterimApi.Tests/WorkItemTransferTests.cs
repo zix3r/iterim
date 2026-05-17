@@ -8,6 +8,7 @@ using iterimApi.Services.Implementations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace iterimApi.Tests;
 
@@ -24,7 +25,8 @@ public class WorkItemTransferTests
 
     private static WorkItemService CreateService(AppDbContext db)
     {
-        return new WorkItemService(db, new WorkItemDependencyService(db));
+        var notifications = new NotificationService(db, NullLogger<NotificationService>.Instance);
+        return new WorkItemService(db, new WorkItemDependencyService(db), notifications);
     }
 
     private static WorkItemsController CreateController(AppDbContext db, int userId)
@@ -197,7 +199,7 @@ public class WorkItemTransferTests
         db.WorkItems.Add(item);
         await db.SaveChangesAsync();
 
-        controller = CreateController(db, member.Id);
+        var controller = CreateController(db, member.Id);
 
         var result = await controller.TransferWorkItem(item.Id, new TransferWorkItemDto { TargetTeamId = targetTeam.Id });
 

@@ -170,6 +170,58 @@ public class UsersController : ControllerBase
         catch (UnauthorizedAccessException) { return Unauthorized(); }
     }
 
+    /// <summary>
+    /// GET /api/users/me/notification-preferences
+    /// </summary>
+    [HttpGet("me/notification-preferences")]
+    public async Task<IActionResult> GetNotificationPreferences()
+    {
+        var userId = GetCurrentUserId();
+
+        var prefs = await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => new NotificationPreferencesDto
+            {
+                NotificationsEnabled = u.NotificationsEnabled,
+                NotifyOnWorkItemAssigned = u.NotifyOnWorkItemAssigned,
+                NotifyOnBlockerResolved = u.NotifyOnBlockerResolved,
+                NotifyOnAddedToTeam = u.NotifyOnAddedToTeam,
+                NotifyOnAddedToOrganization = u.NotifyOnAddedToOrganization
+            })
+            .FirstOrDefaultAsync();
+
+        if (prefs == null)
+            return NotFound(new { errors = new[] { "User not found." } });
+
+        return Ok(prefs);
+    }
+
+    /// <summary>
+    /// PUT /api/users/me/notification-preferences
+    /// </summary>
+    [HttpPut("me/notification-preferences")]
+    public async Task<IActionResult> UpdateNotificationPreferences(
+        [FromBody] NotificationPreferencesDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null)
+            return NotFound(new { errors = new[] { "User not found." } });
+
+        user.NotificationsEnabled = dto.NotificationsEnabled;
+        user.NotifyOnWorkItemAssigned = dto.NotifyOnWorkItemAssigned;
+        user.NotifyOnBlockerResolved = dto.NotifyOnBlockerResolved;
+        user.NotifyOnAddedToTeam = dto.NotifyOnAddedToTeam;
+        user.NotifyOnAddedToOrganization = dto.NotifyOnAddedToOrganization;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     [HttpPut("me/theme")]
     public async Task<ActionResult<CurrentUserProfileDto>> UpdateCurrentUserTheme([FromBody] UpdateThemeDto dto)
     {

@@ -26,5 +26,6 @@ public class WorkItemDto
     public List<TagDto> Tags { get; set; } = [];
     public int BlockerCount { get; set; }
     public int BlocksCount { get; set; }
+    public int CommentCount { get; set; }
     public string? TeamName { get; set; }
 }

@@ -14,11 +14,16 @@ public class WorkItemService : IWorkItemService
 {
     private readonly AppDbContext _db;
     private readonly IWorkItemDependencyService _dependencyService;
+    private readonly INotificationService _notifications;
 
-    public WorkItemService(AppDbContext db, IWorkItemDependencyService dependencyService)
+    public WorkItemService(
+        AppDbContext db,
+        IWorkItemDependencyService dependencyService,
+        INotificationService notifications)
     {
         _db = db;
         _dependencyService = dependencyService;
+        _notifications = notifications;
     }
 
     public async Task<IEnumerable<WorkItemDto>> GetWorkItemsByTeamAsync(int teamId, WorkItemFilterDto filters, int userId)
@@ -60,6 +65,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .OrderByDescending(wi => wi.CreatedAt)
             .ToListAsync();
 
@@ -82,6 +88,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .OrderBy(wi => wi.Position)
             .ThenByDescending(wi => wi.CreatedAt)
             .ToListAsync();
@@ -119,6 +126,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -181,6 +189,26 @@ public class WorkItemService : IWorkItemService
             }
         }
 
+        // ── Notification: new assignee ───────────────────────────
+        if (workItem.AssignedTo.HasValue && workItem.AssignedMember?.OrgMember != null)
+        {
+            var assigneeUserId = workItem.AssignedMember.OrgMember.UserId;
+            // Don't notify the user about their own self-assignment.
+            if (assigneeUserId != userId)
+            {
+                await _notifications.CreateAsync(
+                    assigneeUserId,
+                    NotificationType.WorkItemAssigned,
+                    "notifications.workItemAssigned.title",
+                    "notifications.workItemAssigned.message",
+                    new Dictionary<string, string>
+                    {
+                        ["workItemTitle"] = workItem.Title
+                    },
+                    await BuildWorkItemUrlAsync(workItem.Id));
+            }
+        }
+
         return MapToDto(workItem);
     }
 
@@ -234,6 +262,10 @@ public class WorkItemService : IWorkItemService
         // Track changes and build history entries before mutating the entity
         var historyEntries = BuildHistoryEntries(workItem, dto, orgMember.Id);
 
+        // Capture pre-mutation state for notification logic
+        var previousAssignedTo = workItem.AssignedTo;
+        var previousStatus = workItem.Status;
+
         // Update fields
         workItem.Title = dto.Title;
         if (dto.Type.HasValue)
@@ -267,6 +299,33 @@ public class WorkItemService : IWorkItemService
         else
         {
             workItem.AssignedMember = null;
+        }
+
+        // ── Notification: assignee changed ───────────────────────
+        if (workItem.AssignedTo.HasValue
+            && workItem.AssignedTo != previousAssignedTo
+            && workItem.AssignedMember?.OrgMember != null)
+        {
+            var assigneeUserId = workItem.AssignedMember.OrgMember.UserId;
+            if (assigneeUserId != userId)
+            {
+                await _notifications.CreateAsync(
+                    assigneeUserId,
+                    NotificationType.WorkItemAssigned,
+                    "notifications.workItemAssigned.title",
+                    "notifications.workItemAssigned.message",
+                    new Dictionary<string, string>
+                    {
+                        ["workItemTitle"] = workItem.Title
+                    },
+                    await BuildWorkItemUrlAsync(workItem.Id));
+            }
+        }
+
+        // ── Notification: status → Done; if this item blocks others, unblock them ──
+        if (workItem.Status == WorkItemStatus.Done && previousStatus != WorkItemStatus.Done)
+        {
+            await NotifyBlockersResolvedAsync(workItem, userId);
         }
 
         return MapToDto(workItem);
@@ -356,6 +415,25 @@ public class WorkItemService : IWorkItemService
             workItem.AssignedMember = null;
         }
 
+        // ── Notification: new assignee ───────────────────────────
+        if (workItem.AssignedTo.HasValue && workItem.AssignedMember?.OrgMember != null)
+        {
+            var assigneeUserId = workItem.AssignedMember.OrgMember.UserId;
+            if (assigneeUserId != userId)
+            {
+                await _notifications.CreateAsync(
+                    assigneeUserId,
+                    NotificationType.WorkItemAssigned,
+                    "notifications.workItemAssigned.title",
+                    "notifications.workItemAssigned.message",
+                    new Dictionary<string, string>
+                    {
+                        ["workItemTitle"] = workItem.Title
+                    },
+                    await BuildWorkItemUrlAsync(workItem.Id));
+            }
+        }
+
         return MapToDto(workItem);
     }
 
@@ -374,6 +452,7 @@ public class WorkItemService : IWorkItemService
                 .ThenInclude(wit => wit.Tag)
             .Include(wi => wi.BlockedBy)
             .Include(wi => wi.Blocks)
+            .Include(wi => wi.Comments)
             .FirstOrDefaultAsync(wi => wi.Id == id);
 
         if (workItem == null)
@@ -497,7 +576,178 @@ public class WorkItemService : IWorkItemService
         await _db.SaveChangesAsync();
     }
 
+    public async Task<int> BulkCreateWorkItemsAsync(int teamId, BulkCreateWorkItemsDto dto, int userId)
+    {
+        await EnsureTeamAdmin(teamId, userId);
+
+        // Validate all AssignedTo IDs belong to this team
+        var assigneeIds = dto.Items
+            .Where(i => i.AssignedTo.HasValue)
+            .Select(i => i.AssignedTo!.Value)
+            .Distinct()
+            .ToList();
+
+        if (assigneeIds.Count > 0)
+        {
+            var validAssigneeIds = await _db.TeamMembers
+                .Where(tm => tm.TeamId == teamId && assigneeIds.Contains(tm.Id))
+                .Select(tm => tm.Id)
+                .ToListAsync();
+
+            var invalid = assigneeIds.Except(validAssigneeIds).ToList();
+            if (invalid.Count > 0)
+                throw new InvalidOperationException(
+                    $"AssignedTo IDs [{string.Join(", ", invalid)}] are not valid team members");
+        }
+
+        // Validate all IterationIds belong to this team
+        var iterationIds = dto.Items
+            .Where(i => i.IterationId.HasValue)
+            .Select(i => i.IterationId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (iterationIds.Count > 0)
+        {
+            var validIterationIds = await _db.Iterations
+                .Where(i => i.TeamId == teamId && iterationIds.Contains(i.Id))
+                .Select(i => i.Id)
+                .ToListAsync();
+
+            var invalid = iterationIds.Except(validIterationIds).ToList();
+            if (invalid.Count > 0)
+                throw new InvalidOperationException(
+                    $"IterationId [{string.Join(", ", invalid)}] are not valid iterations for this team");
+        }
+
+        // Compute starting positions per iteration bucket.
+        // Use -1 as sentinel key for the null (backlog) bucket.
+        var maxPositions = await _db.WorkItems
+            .Where(wi => wi.TeamId == teamId)
+            .GroupBy(wi => wi.IterationId)
+            .Select(g => new { IterationId = g.Key, MaxPos = g.Max(wi => wi.Position) })
+            .ToListAsync();
+
+        var counters = new Dictionary<int, int>();
+        foreach (var g in maxPositions)
+            counters[g.IterationId ?? -1] = g.MaxPos;
+
+        var workItems = dto.Items.Select(item =>
+        {
+            var key = item.IterationId ?? -1;
+            var current = counters.GetValueOrDefault(key, -1);
+            counters[key] = current + 1;
+
+            return new WorkItem
+            {
+                TeamId = teamId,
+                Title = item.Title,
+                Description = item.Description,
+                Type = item.Type,
+                Priority = item.Priority,
+                Status = item.Status,
+                Points = item.Points,
+                AssignedTo = item.AssignedTo,
+                IterationId = item.IterationId,
+                Position = current + 1,
+                CreatedBy = userId,
+                UpdatedBy = userId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+        }).ToList();
+
+        _db.WorkItems.AddRange(workItems);
+        await _db.SaveChangesAsync();
+
+        return workItems.Count;
+    }
+
     // ── Private helpers ──────────────────────────────────────
+
+    /// <summary>
+    /// Builds the deep-link URL for a work item, targeting the team's backlog page
+    /// with ?item={id} so BacklogPage auto-opens the EditWorkItemModal.
+    /// Returns null if the work item or its team chain can't be resolved.
+    /// </summary>
+    private async Task<string?> BuildWorkItemUrlAsync(int workItemId)
+    {
+        var loc = await _db.WorkItems
+            .AsNoTracking()
+            .Where(wi => wi.Id == workItemId)
+            .Select(wi => new
+            {
+                OrgId = wi.Team.Product.OrganizationId,
+                ProductId = wi.Team.ProductId,
+                TeamId = wi.TeamId
+            })
+            .FirstOrDefaultAsync();
+
+        if (loc == null) return null;
+        return $"/org/{loc.OrgId}/products/{loc.ProductId}/teams/{loc.TeamId}/backlog?item={workItemId}";
+    }
+
+    /// <summary>
+    /// When a work item is marked Done, find all work items it was blocking and
+    /// notify the right people:
+    ///  - if the unblocked item has an assignee  → notify the assignee
+    ///  - otherwise → notify the team lead (Team.CreatedBy) AND the work item's
+    ///    creator (WorkItem.CreatedBy), deduplicated.
+    /// The actor (who marked it Done) is never notified about their own action.
+    /// </summary>
+    private async Task NotifyBlockersResolvedAsync(WorkItem resolvedItem, int actorUserId)
+    {
+        // Find work items blocked by this resolved one.
+        // Querying WorkItems directly (with an EXISTS subquery) instead of projecting
+        // from WorkItemDependencies — EF Core can't apply Include after a Select projection.
+        var unblocked = await _db.WorkItems
+            .Where(wi => _db.WorkItemDependencies.Any(d =>
+                d.BlockerWorkItemId == resolvedItem.Id &&
+                d.BlockedWorkItemId == wi.Id))
+            .Include(wi => wi.Team)
+            .Include(wi => wi.AssignedMember!)
+                .ThenInclude(am => am.OrgMember)
+            .ToListAsync();
+
+        if (unblocked.Count == 0) return;
+
+        foreach (var item in unblocked)
+        {
+            var titleKey = "notifications.blockerResolved.title";
+            var messageKey = "notifications.blockerResolved.message";
+            var parameters = new Dictionary<string, string>
+            {
+                ["workItemTitle"] = item.Title,
+                ["blockerTitle"] = resolvedItem.Title
+            };
+            var url = await BuildWorkItemUrlAsync(item.Id);
+
+            if (item.AssignedMember?.OrgMember != null)
+            {
+                var assigneeUserId = item.AssignedMember.OrgMember.UserId;
+                if (assigneeUserId != actorUserId)
+                {
+                    await _notifications.CreateAsync(
+                        assigneeUserId,
+                        NotificationType.BlockerResolved,
+                        titleKey, messageKey, parameters, url);
+                }
+            }
+            else
+            {
+                // No assignee → notify team lead + creator (deduped, exclude the actor).
+                var recipients = new HashSet<int>();
+                if (item.Team != null) recipients.Add(item.Team.CreatedBy);
+                recipients.Add(item.CreatedBy);
+                recipients.Remove(actorUserId);
+
+                await _notifications.CreateForManyAsync(
+                    recipients,
+                    NotificationType.BlockerResolved,
+                    titleKey, messageKey, parameters, url);
+            }
+        }
+    }
 
     /// <summary>
     /// Verifies that the user is a member of the team (via TeamMembers → OrgMember → User).
@@ -519,6 +769,19 @@ public class WorkItemService : IWorkItemService
 
         if (!isTeamMember)
             throw new UnauthorizedAccessException("User is not a member of this team");
+    }
+
+    private async Task EnsureTeamAdmin(int teamId, int userId)
+    {
+        await EnsureTeamMember(teamId, userId);
+
+        var isAdmin = await _db.TeamMembers
+            .AnyAsync(tm => tm.TeamId == teamId &&
+                            tm.OrgMember.UserId == userId &&
+                            tm.Role == TeamMemberRole.Admin);
+
+        if (!isAdmin)
+            throw new UnauthorizedAccessException("Only team admins can perform this action");
     }
 
     private async Task EnsureTransferPermissionAsync(int teamId, int userId)
@@ -628,7 +891,8 @@ public class WorkItemService : IWorkItemService
                 CreatedAt = wit.Tag.CreatedAt
             }).ToList(),
             BlockerCount = wi.BlockedBy.Count,
-            BlocksCount = wi.Blocks.Count
+            BlocksCount = wi.Blocks.Count,
+            CommentCount = wi.Comments.Count
         };
     }
 }

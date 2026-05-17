@@ -5,6 +5,7 @@ using iterimApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace iterimApi.Controllers;
+using iterimApi.DTOs.Planning;
 
 [ApiController]
 [Authorize]
@@ -112,7 +113,30 @@ public class TeamsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while retrieving the team", error = ex.Message });
         }
     }
+    
+// GET /api/teams/{teamId}/quarter-plan
+    [HttpGet("api/teams/{teamId:int}/quarter-plan")]
+    public async Task<ActionResult<QuarterPlanDto>> GetQuarterPlan(
+        int teamId, 
+        [FromQuery] string start, 
+        [FromQuery] string end)
+    {
+        // 1. Patikriname datas
+        if (!DateOnly.TryParse(start, out var startDate) || !DateOnly.TryParse(end, out var endDate))
+        {
+            return BadRequest(new { message = "Invalid date format. Use YYYY-MM-DD." });
+        }
 
+        if (startDate > endDate)
+        {
+            return BadRequest(new { message = "Start date must be before end date." });
+        }
+
+        // 2. Kviečiame mūsų sukurtą servisą
+        var quarterPlan = await _teamService.GetQuarterPlanAsync(teamId, startDate, endDate);
+        
+        return Ok(quarterPlan);
+    }
     /// <summary>
     /// Update team details
     /// </summary>

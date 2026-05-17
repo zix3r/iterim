@@ -73,6 +73,7 @@ export function DashboardPage() {
     <DashboardGrid
       firstName={firstName}
       myWork={dashboardData.myWork}
+      blockedWork={dashboardData.blockedWork ?? []}
       recentActivity={dashboardData.recentActivity}
       onInvitationProcessed={refetch}
     />

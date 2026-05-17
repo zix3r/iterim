@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { EditProductModal } from '@/features/products/components/EditProductModal';
 import { CreateTeamModal } from '@/features/teams/components/CreateTeamModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon } from 'lucide-react';
@@ -87,8 +86,6 @@ export function ProductPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-6 max-w-5xl mx-auto">
-        <Skeleton className="h-4 w-48 mb-6" /> {/* Breadcrumbs */}
-        
         <div className="flex justify-between items-center">
           <div className="space-y-2">
             <Skeleton className="h-8 w-64" /> {/* Title */}
@@ -138,15 +135,6 @@ export function ProductPage() {
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: product.organizationName, href: `/org/${orgId}` },
-          { label: t('products.title'), href: `/org/${orgId}/products` },
-          { label: product.name }
-        ]}
-      />
-
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">{product.name}</h1>

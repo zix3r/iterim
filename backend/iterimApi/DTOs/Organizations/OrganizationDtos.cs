@@ -21,6 +21,8 @@ public class OrganizationDetailDto : OrganizationDto
 	public List<OrganizationMemberDto> Members { get; set; } = [];
 	public string UserRole { get; set; } = string.Empty; // Current user's role in the organization
 	public int CurrentUserId { get; set; }
+	// Organizacijos savininko (kūrėjo) UserId.
+	public int OwnerUserId { get; set; }
 }
 
 public class OrganizationMemberDto
@@ -30,6 +32,10 @@ public class OrganizationMemberDto
 	public string Email { get; set; } = string.Empty;
 	public string Role { get; set; } = string.Empty;
 	public string Status { get; set; } = string.Empty;
+	// Kas suteikė šiam nariui dabartinę rolę (Admin promote).
+	public int? RoleGrantedByUserId { get; set; }
+	// Pakvietėjo userId — fallback senuose duomenyse be audit'o.
+	public int? InvitedByUserId { get; set; }
 }
 
 public class AddOrganizationMemberDto

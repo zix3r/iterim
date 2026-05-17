@@ -18,4 +18,5 @@ public interface IWorkItemService
     Task<WorkItemDto?> TransferWorkItemAsync(int id, int targetTeamId, int userId);
     Task<bool> DeleteWorkItemAsync(int id, int userId);
     Task ReorderWorkItemsAsync(int teamId, ReorderWorkItemsDto dto, int userId);
+    Task<int> BulkCreateWorkItemsAsync(int teamId, BulkCreateWorkItemsDto dto, int userId);
 }

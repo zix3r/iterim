@@ -8,7 +8,6 @@ import { AddTeamMemberModal } from '@/features/teams/components/AddTeamMemberMod
 import { EditTeamModal } from '@/features/teams/components/EditTeamModal';
 import { WorkScheduleEditor } from '@/features/teams/components/WorkScheduleEditor';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useToast } from '@/components/ui/toast';
 import { formatDate } from '@/lib/dates';
 import { AlertCircleIcon, UsersIcon, TrashIcon, ShieldIcon, StarIcon, TagIcon, ClockIcon } from 'lucide-react';
@@ -182,8 +181,6 @@ export function TeamDetailPage() {
   if (isLoading) {
     return (
       <div className="p-8 space-y-6 max-w-5xl mx-auto">
-        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
-        
         <div className="flex justify-between items-start gap-4">
           <div className="space-y-2 flex-1">
             <Skeleton className="h-10 w-64" /> {/* Title */}
@@ -243,25 +240,47 @@ export function TeamDetailPage() {
   // 1. The product creator, OR
   // 2. A team admin
   const isProductCreator = team.currentUserId === team.productCreatedBy;
+  const isTeamCreator = team.currentUserId === team.createdBy;
   const isTeamAdmin = team.members.some(
     m => m.userId === team.currentUserId && m.role === 'Admin'
   );
   const canManageTeam = isProductCreator || isTeamAdmin;
 
+  // „Kas suteikė team admin rolę" su fallback'u į pridėjusį narį, kad senuose
+  // duomenyse (be RoleGrantedByUserId) tas, kuris narį pridėjo, vis tiek galėtų
+  // keisti rolę.
+  const effectiveTeamGranter = (member: TeamMember): number | null | undefined =>
+    member.roleGrantedByUserId ?? member.createdByUserId;
+
+  // Ar dabartinis vartotojas gali keisti šio nario rolę?
+  //  • Tu negali keisti savo rolės.
+  //  • Komandos kūrėjo (Team.CreatedBy) rolės keisti negalima.
+  //  • Sumažinti kito Admin rolę gali tik komandos kūrėjas, produkto kūrėjas
+  //    arba tas Admin, kuris šią rolę pats suteikė.
+  //  • Member rolę gali keisti bet kuris team admin.
+  const canEditTeamMemberRole = (member: TeamMember) => {
+    if (!canManageTeam) return false;
+    if (member.userId === team.currentUserId) return false;
+    if (member.userId === team.createdBy) return false;
+    if (member.role === 'Admin' && !isTeamCreator && !isProductCreator) {
+      return effectiveTeamGranter(member) === team.currentUserId;
+    }
+    return true;
+  };
+
+  const teamMemberRoleEditTooltip = (member: TeamMember): string | undefined => {
+    if (!canManageTeam) return undefined;
+    if (member.userId === team.currentUserId) return t('teams.cannotChangeOwnRole');
+    if (member.userId === team.createdBy) return t('teams.cannotChangeCreatorRole');
+    if (member.role === 'Admin' && !isTeamCreator && !isProductCreator && effectiveTeamGranter(member) !== team.currentUserId) {
+      return t('teams.cannotChangeOtherAdminRole');
+    }
+    return undefined;
+  };
+
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-8 space-y-6 max-w-5xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: t('dashboard.title'), href: '/dashboard' },
-          { label: organization.name, href: `/org/${orgId}` },
-          { label: t('products.title'), href: `/org/${orgId}/products` },
-          { label: team.productName, href: `/org/${orgId}/products/${productId}` },
-          { label: t('teams.title'), href: `/org/${orgId}/products/${productId}/teams` },
-          { label: team.name }
-        ]}
-      />
-
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
           <div>
@@ -397,7 +416,7 @@ export function TeamDetailPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {canManageTeam ? (
+                      {canEditTeamMemberRole(member) ? (
                         <select
                           value={member.role === 'Admin' ? '0' : '1'}
                           onChange={(e) => handleRoleChange(member.userId, e.target.value)}
@@ -407,13 +426,18 @@ export function TeamDetailPage() {
                           <option value="1">{t('teams.roleMember')}</option>
                         </select>
                       ) : (
-                        <span className={`inline-flex items-center px-3 py-1 rounded-md text-sm ${
-                          member.role === 'Admin' 
-                            ? 'bg-primary/10 text-primary' 
-                            : 'bg-secondary text-secondary-foreground'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-md text-sm ${
+                            member.role === 'Admin'
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-secondary text-secondary-foreground'
+                          }`}
+                          title={teamMemberRoleEditTooltip(member)}
+                        >
                           {member.role === 'Admin' && <ShieldIcon className="h-3 w-3 mr-1" />}
-                          {member.role === 'Admin' ? t('teams.roleAdmin') : member.role === 'Member' ? t('teams.roleMember') : member.role === 'Viewer' ? t('teams.roleViewer') : member.role}
+                          {member.userId === team.createdBy
+                            ? t('teams.roleCreator')
+                            : member.role === 'Admin' ? t('teams.roleAdmin') : member.role === 'Member' ? t('teams.roleMember') : member.role === 'Viewer' ? t('teams.roleViewer') : member.role}
                         </span>
                       )}
                       

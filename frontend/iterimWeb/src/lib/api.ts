@@ -11,12 +11,18 @@ export interface OrganizationMember {
   email: string;
   role: string;
   status: string;
+  // Vartotojas, kuris suteikė šiam nariui dabartinę rolę (Admin promote).
+  roleGrantedByUserId?: number | null;
+  // Pakvietėjas — fallback senuose duomenyse be audit'o.
+  invitedByUserId?: number | null;
 }
 
 export interface OrganizationDetail extends Organization {
   members: OrganizationMember[];
   userRole: string;
   currentUserId: number;
+  // Organizacijos savininko (kūrėjo) UserId.
+  ownerUserId: number;
 }
 // Surask, kur aprašyti Absence tipai ir pridėk šį:
 export interface AbsenceFilters {
@@ -105,6 +111,10 @@ export interface TeamMember {
   tags: Tag[];
   weeklyHours: number;
   scheduleType: string;
+  // Vartotojas, kuris suteikė šiam nariui dabartinę team rolę.
+  roleGrantedByUserId?: number | null;
+  // Pridėjusio nario userId — fallback senuose duomenyse.
+  createdByUserId?: number | null;
 }
 
 export interface Team {
@@ -171,6 +181,7 @@ export interface WorkItem {
   tags: Tag[];
   blockerCount: number;
   blocksCount: number;
+  commentCount: number;
   teamName?: string;
 }
 
@@ -231,6 +242,25 @@ export interface UpdateWorkItemRequest {
 
 export interface TransferWorkItemRequest {
   targetTeamId: number;
+}
+
+export interface ImportWorkItemRequest {
+  title: string;
+  description?: string;
+  type: number;       // 0=Story, 1=Task, 2=Bug
+  priority: number;   // 0=Low, 1=Medium, 2=High, 3=Critical
+  status: number;     // 0=Backlog, 1=Todo, 2=InProgress, 3=Review, 4=Done
+  points?: number;
+  assignedTo?: number | null;
+  iterationId?: number | null;
+}
+
+export interface BulkImportWorkItemsRequest {
+  items: ImportWorkItemRequest[];
+}
+
+export interface BulkImportResult {
+  importedCount: number;
 }
 
 export interface WorkItemFilter {
@@ -732,6 +762,33 @@ export interface DashboardWorkItem {
   teamName: string;
 }
 
+export interface DashboardBlocker {
+  workItemId: number;
+  title: string;
+  status: string;
+  isDone: boolean;
+  teamId: number;
+  teamName: string;
+  productId: number;
+  organizationId: number;
+}
+
+export interface DashboardBlockedWorkItem {
+  id: number;
+  title: string;
+  typeName: string;
+  statusName: string;
+  points: number | null;
+  organizationId: number;
+  organizationName: string;
+  productId: number;
+  productName: string;
+  teamId: number;
+  teamName: string;
+  blockers: DashboardBlocker[];
+  unfinishedBlockerCount: number;
+}
+
 export interface DashboardActivity {
   id: number;
   workItemTitle: string;
@@ -749,6 +806,7 @@ export interface DashboardActivity {
 export interface DashboardData {
   organizations: DashboardOrganization[];
   myWork: DashboardWorkItem[];
+  blockedWork: DashboardBlockedWorkItem[];
   recentActivity: DashboardActivity[];
 }
 
@@ -848,6 +906,15 @@ export const reorderWorkItems = (teamId: number, items: { id: number; position: 
     teamDataEventTarget.dispatchEvent(new Event('team-data-changed'));
   });
 
+export const bulkImportWorkItems = (teamId: number, data: BulkImportWorkItemsRequest): Promise<BulkImportResult> =>
+  fetchWithAuth(`/teams/${teamId}/workitems/bulk`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
 // ── Iteration API ─────────────────────────────────────────────
 
 export const getIterationsByTeam = (teamId: number): Promise<Iteration[]> =>
@@ -936,11 +1003,13 @@ export interface BoardBlocker {
 export interface BoardWorkItem {
   id: number;
   title: string;
+  description: string | null;
   type: string;
   points: number | null;
   assignedMember: BoardAssignedMember | null;
   tags: Tag[];
   blockers: BoardBlocker[];
+  commentCount: number;
 }
 
 export interface BoardColumn {
@@ -1347,7 +1416,7 @@ export const searchWorkItems = (q: string): Promise<WorkItem[]> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
-  // ── Admin API ──────────────────────────────────────────
+// ── Admin API ──────────────────────────────────────────
 
 export interface AdminOrganizationListDto {
   id: number;
@@ -1405,7 +1474,7 @@ export const deleteAdminOrganization = (orgId: number): Promise<void> =>
   fetchWithAuth(`/admin/organizations/manage/${orgId}`, { method: 'DELETE' }).then(async r => { // PRIDĖTA /manage
     if (!r.ok) throw new Error(await getErrorMessage(r));
   });
-  export interface UpdateTeamMemberScheduleDto {
+export interface UpdateTeamMemberScheduleDto {
   scheduleType: 'FullTime' | 'PartTime' | 'Custom';
   weeklyHours: number;
 }
@@ -1574,3 +1643,417 @@ export const applyAtpaSuggestions = async (
   });
   return { applied, failed };
 };
+
+// ── Notifications ────────────────────────────────────────────
+
+export type NotificationTypeName =
+  | 'WorkItemAssigned'
+  | 'BlockerResolved'
+  | 'AddedToTeam'
+  | 'AddedToOrganization'
+  | 'PasswordReset';
+
+export interface NotificationItem {
+  id: number;
+  type: NotificationTypeName;
+  /** Translation key — looked up via translations.ts. */
+  titleKey: string;
+  /** Translation key for the message body. */
+  messageKey: string;
+  /** Placeholder values for the title/message templates. */
+  messageParams?: Record<string, string> | null;
+  /** Pre-rendered English fallback title. */
+  title: string;
+  /** Pre-rendered English fallback message body. */
+  message: string;
+  isRead: boolean;
+  relatedUrl?: string | null;
+  createdAt: string;
+}
+
+export interface NotificationListResponse {
+  items: NotificationItem[];
+  totalCount: number;
+  unreadCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface UnreadCountResponse {
+  count: number;
+}
+
+export const getNotifications = (page = 1, pageSize = 20): Promise<NotificationListResponse> =>
+  fetchWithAuth(`/notifications?page=${page}&pageSize=${pageSize}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const getNotificationUnreadCount = (): Promise<UnreadCountResponse> =>
+  fetchWithAuth('/notifications/unread-count').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const markNotificationAsRead = (id: number): Promise<void> =>
+  fetchWithAuth(`/notifications/${id}/read`, { method: 'PATCH' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+export const markAllNotificationsAsRead = (): Promise<void> =>
+  fetchWithAuth('/notifications/read-all', { method: 'POST' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Notification preferences ─────────────────────────────────
+
+export interface NotificationPreferences {
+  notificationsEnabled: boolean;
+  notifyOnWorkItemAssigned: boolean;
+  notifyOnBlockerResolved: boolean;
+  notifyOnAddedToTeam: boolean;
+  notifyOnAddedToOrganization: boolean;
+}
+
+export const getNotificationPreferences = (): Promise<NotificationPreferences> =>
+  fetchWithAuth('/users/me/notification-preferences').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateNotificationPreferences = (
+  prefs: NotificationPreferences,
+): Promise<void> =>
+  fetchWithAuth('/users/me/notification-preferences', {
+    method: 'PUT',
+    body: JSON.stringify(prefs),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+// ── Quarter Planning Types ──────────────────────────────────────────
+
+export interface IterationSummaryDto {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: string; // "Planning", "Active", "Completed"
+  totalSP: number;
+  doneSP: number;
+  inProgressSP: number;
+  todoSP: number;
+}
+
+export interface FeatureSpanDto {
+  workItemId: number;
+  workItemTitle: string;
+  type: string;
+  startIterationId: number;
+  endIterationId: number;
+  totalSP: number;
+  completionPercent: number;
+}
+
+export interface IterationCapacityDto {
+  iterationId: number;
+  totalWorkDays: number;
+  totalAbsenceDays: number;
+  netCapacityDays: number;
+}
+
+export interface QuarterPlan {
+  iterations: IterationSummaryDto[];
+  featureSummaries: FeatureSpanDto[];
+  capacityPerIteration: IterationCapacityDto[];
+}
+
+// Naujas API endpointas
+export const getQuarterPlan = (
+  teamId: number,
+  start: string,
+  end: string
+): Promise<QuarterPlan> =>
+  fetchWithAuth(`/teams/${teamId}/quarter-plan?start=${start}&end=${end}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// ── Comment Types ─────────────────────────────────────────────
+
+export interface WorkItemComment {
+  id: number;
+  workItemId: number;
+  authorId: number;
+  authorUserId: number;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+}
+
+export interface UpdateCommentRequest {
+  content: string;
+}
+
+// ── Comment API ───────────────────────────────────────────────
+
+export const getWorkItemComments = (workItemId: number): Promise<WorkItemComment[]> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createWorkItemComment = (workItemId: number, data: CreateCommentRequest): Promise<WorkItemComment> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateWorkItemComment = (workItemId: number, commentId: number, data: UpdateCommentRequest): Promise<WorkItemComment> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments/${commentId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteWorkItemComment = (workItemId: number, commentId: number): Promise<void> =>
+  fetchWithAuth(`/workitems/${workItemId}/comments/${commentId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+// ── Retrospective Types ───────────────────────────────────────
+
+/** Matches backend `RetroColumn` enum (string-serialized). */
+export type RetroColumnName = 'WentWell' | 'DidntGoWell' | 'ActionItem';
+
+export interface RetroItem {
+  id: number;
+  iterationId: number;
+  userId: number;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  column: RetroColumnName;
+  content: string;
+  voteCount: number;
+  /** True if the requesting user has voted for this card. */
+  hasVoted: boolean;
+  /** True if the requesting user authored this card (controls Edit/Delete UI). */
+  isOwn: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RetroBoard {
+  iterationId: number;
+  teamId: number;
+  iterationName: string | null;
+  iterationStatus: string;       // "Planning" | "Active" | "Completed"
+  /** True when the iteration is Completed — FE must hide controls. */
+  isReadOnly: boolean;
+  items: RetroItem[];
+}
+
+export interface CreateRetroItemRequest {
+  column: RetroColumnName;
+  content: string;
+}
+
+export interface UpdateRetroItemRequest {
+  content: string;
+}
+
+// ── Retrospective API ─────────────────────────────────────────
+
+export const getRetroBoard = (teamId: number, iterationId: number): Promise<RetroBoard> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const createRetroItem = (
+  teamId: number,
+  iterationId: number,
+  data: CreateRetroItemRequest,
+): Promise<RetroItem> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const updateRetroItem = (
+  teamId: number,
+  iterationId: number,
+  itemId: number,
+  data: UpdateRetroItemRequest,
+): Promise<RetroItem> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const deleteRetroItem = (
+  teamId: number,
+  iterationId: number,
+  itemId: number,
+): Promise<void> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}`, {
+    method: 'DELETE',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+  });
+
+/** Toggles the caller's vote — returns the updated card (one vote/user/card). */
+export const toggleRetroVote = (
+  teamId: number,
+  iterationId: number,
+  itemId: number,
+): Promise<RetroItem> =>
+  fetchWithAuth(`/teams/${teamId}/iterations/${iterationId}/retro/${itemId}/vote`, {
+    method: 'POST',
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+// ── Feedback ─────────────────────────────────────────────────
+
+export type FeedbackReason =
+  | 'MissingFunctionality'
+  | 'EasyToGetLost'
+  | 'DifficultToStart'
+  | 'MissingIntegration'
+  | 'NotVisuallyAppealing'
+  | 'NotUpToStandards'
+  | 'TooExpensive'
+  | 'Other'
+  | 'UnmentionedFlaw';
+
+export interface CreateFeedbackPayload {
+  language: string;
+  sprintsUsed: number;
+  overallRating: number;
+  wasSatisfied: boolean;
+  dissatisfactionReasons: FeedbackReason[];
+  missedFunctionalities?: string;
+  hardestToFind?: string;
+  daysToGetUsedTo?: number;
+  missedIntegrations?: string;
+  acceptableMonthlyPricePerUser?: number;
+  otherReasonDescription?: string;
+  unmentionedFlawDescription?: string;
+  mostUsefulFeature?: string;
+  encounteredBugs: boolean;
+  bugContext?: string;
+  wouldTryAgain: boolean;
+}
+
+export interface FeedbackItem {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  language: string;
+  sprintsUsed: number;
+  overallRating: number;
+  wasSatisfied: boolean;
+  dissatisfactionReasons: FeedbackReason[];
+  missedFunctionalities?: string | null;
+  hardestToFind?: string | null;
+  daysToGetUsedTo?: number | null;
+  missedIntegrations?: string | null;
+  acceptableMonthlyPricePerUser?: number | null;
+  otherReasonDescription?: string | null;
+  unmentionedFlawDescription?: string | null;
+  mostUsefulFeature?: string | null;
+  encounteredBugs: boolean;
+  bugContext?: string | null;
+  wouldTryAgain: boolean;
+  isReviewed: boolean;
+  createdAt: string;
+  reviewedByUserName?: string | null;
+  reviewedAt?: string | null;
+}
+
+export interface FeedbackListResponse {
+  items: FeedbackItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface FeedbackSummary {
+  totalCount: number;
+  reviewedCount: number;
+  unreviewedCount: number;
+  averageRating: number;
+  averageSprintsUsed: number;
+  satisfiedCount: number;
+  unsatisfiedCount: number;
+  encounteredBugsCount: number;
+  wouldTryAgainCount: number;
+  dissatisfactionReasonCounts: Record<string, number>;
+  ratingDistribution: Record<string, number>;
+}
+
+export const createFeedback = (payload: CreateFeedbackPayload): Promise<FeedbackItem> =>
+  fetchWithAuth('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export interface AdminFeedbackFilters {
+  page?: number;
+  pageSize?: number;
+  reviewed?: boolean;
+  satisfied?: boolean;
+  bugs?: boolean;
+  wouldTryAgain?: boolean;
+}
+
+export const getAdminFeedback = (filters: AdminFeedbackFilters = {}): Promise<FeedbackListResponse> => {
+  const params = new URLSearchParams();
+  if (filters.page) params.set('page', String(filters.page));
+  if (filters.pageSize) params.set('pageSize', String(filters.pageSize));
+  if (filters.reviewed !== undefined) params.set('reviewed', String(filters.reviewed));
+  if (filters.satisfied !== undefined) params.set('satisfied', String(filters.satisfied));
+  if (filters.bugs !== undefined) params.set('bugs', String(filters.bugs));
+  if (filters.wouldTryAgain !== undefined) params.set('wouldTryAgain', String(filters.wouldTryAgain));
+  const qs = params.toString();
+  return fetchWithAuth(`/admin/feedback${qs ? `?${qs}` : ''}`).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+};
+
+export const getAdminFeedbackSummary = (): Promise<FeedbackSummary> =>
+  fetchWithAuth('/admin/feedback/summary').then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });
+
+export const toggleFeedbackReviewed = (id: number): Promise<FeedbackItem> =>
+  fetchWithAuth(`/admin/feedback/${id}/review`, { method: 'PATCH' }).then(async (r) => {
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });

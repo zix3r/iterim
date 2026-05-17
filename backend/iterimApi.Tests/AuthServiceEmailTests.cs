@@ -70,9 +70,9 @@ public class AuthServiceEmailTests
         var passwordHasher = new PasswordHasher<User>();
         var mockEmail = emailService ?? new Mock<IEmailService>().Object;
 
-        var emailSettings = Options.Create(new EmailSettings { SmtpServer = "localhost", SmtpPort = 25, SenderEmail = "test@example.com", SenderName = "Test" });
+        var emailSettings = Options.Create(new EmailSettings { FromAddress = "test@example.com", FromName = "Test" });
         return new AuthService(db, jwtService.Object, refreshTokenService.Object,
-            mockEmail, jwtSettings, accessor, passwordHasher);
+            mockEmail, jwtSettings, emailSettings, accessor, passwordHasher);
     }
 
     private static async Task<User> CreateConfirmedUser(AppDbContext db, string email = "test@example.com")

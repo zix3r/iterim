@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { BarChart2, ChevronDown, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -160,8 +159,6 @@ export function MetricsPage() {
   if (iterLoading) {
     return (
       <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
-        <Skeleton className="h-4 w-64 mb-6" /> {/* Breadcrumbs */}
-        
         <div className="flex justify-between items-start">
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" /> {/* Title */}
@@ -202,18 +199,6 @@ export function MetricsPage() {
   // 3. SĖKMINGA BŪSENA
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
-      <Breadcrumbs
-        items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Org', href: `/org/${orgId}` },
-          { label: 'Products', href: `/org/${orgId}/products` },
-          { label: 'Product', href: `/org/${orgId}/products/${productId}` },
-          { label: 'Teams', href: `/org/${orgId}/products/${productId}/teams` },
-          { label: 'Team', href: `/org/${orgId}/products/${productId}/teams/${teamId}` },
-          { label: 'Metrics' },
-        ]}
-      />
-
       <PageHeader
         title={t('metrics.title')}
         description={t('products.metrics')}

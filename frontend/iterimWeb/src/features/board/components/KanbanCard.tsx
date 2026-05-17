@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { BoardWorkItem, BoardBlocker, WorkItemDependency } from '@/lib/api';
@@ -26,7 +25,7 @@ function blockerToDepForModal(b: BoardBlocker): WorkItemDependency {
   };
 }
 import { TagBadge } from '@/components/shared/TagBadge';
-import { Lock } from 'lucide-react';
+import { Lock, MessageSquare } from 'lucide-react';
 import { DependencyDetailModal } from '@/features/backlog/components/DependencyDetailModal';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -96,12 +95,12 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
 
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="relative">
-      <Card
+      <div
         onClick={onClick}
-        className={`mb-3 border border-black/20 dark:border-white/25 transition-shadow cursor-pointer ${isDragging ? 'shadow-xl' : 'hover:shadow-md hover:border-black/35 dark:hover:border-white/40'}`}
+        className={`mb-1.5 rounded-lg border border-black/15 dark:border-white/20 bg-card text-card-foreground shadow-sm px-2 py-1.5 transition-shadow cursor-pointer ${isDragging ? 'shadow-xl' : 'hover:shadow-md hover:border-black/30 dark:hover:border-white/35'}`}
       >
-        <CardHeader className="p-3 pb-2 flex flex-row items-start justify-between space-y-0 gap-2">
-          <div className="font-medium text-sm leading-tight flex-1">{item.title}</div>
+        <div className="flex items-start justify-between gap-1.5">
+          <div className="font-semibold text-[13px] leading-snug flex-1 line-clamp-2">{item.title}</div>
           {isBlocked && (
             <button
               ref={lockRef}
@@ -109,52 +108,62 @@ export function KanbanCard({ item, onClick }: KanbanCardProps) {
               className="shrink-0 p-0.5 rounded hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-500 dark:text-amber-400 transition-colors"
               title={`Blokuojamas: ${unfinishedBlockers.map(b => b.title).join(', ')}`}
             >
-              <Lock className="h-3.5 w-3.5" />
+              <Lock className="h-3 w-3" />
             </button>
           )}
-        </CardHeader>
-        <CardContent className="p-3 pt-0 flex flex-col gap-2">
+        </div>
 
-          {item.tags && item.tags.length > 0 && (
-            <div className="flex flex-wrap gap-0.5">
+        <div className="mt-3 flex items-center gap-1 flex-wrap">
+          <Badge variant="outline" className={`text-[9px] px-1 py-0 leading-4 font-semibold ${getBadgeColor(item.type)}`}>
+            {item.type.toUpperCase()}
+          </Badge>
+          {item.points !== null && (
+            <span className="text-[10px] font-mono font-semibold bg-secondary/60 px-1 py-0 leading-4 rounded text-muted-foreground">
+              {item.points}
+            </span>
+          )}
+          {item.commentCount > 0 && (
+            <span
+              className="flex items-center gap-0.5 text-[9px] font-medium px-1 leading-4 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400"
+              title={`${item.commentCount} comment${item.commentCount === 1 ? '' : 's'}`}
+            >
+              <MessageSquare className="h-2.5 w-2.5" />
+              {item.commentCount}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-1 flex items-center gap-0.5 flex-wrap min-w-0">
+          {item.tags && item.tags.length > 0 ? (
+            <>
               {item.tags.slice(0, 3).map(tag => (
                 <TagBadge key={tag.id} tag={tag} size="xs" />
               ))}
               {item.tags.length > 3 && (
-                <span className="text-[9px] text-muted-foreground self-center">+{item.tags.length - 3}</span>
+                <span className="text-[9px] text-muted-foreground">+{item.tags.length - 3}</span>
               )}
-            </div>
+            </>
+          ) : (
+            <span className="text-[10px] text-muted-foreground italic">{t('board.noTags')}</span>
           )}
+        </div>
 
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 font-semibold ${getBadgeColor(item.type)}`}>
-              {item.type.toUpperCase()}
-            </Badge>
-            {item.points !== null && (
-              <span className="text-xs font-mono font-semibold bg-secondary/50 px-1.5 py-0.5 rounded text-muted-foreground">
-                {item.points}
+        <div className="mt-1 flex items-center gap-1.5 min-w-0">
+          {item.assignedMember ? (
+            <>
+              <Avatar className="h-4 w-4">
+                <AvatarImage src={item.assignedMember.avatarUrl ?? undefined} alt={item.assignedMember.fullName} />
+                <AvatarFallback className="text-[8px] bg-primary/10">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="text-[11px] text-muted-foreground font-medium truncate" title={item.assignedMember.fullName}>
+                {formattedAssigneeName}
               </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1.5 mt-1">
-            {item.assignedMember ? (
-              <>
-                <Avatar className="h-5 w-5">
-                  <AvatarImage src={item.assignedMember.avatarUrl ?? undefined} alt={item.assignedMember.fullName} />
-                  <AvatarFallback className="text-[9px] bg-primary/10">{initials}</AvatarFallback>
-                </Avatar>
-                <span className="text-xs text-muted-foreground font-medium truncate max-w-[180px]" title={item.assignedMember.fullName}>
-                  {formattedAssigneeName}
-                </span>
-              </>
-            ) : (
-              <span className="text-[11px] text-muted-foreground italic">{t('backlog.unassigned')}</span>
-            )}
-          </div>
-
-        </CardContent>
-      </Card>
+            </>
+          ) : (
+            <span className="text-[10px] text-muted-foreground italic">{t('backlog.unassigned')}</span>
+          )}
+        </div>
+      </div>
 
       {/* Lock popup */}
       {lockPopupOpen && isBlocked && (

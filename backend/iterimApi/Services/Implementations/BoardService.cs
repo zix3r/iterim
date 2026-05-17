@@ -34,6 +34,8 @@ namespace iterimApi.Services.Implementations
                             .ThenInclude(bwi => bwi.Team)
                                 .ThenInclude(t => t.Product)
                                     .ThenInclude(p => p.Organization)
+                .Include(i => i.WorkItems)
+                    .ThenInclude(wi => wi.Comments)
                 .Where(i => i.TeamId == teamId && i.Status == IterationStatus.Active)
                 .FirstOrDefaultAsync();
 
@@ -74,8 +76,10 @@ namespace iterimApi.Services.Implementations
                     {
                         Id = wi.Id,
                         Title = wi.Title,
+                        Description = wi.Description,
                         Type = wi.Type.ToString(),
                         Points = wi.Points,
+                        CommentCount = wi.Comments.Count,
                         AssignedMember = wi.AssignedMember != null ? new AssignedMemberDto
                         {
                             Id = wi.AssignedMember.Id,
