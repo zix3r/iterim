@@ -170,6 +170,11 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(om => om.UpdatedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(om => om.RoleGrantedByUser)
+                .WithMany()
+                .HasForeignKey(om => om.RoleGrantedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── OrganizationConfig ──────────────────────────────
@@ -249,6 +254,11 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(tm => tm.UpdatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(tm => tm.RoleGrantedByUser)
+                .WithMany()
+                .HasForeignKey(tm => tm.RoleGrantedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── Iteration ───────────────────────────────────────

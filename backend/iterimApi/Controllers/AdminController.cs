@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using iterimApi.Data;
 using iterimApi.DTOs.Admin;
 using iterimApi.Services.Interfaces;
@@ -23,6 +24,14 @@ public class AdminController : ControllerBase
         _db = db;
         _authService = authService;
         _notifications = notifications;
+    }
+
+    private int GetCurrentUserId()
+    {
+        var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (int.TryParse(claim, out int uid))
+            return uid;
+        throw new UnauthorizedAccessException("Invalid user token.");
     }
 
     /// <summary>
@@ -313,6 +322,68 @@ public class AdminController : ControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(new { message = "User deleted successfully." });
+    }
+
+    /// <summary>
+    /// PATCH /api/admin/users/{userId}/role
+    /// Pakeičia globalią vartotojo rolę (Admin / User).
+    ///
+    /// Apsauga: sumažinti kito Admin rolę gali tik tas Admin, kuris šią rolę
+    /// jam pats suteikė. Tai užtikrina, kad bet kuris adminas negalėtų
+    /// piktnaudžiaudamas „nuvalyti" kitų adminų teisių.
+    /// </summary>
+    [HttpPatch("users/{userId}/role")]
+    public async Task<IActionResult> UpdateUserRole(int userId, [FromBody] UpdateUserRoleDto dto)
+    {
+        if (!Enum.TryParse<UserRole>(dto.Role, true, out var newRole))
+            return BadRequest(new { errors = new[] { "Invalid role. Valid roles are: Admin, User." } });
+
+        var target = await _db.Users.FindAsync(userId);
+        if (target is null)
+            return NotFound(new { errors = new[] { "User not found." } });
+
+        var requestingUserId = GetCurrentUserId();
+
+        // Negali keisti savo rolės — kitaip pats sau galėtų atimti admino teises.
+        if (target.Id == requestingUserId)
+            return BadRequest(new { errors = new[] { "Negalite pakeisti savo paties rolės." } });
+
+        // Šis endpoint'as veikia tik su Admin role authorize, tad requester yra Admin.
+        bool isDemotion = target.Role == UserRole.Admin && newRole != UserRole.Admin;
+
+        if (isDemotion)
+        {
+            // Sumažinti gali tik tas, kuris suteikė admin rolę šiam vartotojui.
+            // Jei target.RoleGrantedByUserId == null, jis yra „pradinis" admin
+            // (pvz. seed'ina sistema), todėl jo niekas demote'inti negali per šį endpoint'ą.
+            bool requesterGrantedRole =
+                target.RoleGrantedByUserId.HasValue &&
+                target.RoleGrantedByUserId.Value == requestingUserId;
+
+            if (!requesterGrantedRole)
+            {
+                return StatusCode(403, new
+                {
+                    errors = new[]
+                    {
+                        "Sumažinti administratoriaus rolę gali tik tas administratorius, " +
+                        "kuris šią rolę suteikė."
+                    }
+                });
+            }
+        }
+
+        if (target.Role == newRole)
+            return Ok(new { message = "No change.", role = target.Role.ToString() });
+
+        target.Role = newRole;
+        target.UpdatedAt = DateTime.UtcNow;
+        // Audit: kas suteikė naują rolę.
+        target.RoleGrantedByUserId = newRole == UserRole.Admin ? requestingUserId : (int?)null;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Role updated.", role = target.Role.ToString() });
     }
 
     /// <summary>

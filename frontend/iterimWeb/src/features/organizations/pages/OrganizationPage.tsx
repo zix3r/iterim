@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router';
 import { getOrganizationById, getProductsByOrganization, removeOrganizationMember, updateOrganizationMemberRole, deleteOrganization, getOrgTags, createOrgTag, deleteOrgTag } from '@/lib/api';
-import type { OrganizationDetail, Tag } from '@/lib/api';
+import type { OrganizationDetail, OrganizationMember, Tag } from '@/lib/api';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -212,6 +212,40 @@ export function OrganizationPage() {
   
   const canManageAllAbsences = organization.userRole === 'Admin';
   const isAdmin = organization.userRole === 'Admin';
+  const currentUserIsOwner = organization.ownerUserId === organization.currentUserId;
+
+  // „Kas suteikė admin rolę" su fallback'u į pakvietėją, kad senuose duomenyse
+  // (kur RoleGrantedByUserId yra null) taisyklės vis tiek veiktų.
+  const effectiveGranter = (member: OrganizationMember): number | null | undefined =>
+    member.roleGrantedByUserId ?? member.invitedByUserId;
+
+  // Ar dabartinis vartotojas gali redaguoti šio nario rolę?
+  //  • Tu negali keisti savo paties rolės.
+  //  • Niekas negali keisti savininko rolės.
+  //  • Sumažinti kito Admin rolę gali tik savininkas ARBA tas Admin,
+  //    kuris šią Admin rolę pats suteikė.
+  //  • Member / Viewer rolę gali keisti bet kuris Admin.
+  const canEditMemberRole = (member: OrganizationMember) => {
+    if (!isAdmin) return false;
+    if (member.status === 'Removed' || member.status === 'Declined') return false;
+    if (member.userId === organization.currentUserId) return false;
+    if (member.userId === organization.ownerUserId) return false;
+    if (member.role === 'Admin' && !currentUserIsOwner) {
+      return effectiveGranter(member) === organization.currentUserId;
+    }
+    return true;
+  };
+
+  const memberRoleEditTooltip = (member: OrganizationMember): string | undefined => {
+    if (!isAdmin) return undefined;
+    if (member.userId === organization.currentUserId)
+      return t('organizations.cannotChangeOwnRole');
+    if (member.userId === organization.ownerUserId)
+      return t('organizations.cannotChangeOwnerRole');
+    if (member.role === 'Admin' && !currentUserIsOwner && effectiveGranter(member) !== organization.currentUserId)
+      return t('organizations.cannotChangeOtherAdminRole');
+    return undefined;
+  };
 
   const translateOrgRole = (role: string) => {
     switch (role) {
@@ -339,7 +373,7 @@ export function OrganizationPage() {
                 <TableRow key={member.userId}>
                   <TableCell className="font-medium">{member.email}</TableCell>
                   <TableCell>
-                    {isAdmin && member.userId !== organization.currentUserId && member.status !== 'Removed' && member.status !== 'Declined' ? (
+                    {canEditMemberRole(member) ? (
                       <select
                         value={member.role}
                         onChange={(e) => requestRoleChange(member.id, member.email, member.role, e.target.value)}
@@ -352,7 +386,11 @@ export function OrganizationPage() {
                         <option value="Viewer">{t('organizations.roleViewer')}</option>
                       </select>
                     ) : (
-                      <span>{translateOrgRole(member.role)}</span>
+                      <span title={memberRoleEditTooltip(member)}>
+                        {member.userId === organization.ownerUserId
+                          ? t('organizations.roleOwner')
+                          : translateOrgRole(member.role)}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>{member.status}</TableCell>

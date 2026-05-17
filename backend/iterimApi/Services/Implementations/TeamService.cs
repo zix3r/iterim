@@ -272,6 +272,8 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
                 UserEmail = m.OrgMember.User.Email,
                 Role = m.Role.ToString(),
                 CreatedAt = m.CreatedAt,
+                RoleGrantedByUserId = m.RoleGrantedByUserId,
+                CreatedByUserId = m.CreatedBy,
 
                 WeeklyHours = m.WeeklyHours,
                 ScheduleType = m.ScheduleType.ToString(),
@@ -339,7 +341,10 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
             CreatedBy = userId,
             UpdatedBy = userId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            // Komandos kūrėjas yra savaiminis admin — niekas „nesuteikė" rolės;
+            // savininko apsauga užtikrinama per Team.CreatedBy.
+            RoleGrantedByUserId = null
         };
         
         _db.TeamMembers.Add(creatorTeamMember);
@@ -495,7 +500,9 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
             CreatedBy = userId,
             UpdatedBy = userId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            // Užfiksuojame, kas suteikė Admin rolę (jei iškart prisidedamas kaip Admin).
+            RoleGrantedByUserId = dto.Role == TeamMemberRole.Admin ? userId : (int?)null
         };
 
         _db.TeamMembers.Add(teamMember);
@@ -525,7 +532,9 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
             UserName = orgMember.User.Name,
             UserEmail = orgMember.User.Email,
             Role = teamMember.Role.ToString(),
-            CreatedAt = teamMember.CreatedAt
+            CreatedAt = teamMember.CreatedAt,
+            RoleGrantedByUserId = teamMember.RoleGrantedByUserId,
+            CreatedByUserId = teamMember.CreatedBy
         };
     }
 
@@ -575,20 +584,60 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
             throw new KeyNotFoundException("Team member not found");
         }
 
-        // If trying to demote from Admin to Member, check if user is the team creator and the only admin
-        if (teamMember.Role == TeamMemberRole.Admin && dto.Role == TeamMemberRole.Member)
+        // ── Apsauga: narys negali keisti SAVO PATIES rolės ──────────
+        // Nei aukštyn (promote), nei žemyn (demote). Komandos narys, net
+        // ir būdamas admin, neturi teisės pats sau redaguoti rolės; tai
+        // turi padaryti kitas admin / komandos kūrėjas / produkto kūrėjas.
+        if (memberUserId == userId)
         {
-            var isTeamCreator = team.CreatedBy == memberUserId;
-            if (isTeamCreator)
-            {
-                // Count how many admins are in the team
-                var adminCount = await _db.TeamMembers
-                    .CountAsync(tm => tm.TeamId == teamId && tm.Role == TeamMemberRole.Admin);
+            throw new InvalidOperationException(
+                "Negalite pakeisti savo paties rolės komandoje.");
+        }
 
-                if (adminCount <= 1)
+        // ── Apsauga nuo savininko / kitų adminų DEMOTE'INIMO ─────────
+        // Sumažinti komandos admin rolę gali tik:
+        //   • komandos savininkas (Team.CreatedBy), arba
+        //   • produkto kūrėjas (Product.CreatedBy), arba
+        //   • tas admin, kuris pats šią rolę suteikė.
+        bool isDemotion = teamMember.Role == TeamMemberRole.Admin && dto.Role == TeamMemberRole.Member;
+        bool memberIsTeamCreator = team.CreatedBy == memberUserId;
+        bool requesterIsTeamCreator = team.CreatedBy == userId;
+
+        if (isDemotion)
+        {
+            if (memberIsTeamCreator && !requesterIsTeamCreator && !isProductCreator)
+            {
+                throw new UnauthorizedAccessException(
+                    "Komandos kūrėjo (savininko) rolės sumažinti negalima.");
+            }
+
+            if (!requesterIsTeamCreator && !isProductCreator)
+            {
+                // Audit fallback: jei senuose duomenyse RoleGrantedByUserId NULL,
+                // priimame TeamMember.CreatedBy — narį į komandą įtraukęs admin
+                // dažniausiai ir nustatė rolę.
+                int effectiveGranter = teamMember.RoleGrantedByUserId ?? teamMember.CreatedBy;
+                bool requesterGrantedRole = effectiveGranter == userId;
+
+                if (!requesterGrantedRole)
                 {
-                    throw new InvalidOperationException("Cannot demote the team creator from admin when they are the only admin. Add another admin first.");
+                    throw new UnauthorizedAccessException(
+                        "Sumažinti komandos administratoriaus rolę gali tik komandos kūrėjas, " +
+                        "produkto kūrėjas arba tas administratorius, kuris šią rolę suteikė.");
                 }
+            }
+        }
+
+        // Esama apsauga: jei demote'inamas team creator ir jis vienintelis admin
+        if (isDemotion && memberIsTeamCreator)
+        {
+            // Count how many admins are in the team
+            var adminCount = await _db.TeamMembers
+                .CountAsync(tm => tm.TeamId == teamId && tm.Role == TeamMemberRole.Admin);
+
+            if (adminCount <= 1)
+            {
+                throw new InvalidOperationException("Cannot demote the team creator from admin when they are the only admin. Add another admin first.");
             }
         }
 
@@ -596,6 +645,10 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
         teamMember.Role = dto.Role;
         teamMember.UpdatedBy = userId;
         teamMember.UpdatedAt = DateTime.UtcNow;
+        // Audit: kas suteikė naują rolę.
+        teamMember.RoleGrantedByUserId = dto.Role == TeamMemberRole.Admin
+            ? userId
+            : (int?)null;
 
         await _db.SaveChangesAsync();
 
@@ -608,7 +661,9 @@ private int CalculateWorkingDays(DateOnly start, DateOnly end)
             UserName = teamMember.OrgMember.User.Name,
             UserEmail = teamMember.OrgMember.User.Email,
             Role = teamMember.Role.ToString(),
-            CreatedAt = teamMember.CreatedAt
+            CreatedAt = teamMember.CreatedAt,
+            RoleGrantedByUserId = teamMember.RoleGrantedByUserId,
+            CreatedByUserId = teamMember.CreatedBy
         };
     }
 

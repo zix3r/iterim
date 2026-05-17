@@ -86,6 +86,7 @@ public class OrganizationService : IOrganizationService
             Slug = organization.Slug,
             UserRole = currentUserMember.Role.ToString(),
             CurrentUserId = userId,
+            OwnerUserId = organization.CreatedBy,
             Members = organization.Members
                 .Where(m => m.Status != OrgMemberStatus.Removed && m.Status != OrgMemberStatus.Declined)
                 .Select(m => new OrganizationMemberDto
@@ -94,7 +95,9 @@ public class OrganizationService : IOrganizationService
                     UserId = m.UserId,
                     Email = m.Email,
                     Role = m.Role.ToString(),
-                    Status = m.Status.ToString()
+                    Status = m.Status.ToString(),
+                    RoleGrantedByUserId = m.RoleGrantedByUserId,
+                    InvitedByUserId = m.InvitedBy
                 }).ToList()
         };
     }
@@ -163,7 +166,8 @@ public class OrganizationService : IOrganizationService
                     Email = user.Email,
                     Role = OrgMemberRole.Admin,
                     Status = OrgMemberStatus.Active,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTime.UtcNow,
+                    RoleGrantedByUserId = null
                 }
             }
         };
@@ -222,6 +226,7 @@ public class OrganizationService : IOrganizationService
              existingMember.JoinedAt = null;
              existingMember.UpdatedAt = DateTime.UtcNow;
              existingMember.UpdatedByUserId = currentUserId;
+             existingMember.RoleGrantedByUserId = role == OrgMemberRole.Admin ? currentUserId : null;
 
              await _db.SaveChangesAsync();
 
@@ -248,7 +253,8 @@ public class OrganizationService : IOrganizationService
                  UserId = existingMember.UserId,
                  Email = existingMember.Email,
                  Role = existingMember.Role.ToString(),
-                 Status = existingMember.Status.ToString()
+                 Status = existingMember.Status.ToString(),
+                 RoleGrantedByUserId = existingMember.RoleGrantedByUserId
              };
         }
 
@@ -260,7 +266,8 @@ public class OrganizationService : IOrganizationService
             Role = role,
             Status = OrgMemberStatus.Invited,
             InvitedAt = DateTime.UtcNow,
-            InvitedBy = currentUserId
+            InvitedBy = currentUserId,
+            RoleGrantedByUserId = role == OrgMemberRole.Admin ? currentUserId : null
         };
 
         _db.OrganizationMembers.Add(newMember);
@@ -289,7 +296,8 @@ public class OrganizationService : IOrganizationService
             UserId = newMember.UserId,
             Email = newMember.Email,
             Role = newMember.Role.ToString(),
-            Status = newMember.Status.ToString()
+            Status = newMember.Status.ToString(),
+            RoleGrantedByUserId = newMember.RoleGrantedByUserId
         };
     }
 
@@ -422,32 +430,56 @@ public class OrganizationService : IOrganizationService
         if (!Enum.TryParse<OrgMemberRole>(newRole, true, out var parsedRole))
             throw new ArgumentException($"Invalid role: {newRole}. Valid roles are: Admin, Member, Viewer");
 
-        // 2. Locate the member to update
+        var organization = await _db.Organizations
+            .FirstOrDefaultAsync(o => o.Id == organizationId);
+        if (organization == null)
+            throw new KeyNotFoundException("Organization not found.");
+
         var memberToUpdate = await _db.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.Id == memberId);
-
         if (memberToUpdate == null)
             throw new KeyNotFoundException("Member not found in this organization.");
 
-        // 3. Verify the requester is an admin of this organization
         var requester = await _db.OrganizationMembers
             .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == requestingUserId);
-
         if (requester == null)
             throw new UnauthorizedAccessException("You are not a member of this organization.");
-
         if (requester.Role != OrgMemberRole.Admin)
             throw new UnauthorizedAccessException("Only organization admins can change member roles.");
 
-        // 4. Prevent admins from demoting themselves (use Leave Organization for that)
         if (memberToUpdate.UserId == requestingUserId)
             throw new InvalidOperationException("You cannot change your own role.");
 
-        // 5. Don't allow role changes on removed/declined members
         if (memberToUpdate.Status == OrgMemberStatus.Removed || memberToUpdate.Status == OrgMemberStatus.Declined)
             throw new InvalidOperationException("Cannot change the role of a removed or declined member.");
 
-        // 6. If demoting an active admin, ensure at least one admin remains
+        // Apsauga: savininko / kitų adminų demotion.
+        bool requesterIsOwner = organization.CreatedBy == requestingUserId;
+        bool memberIsOwner = organization.CreatedBy == memberToUpdate.UserId;
+        bool isDemotion = (int)parsedRole > (int)memberToUpdate.Role;
+
+        if (isDemotion)
+        {
+            if (memberIsOwner)
+            {
+                throw new UnauthorizedAccessException(
+                    "Organizacijos savininko rolės negalima pakeisti į žemesnę.");
+            }
+
+            if (memberToUpdate.Role == OrgMemberRole.Admin && !requesterIsOwner)
+            {
+                int? effectiveGranter = memberToUpdate.RoleGrantedByUserId ?? memberToUpdate.InvitedBy;
+                bool requesterGrantedRole = effectiveGranter.HasValue && effectiveGranter.Value == requestingUserId;
+
+                if (!requesterGrantedRole)
+                {
+                    throw new UnauthorizedAccessException(
+                        "Sumažinti administratoriaus rolę gali tik organizacijos savininkas " +
+                        "arba tas administratorius, kuris šią rolę suteikė.");
+                }
+            }
+        }
+
         if (memberToUpdate.Role == OrgMemberRole.Admin
             && parsedRole != OrgMemberRole.Admin
             && memberToUpdate.Status == OrgMemberStatus.Active)
@@ -456,14 +488,10 @@ public class OrganizationService : IOrganizationService
                 .CountAsync(m => m.OrganizationId == organizationId
                                  && m.Role == OrgMemberRole.Admin
                                  && m.Status == OrgMemberStatus.Active);
-
             if (adminCount <= 1)
-            {
                 throw new InvalidOperationException("Cannot demote the last administrator of the organization.");
-            }
         }
 
-        // 7. No-op shortcut: nothing to do if role unchanged
         if (memberToUpdate.Role == parsedRole)
         {
             return new OrganizationMemberDto
@@ -472,13 +500,17 @@ public class OrganizationService : IOrganizationService
                 UserId = memberToUpdate.UserId,
                 Email = memberToUpdate.Email,
                 Role = memberToUpdate.Role.ToString(),
-                Status = memberToUpdate.Status.ToString()
+                Status = memberToUpdate.Status.ToString(),
+                RoleGrantedByUserId = memberToUpdate.RoleGrantedByUserId
             };
         }
 
         memberToUpdate.Role = parsedRole;
         memberToUpdate.UpdatedAt = DateTime.UtcNow;
         memberToUpdate.UpdatedByUserId = requestingUserId;
+        memberToUpdate.RoleGrantedByUserId = parsedRole == OrgMemberRole.Admin
+            ? requestingUserId
+            : (int?)null;
 
         await _db.SaveChangesAsync();
 
@@ -488,7 +520,8 @@ public class OrganizationService : IOrganizationService
             UserId = memberToUpdate.UserId,
             Email = memberToUpdate.Email,
             Role = memberToUpdate.Role.ToString(),
-            Status = memberToUpdate.Status.ToString()
+            Status = memberToUpdate.Status.ToString(),
+            RoleGrantedByUserId = memberToUpdate.RoleGrantedByUserId
         };
     }
 

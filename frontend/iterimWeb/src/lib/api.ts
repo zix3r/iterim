@@ -11,12 +11,18 @@ export interface OrganizationMember {
   email: string;
   role: string;
   status: string;
+  // Vartotojas, kuris suteikė šiam nariui dabartinę rolę (Admin promote).
+  roleGrantedByUserId?: number | null;
+  // Pakvietėjas — fallback senuose duomenyse be audit'o.
+  invitedByUserId?: number | null;
 }
 
 export interface OrganizationDetail extends Organization {
   members: OrganizationMember[];
   userRole: string;
   currentUserId: number;
+  // Organizacijos savininko (kūrėjo) UserId.
+  ownerUserId: number;
 }
 // Surask, kur aprašyti Absence tipai ir pridėk šį:
 export interface AbsenceFilters {
@@ -105,6 +111,10 @@ export interface TeamMember {
   tags: Tag[];
   weeklyHours: number;
   scheduleType: string;
+  // Vartotojas, kuris suteikė šiam nariui dabartinę team rolę.
+  roleGrantedByUserId?: number | null;
+  // Pridėjusio nario userId — fallback senuose duomenyse.
+  createdByUserId?: number | null;
 }
 
 export interface Team {

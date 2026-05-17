@@ -16,12 +16,17 @@ public class OrganizationMember
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int? InvitedBy { get; set; }
     public int? UpdatedByUserId { get; set; }
+    // Vartotojas, kuris suteikė dabartinę rolę (Admin promote). Naudojamas
+    // įgaliojimų patikrai: tik savininkas arba tas, kuris suteikė admin rolę,
+    // gali ją sumažinti.
+    public int? RoleGrantedByUserId { get; set; }
 
     // Navigation
     public Organization Organization { get; set; } = null!;
     public User User { get; set; } = null!;
     public User? InvitedByUser { get; set; }
     public User? UpdatedByUser { get; set; }
+    public User? RoleGrantedByUser { get; set; }
     public ICollection<TeamMember> TeamMemberships { get; set; } = [];
     public ICollection<MemberAbsence> Absences { get; set; } = [];
     public ICollection<WorkItemComment> Comments { get; set; } = [];

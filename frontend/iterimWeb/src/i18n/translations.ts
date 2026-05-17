@@ -281,6 +281,9 @@ export type TranslationKey =
   | 'organizations.roleUpdated'
   | 'organizations.failedRoleUpdate'
   | 'organizations.changeRoleConfirm'
+  | 'organizations.cannotChangeOwnRole'
+  | 'organizations.cannotChangeOwnerRole'
+  | 'organizations.cannotChangeOtherAdminRole'
   | 'organizations.email'
   | 'organizations.absence'
   | 'organizations.activeMembers'
@@ -356,6 +359,10 @@ export type TranslationKey =
   | 'teams.roleMember'
   | 'teams.roleAdmin'
   | 'teams.roleViewer'
+  | 'teams.cannotChangeOwnRole'
+  | 'teams.cannotChangeCreatorRole'
+  | 'teams.cannotChangeOtherAdminRole'
+  | 'teams.roleCreator'
   | 'teams.information'
   | 'teams.teamId'
   | 'teams.created'
@@ -1046,6 +1053,9 @@ export const translations: Record<Language, Translations> = {
     'organizations.roleUpdated': 'Nario rolė sėkmingai atnaujinta',
     'organizations.failedRoleUpdate': 'Nepavyko atnaujinti nario rolės.',
     'organizations.changeRoleConfirm': 'Ar tikrai norite pakeisti šio nario rolę?',
+    'organizations.cannotChangeOwnRole': 'Savo paties rolės keisti negalite',
+    'organizations.cannotChangeOwnerRole': 'Savininko rolės pakeisti negalima',
+    'organizations.cannotChangeOtherAdminRole': 'Šio administratoriaus rolės sumažinti gali tik savininkas arba tas, kuris šią rolę jam suteikė',
     'organizations.email': 'El. paštas',
     'organizations.absence': 'Pravaikšta',
     'organizations.activeMembers': 'Aktyvūs nariai',
@@ -1121,6 +1131,10 @@ export const translations: Record<Language, Translations> = {
     'teams.roleMember': 'Narys',
     'teams.roleAdmin': 'Administratorius',
     'teams.roleViewer': 'Stebėtojas',
+    'teams.cannotChangeOwnRole': 'Savo paties rolės keisti negalite',
+    'teams.cannotChangeCreatorRole': 'Komandos kūrėjo rolės pakeisti negalima',
+    'teams.cannotChangeOtherAdminRole': 'Šio administratoriaus rolės sumažinti gali tik komandos / produkto kūrėjas arba tas, kuris šią rolę jam suteikė',
+    'teams.roleCreator': 'Kūrėjas',
     'teams.information': 'Komandos informacija',
     'teams.teamId': 'Komandos ID',
     'teams.created': 'Sukurta',
@@ -1808,6 +1822,9 @@ export const translations: Record<Language, Translations> = {
     'organizations.roleUpdated': 'Member role updated successfully',
     'organizations.failedRoleUpdate': 'Failed to update member role.',
     'organizations.changeRoleConfirm': "Are you sure you want to change this member's role?",
+    'organizations.cannotChangeOwnRole': 'You cannot change your own role',
+    'organizations.cannotChangeOwnerRole': "The owner's role cannot be changed",
+    'organizations.cannotChangeOtherAdminRole': 'Only the owner or the admin who granted this role can change it',
     'organizations.email': 'Email',
     'organizations.absence': 'Absence',
     'organizations.activeMembers': 'Active Members',
@@ -1883,6 +1900,10 @@ export const translations: Record<Language, Translations> = {
     'teams.roleMember': 'Member',
     'teams.roleAdmin': 'Admin',
     'teams.roleViewer': 'Viewer',
+    'teams.cannotChangeOwnRole': 'You cannot change your own role',
+    'teams.cannotChangeCreatorRole': "The team creator's role cannot be changed",
+    'teams.cannotChangeOtherAdminRole': 'Only the team creator, the product creator, or the admin who granted this role can change it',
+    'teams.roleCreator': 'Creator',
     'teams.information': 'Team Information',
     'teams.teamId': 'Team ID',
     'teams.created': 'Created',

@@ -52,3 +52,9 @@ public class AdminUserTeamDto
     public string Role { get; set; } = string.Empty;
     public int AssignedWorkItems { get; set; }
 }
+
+public class UpdateUserRoleDto
+{
+    // "Admin" arba "User"
+    public string Role { get; set; } = string.Empty;
+}

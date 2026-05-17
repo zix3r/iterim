@@ -240,10 +240,43 @@ export function TeamDetailPage() {
   // 1. The product creator, OR
   // 2. A team admin
   const isProductCreator = team.currentUserId === team.productCreatedBy;
+  const isTeamCreator = team.currentUserId === team.createdBy;
   const isTeamAdmin = team.members.some(
     m => m.userId === team.currentUserId && m.role === 'Admin'
   );
   const canManageTeam = isProductCreator || isTeamAdmin;
+
+  // „Kas suteikė team admin rolę" su fallback'u į pridėjusį narį, kad senuose
+  // duomenyse (be RoleGrantedByUserId) tas, kuris narį pridėjo, vis tiek galėtų
+  // keisti rolę.
+  const effectiveTeamGranter = (member: TeamMember): number | null | undefined =>
+    member.roleGrantedByUserId ?? member.createdByUserId;
+
+  // Ar dabartinis vartotojas gali keisti šio nario rolę?
+  //  • Tu negali keisti savo rolės.
+  //  • Komandos kūrėjo (Team.CreatedBy) rolės keisti negalima.
+  //  • Sumažinti kito Admin rolę gali tik komandos kūrėjas, produkto kūrėjas
+  //    arba tas Admin, kuris šią rolę pats suteikė.
+  //  • Member rolę gali keisti bet kuris team admin.
+  const canEditTeamMemberRole = (member: TeamMember) => {
+    if (!canManageTeam) return false;
+    if (member.userId === team.currentUserId) return false;
+    if (member.userId === team.createdBy) return false;
+    if (member.role === 'Admin' && !isTeamCreator && !isProductCreator) {
+      return effectiveTeamGranter(member) === team.currentUserId;
+    }
+    return true;
+  };
+
+  const teamMemberRoleEditTooltip = (member: TeamMember): string | undefined => {
+    if (!canManageTeam) return undefined;
+    if (member.userId === team.currentUserId) return t('teams.cannotChangeOwnRole');
+    if (member.userId === team.createdBy) return t('teams.cannotChangeCreatorRole');
+    if (member.role === 'Admin' && !isTeamCreator && !isProductCreator && effectiveTeamGranter(member) !== team.currentUserId) {
+      return t('teams.cannotChangeOtherAdminRole');
+    }
+    return undefined;
+  };
 
   // 3. SĖKMINGA BŪSENA
   return (
@@ -383,7 +416,7 @@ export function TeamDetailPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      {canManageTeam ? (
+                      {canEditTeamMemberRole(member) ? (
                         <select
                           value={member.role === 'Admin' ? '0' : '1'}
                           onChange={(e) => handleRoleChange(member.userId, e.target.value)}
@@ -393,13 +426,18 @@ export function TeamDetailPage() {
                           <option value="1">{t('teams.roleMember')}</option>
                         </select>
                       ) : (
-                        <span className={`inline-flex items-center px-3 py-1 rounded-md text-sm ${
-                          member.role === 'Admin' 
-                            ? 'bg-primary/10 text-primary' 
-                            : 'bg-secondary text-secondary-foreground'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-md text-sm ${
+                            member.role === 'Admin'
+                              ? 'bg-primary/10 text-primary'
+                              : 'bg-secondary text-secondary-foreground'
+                          }`}
+                          title={teamMemberRoleEditTooltip(member)}
+                        >
                           {member.role === 'Admin' && <ShieldIcon className="h-3 w-3 mr-1" />}
-                          {member.role === 'Admin' ? t('teams.roleAdmin') : member.role === 'Member' ? t('teams.roleMember') : member.role === 'Viewer' ? t('teams.roleViewer') : member.role}
+                          {member.userId === team.createdBy
+                            ? t('teams.roleCreator')
+                            : member.role === 'Admin' ? t('teams.roleAdmin') : member.role === 'Member' ? t('teams.roleMember') : member.role === 'Viewer' ? t('teams.roleViewer') : member.role}
                         </span>
                       )}
                       

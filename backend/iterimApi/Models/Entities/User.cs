@@ -10,6 +10,9 @@ public class User
     public string? AvatarUrl { get; set; }
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; } = UserRole.User;
+    // Vartotojas, kuris suteikė globalią Admin rolę (jei kažkada bus įdiegtas
+    // endpoint'as keisti UserRole). Tik tas, kuris suteikė, gali sumažinti.
+    public int? RoleGrantedByUserId { get; set; }
     public string Theme { get; set; } = "light";
 
     // ── Notification preferences ─────────────────────────

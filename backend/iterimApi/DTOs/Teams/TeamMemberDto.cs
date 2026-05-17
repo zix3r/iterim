@@ -15,4 +15,8 @@ public class TeamMemberDto
     public List<TagDto> Tags { get; set; } = [];
     public int WeeklyHours { get; set; }
     public string ScheduleType { get; set; } = string.Empty;
+    // Vartotojas, kuris suteikė šiam nariui dabartinę team rolę.
+    public int? RoleGrantedByUserId { get; set; }
+    // Pridėjusio nario userId — fallback senuose duomenyse.
+    public int? CreatedByUserId { get; set; }
 }
