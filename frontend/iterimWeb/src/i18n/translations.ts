@@ -371,6 +371,9 @@ export type TranslationKey =
   | 'teams.noMembers'
 
   // Backlog
+  | 'backlog.selected'
+  | 'backlog.moveTo'
+  | 'backlog.movingItems'
   | 'backlog.title'
   | 'backlog.addItem'
   | 'backlog.createItemTitle'
@@ -1143,6 +1146,9 @@ export const translations: Record<Language, Translations> = {
     'teams.noMembers': 'Šioje komandoje narių dar nėra.',
 
     // Backlog
+    'backlog.selected': 'pasirinkta',
+    'backlog.moveTo': 'Perkelti į...',
+    'backlog.movingItems': 'Perkeliama elementų:',
     'backlog.title': 'Darbų sąrašas',
     'backlog.addItem': 'Pridėti darbo elementą',
     'backlog.createItemTitle': 'Sukurti darbo elementą',
@@ -1912,6 +1918,9 @@ export const translations: Record<Language, Translations> = {
     'teams.noMembers': 'No members in this team yet.',
 
     // Backlog
+    'backlog.selected': 'selected',
+    'backlog.moveTo': 'Move to...',
+    'backlog.movingItems': 'Moving items:',
     'backlog.title': 'Backlog',
     'backlog.addItem': 'Add work item',
     'backlog.createItemTitle': 'Create work item',

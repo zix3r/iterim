@@ -556,7 +556,7 @@ export function BacklogPage() {
                   {selectedItemIds.includes(activeItem.id) && selectedItemIds.length > 1 ? (
                     <div className="flex items-center gap-2 font-semibold text-primary">
                       <ListTodo className="h-5 w-5" />
-                      Moving {selectedItemIds.length} items
+                      {t('backlog.movingItems')} {selectedItemIds.length}
                     </div>
                   ) : (
                     <>
@@ -583,19 +583,19 @@ export function BacklogPage() {
             <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-full">
               {selectedItemIds.length}
             </span>
-            <span className="text-sm font-medium">selected</span>
+            <span className="text-sm font-medium">{t('backlog.selected')}</span>
           </div>
           <div className="h-4 w-px bg-border" />
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="secondary" className="gap-2">
-                <MoveRight className="h-4 w-4" /> Move to...
+                <MoveRight className="h-4 w-4" /> {t('backlog.moveTo')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-48">
               <DropdownMenuItem onClick={() => handleBulkMove(null)}>
-                Backlog
+                {t('backlog.title')}
               </DropdownMenuItem>
               {iterations.filter(i => i.status !== 'Completed').map(it => (
                 <DropdownMenuItem key={it.id} onClick={() => handleBulkMove(it.id)}>
