@@ -780,6 +780,25 @@ export type TranslationKey =
   | 'retro.failedVote'
   | 'retro.iterationNotStarted'
 
+  // Quarter Plan
+  | 'quarterPlan.title'
+  | 'quarterPlan.subtitle'
+  | 'quarterPlan.recentPageLabel'
+  | 'quarterPlan.quarterShort'
+  | 'quarterPlan.noIterationsTitle'
+  | 'quarterPlan.noIterationsDescription'
+  | 'quarterPlan.spanningFeatures'
+  | 'quarterPlan.todo'
+  | 'quarterPlan.inProgress'
+  | 'quarterPlan.done'
+  | 'quarterPlan.spSuffix'
+  | 'quarterPlan.teamCapacity'
+  | 'quarterPlan.daysSuffix'
+  | 'quarterPlan.noFeatures'
+  | 'quarterPlan.statusPlanning'
+  | 'quarterPlan.statusActive'
+  | 'quarterPlan.statusCompleted'
+
   // Kalbų pavadinimai
   | 'language.lt'
   | 'language.en';
@@ -1555,6 +1574,25 @@ export const translations: Record<Language, Translations> = {
     'retro.failedVote': 'Nepavyko balsuoti.',
     'retro.iterationNotStarted': 'Retrospektyva pasiekiama tik aktyvioms ar užbaigtoms iteracijoms.',
 
+    // Ketvirčio planas
+    'quarterPlan.title': 'Ketvirčio planas',
+    'quarterPlan.subtitle': 'Strateginė iteracijų ir funkcijų apžvalga.',
+    'quarterPlan.recentPageLabel': 'Ketvirčio planas',
+    'quarterPlan.quarterShort': 'K',
+    'quarterPlan.noIterationsTitle': 'Iteracijų nerasta',
+    'quarterPlan.noIterationsDescription': 'Pasirinktame laikotarpyje suplanuotų iteracijų nėra.',
+    'quarterPlan.spanningFeatures': 'Apjungiančios funkcijos',
+    'quarterPlan.todo': 'Atlikti',
+    'quarterPlan.inProgress': 'Vykdoma',
+    'quarterPlan.done': 'Užbaigta',
+    'quarterPlan.spSuffix': 'TT',
+    'quarterPlan.teamCapacity': 'Komandos pajėgumas:',
+    'quarterPlan.daysSuffix': 'd.',
+    'quarterPlan.noFeatures': 'Šiame laikotarpyje nerasta kelias iteracijas apimančių funkcijų.',
+    'quarterPlan.statusPlanning': 'Planuojama',
+    'quarterPlan.statusActive': 'Aktyvi',
+    'quarterPlan.statusCompleted': 'Užbaigta',
+
     // Kalbų pavadinimai
     'language.lt': 'Lietuvių',
     'language.en': 'Anglų',
@@ -2326,6 +2364,25 @@ export const translations: Record<Language, Translations> = {
     'retro.failedDelete': 'Failed to delete the card.',
     'retro.failedVote': 'Failed to vote.',
     'retro.iterationNotStarted': 'The retrospective is only available for active or completed iterations.',
+
+    // Quarter Plan
+    'quarterPlan.title': 'Quarterly Plan',
+    'quarterPlan.subtitle': 'Strategic overview of iterations and features.',
+    'quarterPlan.recentPageLabel': 'Quarter Plan',
+    'quarterPlan.quarterShort': 'Q',
+    'quarterPlan.noIterationsTitle': 'No Iterations Found',
+    'quarterPlan.noIterationsDescription': 'There are no planned iterations for the selected date range.',
+    'quarterPlan.spanningFeatures': 'Spanning Features',
+    'quarterPlan.todo': 'Todo',
+    'quarterPlan.inProgress': 'In Prog',
+    'quarterPlan.done': 'Done',
+    'quarterPlan.spSuffix': 'SP',
+    'quarterPlan.teamCapacity': 'Team Capacity:',
+    'quarterPlan.daysSuffix': 'Days',
+    'quarterPlan.noFeatures': 'No cross-iteration features found in this period.',
+    'quarterPlan.statusPlanning': 'Planning',
+    'quarterPlan.statusActive': 'Active',
+    'quarterPlan.statusCompleted': 'Completed',
 
     // Language names
     'language.lt': 'Lithuanian',
