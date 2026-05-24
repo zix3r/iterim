@@ -128,13 +128,15 @@ public class OrganizationService : IOrganizationService
         var absencesList = await query.OrderByDescending(a => a.FromDate).ToListAsync();
 
         // 2. Dabar saugiai konvertuojame objektus (čia .ToString() veiks be problemų)
-        return absencesList.Select(a => new MemberAbsenceDto 
+        return absencesList.Select(a => new MemberAbsenceDto
         {
             Id = a.Id,
             OrgMemberId = a.OrgMemberId,
             MemberName = a.OrgMember.User.Name,
             FromDate = a.FromDate,
             ToDate = a.ToDate,
+            FromTime = a.FromTime,
+            ToTime = a.ToTime,
             Reason = a.Reason.ToString(),
             ReasonDetails = a.ReasonDetails
         });

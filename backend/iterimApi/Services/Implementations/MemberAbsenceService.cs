@@ -69,6 +69,8 @@ public class MemberAbsenceService : IMemberAbsenceService
             OrgMemberId = dto.OrgMemberId,
             FromDate = dto.FromDate,
             ToDate = dto.ToDate,
+            FromTime = dto.FromTime,
+            ToTime = dto.ToTime,
             Reason = dto.Reason,
             ReasonDetails = NormalizeReasonDetails(dto.Reason, dto.OtherReason),
             CreatedBy = userId,
@@ -120,6 +122,8 @@ public class MemberAbsenceService : IMemberAbsenceService
         absence.OrgMemberId = dto.OrgMemberId;
         absence.FromDate = dto.FromDate;
         absence.ToDate = dto.ToDate;
+        absence.FromTime = dto.FromTime;
+        absence.ToTime = dto.ToTime;
         absence.Reason = dto.Reason;
         absence.ReasonDetails = NormalizeReasonDetails(dto.Reason, dto.OtherReason);
         absence.UpdatedBy = userId;
@@ -188,6 +192,8 @@ public class MemberAbsenceService : IMemberAbsenceService
             MemberName = absence.OrgMember.User.Name,
             FromDate = absence.FromDate,
             ToDate = absence.ToDate,
+            FromTime = absence.FromTime,
+            ToTime = absence.ToTime,
             Reason = absence.Reason.ToString(),
             ReasonDetails = absence.ReasonDetails
         };

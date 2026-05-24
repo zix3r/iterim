@@ -39,6 +39,8 @@ export interface MemberAbsence {
   memberName: string;
   fromDate: string;
   toDate: string;
+  fromTime?: string | null;
+  toTime?: string | null;
   reason: string;
   reasonDetails?: string | null;
 }
@@ -47,6 +49,8 @@ export interface CreateMemberAbsenceRequest {
   orgMemberId: number;
   fromDate: string;
   toDate: string;
+  fromTime?: string | null;
+  toTime?: string | null;
   reason: AbsenceReason;
   otherReason?: string;
 }
@@ -55,6 +59,8 @@ export interface UpdateMemberAbsenceRequest {
   orgMemberId: number;
   fromDate: string;
   toDate: string;
+  fromTime?: string | null;
+  toTime?: string | null;
   reason: AbsenceReason;
   otherReason?: string;
 }

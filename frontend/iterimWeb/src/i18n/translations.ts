@@ -586,6 +586,9 @@ export type TranslationKey =
   | 'absences.typeOther'
   | 'absences.startDate'
   | 'absences.endDate'
+  | 'absences.startTime'
+  | 'absences.endTime'
+  | 'absences.timeRange'
   | 'absences.reason'
   | 'absences.reasonPlaceholder'
   | 'absences.status'
@@ -1380,6 +1383,9 @@ export const translations: Record<Language, Translations> = {
     'absences.typeOther': 'Kita',
     'absences.startDate': 'Pradžios data',
     'absences.endDate': 'Pabaigos data',
+    'absences.startTime': 'Pradžios laikas',
+    'absences.endTime': 'Pabaigos laikas',
+    'absences.timeRange': 'Laikas',
     'absences.reason': 'Priežastis',
     'absences.reasonPlaceholder': 'Trumpas paaiškinimas',
     'absences.status': 'Būsena',
@@ -2171,6 +2177,9 @@ export const translations: Record<Language, Translations> = {
     'absences.typeOther': 'Other',
     'absences.startDate': 'Start date',
     'absences.endDate': 'End date',
+    'absences.startTime': 'Start time',
+    'absences.endTime': 'End time',
+    'absences.timeRange': 'Time',
     'absences.reason': 'Reason',
     'absences.reasonPlaceholder': 'Brief explanation',
     'absences.status': 'Status',

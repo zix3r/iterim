@@ -8,6 +8,8 @@ public class MemberAbsence
     public int OrgMemberId { get; set; }
     public DateOnly FromDate { get; set; }
     public DateOnly ToDate { get; set; }
+    public TimeOnly? FromTime { get; set; }
+    public TimeOnly? ToTime { get; set; }
     public AbsenceReason Reason { get; set; }
     public string? ReasonDetails { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

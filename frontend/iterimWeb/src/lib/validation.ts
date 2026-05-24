@@ -122,6 +122,39 @@ export const dateOnOrAfter = <
   };
 };
 
+export const timeOnOrAfterWhenSameDate = <
+  T extends FormValues,
+  K extends keyof T,
+  TimeField extends keyof T,
+  DateField extends keyof T,
+>(
+  fromTimeField: TimeField,
+  fromDateField: DateField,
+  toDateField: DateField,
+  message: string,
+): FieldValidator<T, K> => {
+  return (value, values) => {
+    const toTime = toTrimmedString(value);
+    const fromTime = toTrimmedString(values[fromTimeField]);
+    const fromDate = toTrimmedString(values[fromDateField]);
+    const toDate = toTrimmedString(values[toDateField]);
+
+    if (!fromTime || !toTime || !fromDate || !toDate) {
+      return undefined;
+    }
+
+    if (fromDate !== toDate) {
+      return undefined;
+    }
+
+    if (toTime < fromTime) {
+      return message;
+    }
+
+    return undefined;
+  };
+};
+
 export const requiredWhen = <
   T extends FormValues,
   K extends keyof T,

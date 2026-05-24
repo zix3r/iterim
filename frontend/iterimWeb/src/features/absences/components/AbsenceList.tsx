@@ -35,6 +35,17 @@ const formatDateOnly = (dateOnly: string): string => {
   });
 };
 
+const formatTimeOnly = (time?: string | null): string | null => {
+  if (!time) return null;
+  return time.slice(0, 5);
+};
+
+const formatDateTime = (date: string, time?: string | null): string => {
+  const datePart = formatDateOnly(date);
+  const timePart = formatTimeOnly(time);
+  return timePart ? `${datePart} ${timePart}` : datePart;
+};
+
 const DETAIL_PREVIEW_MAX = 30;
 
 const truncateDetails = (value: string): string => {
@@ -104,8 +115,8 @@ export function AbsenceList({ absences, members, currentUserId, canManageAllAbse
           {absences.map((absence) => (
             <TableRow key={absence.id}>
               <TableCell className="font-medium">{absence.memberName}</TableCell>
-              <TableCell>{formatDateOnly(absence.fromDate)}</TableCell>
-              <TableCell>{formatDateOnly(absence.toDate)}</TableCell>
+              <TableCell>{formatDateTime(absence.fromDate, absence.fromTime)}</TableCell>
+              <TableCell>{formatDateTime(absence.toDate, absence.toTime)}</TableCell>
               <TableCell>
                 <div>{REASON_LABEL_KEYS[absence.reason] ? t(REASON_LABEL_KEYS[absence.reason]) : absence.reason}</div>
                 {absence.reasonDetails && (

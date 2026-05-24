@@ -12,6 +12,10 @@ public class UpdateMemberAbsenceDto : IValidatableObject
 
     public DateOnly ToDate { get; set; }
 
+    public TimeOnly? FromTime { get; set; }
+
+    public TimeOnly? ToTime { get; set; }
+
     public AbsenceReason Reason { get; set; }
 
     [MaxLength(500, ErrorMessage = "Reason details cannot exceed 500 characters.")]
@@ -40,6 +44,14 @@ public class UpdateMemberAbsenceDto : IValidatableObject
             yield return new ValidationResult(
                 "To date must be on or after from date.",
                 [nameof(ToDate)]
+            );
+        }
+
+        if (FromDate == ToDate && FromTime.HasValue && ToTime.HasValue && ToTime.Value < FromTime.Value)
+        {
+            yield return new ValidationResult(
+                "To time must be on or after from time when on the same day.",
+                [nameof(ToTime)]
             );
         }
 
