@@ -2063,3 +2063,9 @@ export const toggleFeedbackReviewed = (id: number): Promise<FeedbackItem> =>
     if (!r.ok) throw new Error(await getErrorMessage(r));
     return r.json();
   });
+export const getBoardByIterationId = (teamId: number, iterationId: number): Promise<BoardData | null> =>
+  fetchWithAuth(`/teams/${teamId}/boards/${iterationId}`).then(async (r) => {
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error(await getErrorMessage(r));
+    return r.json();
+  });

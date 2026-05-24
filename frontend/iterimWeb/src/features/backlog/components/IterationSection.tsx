@@ -59,8 +59,9 @@ export function IterationSection({
       await startIteration(iteration.id);
       toast({ variant: 'success', title: t('common.success') });
       onRefresh();
-    } catch (error: any) {
-      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedUpdate') });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('backlog.failedUpdate');
+      toast({ variant: 'error', title: t('common.error'), description: message });
     }
   };
 
@@ -72,8 +73,9 @@ export function IterationSection({
       toast({ variant: 'success', title: t('common.success') });
       setConfirmDelete(false);
       onRefresh();
-    } catch (error: any) {
-      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedDelete') });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('backlog.failedDelete');
+      toast({ variant: 'error', title: t('common.error'), description: message });
     } finally {
       setIsDeleting(false);
     }

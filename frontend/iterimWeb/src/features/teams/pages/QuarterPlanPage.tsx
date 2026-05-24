@@ -154,7 +154,8 @@ export function QuarterPlanPage() {
                 <div
                   key={iter.id}
                   className={`border rounded-lg p-4 m-1 cursor-pointer transition-colors ${statusColor}`}
-                  onClick={() => navigate(`/org/${orgId}/products/${productId}/teams/${teamId}/board`)} // Idealu naviguoti į to sprinto board
+                  // PAKEITIMAS: pridedame iteracijos ID kaip URL parametrą
+                  onClick={() => navigate(`/org/${orgId}/products/${productId}/teams/${teamId}/board?iterationId=${iter.id}`)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold text-base truncate">{iter.name}</h3>
@@ -182,7 +183,6 @@ export function QuarterPlanPage() {
                         <span className="font-semibold">{capacity.netCapacityDays} {t('quarterPlan.daysSuffix')}</span>
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
-                        {/* Improvizuotas SP užpildymas. Daroma prielaida, kad 1 diena = pvz. 1 SP vizualiai. Gali adaptuoti. */}
                         <div
                           className={`h-full ${iter.totalSP > capacity.netCapacityDays ? 'bg-red-500' : 'bg-primary'}`}
                           style={{ width: `${Math.min((iter.totalSP / (capacity.netCapacityDays || 1)) * 100, 100)}%` }}
@@ -200,11 +200,9 @@ export function QuarterPlanPage() {
 
             {/* 2. FEATURES (Gantt juostos) */}
             {features.map((feature) => {
-              // Surandame iteracijų indeksus (nuo kurios iki kurios) CSS Grid stulpeliams
               const startIndex = iterations.findIndex(i => i.id === feature.startIterationId) + 1;
               const endIndex = iterations.findIndex(i => i.id === feature.endIterationId) + 1;
 
-              // Jei kažkuri iteracija nepatenka į rėžį, ignoruojame brėžimą arba apribojame
               if (startIndex === 0 || endIndex === 0) return null;
 
               return (
@@ -224,7 +222,6 @@ export function QuarterPlanPage() {
                       <span className="text-xs font-bold text-primary">{feature.totalSP} {t('quarterPlan.spSuffix')}</span>
                     </div>
 
-                    {/* Progress Bar for Feature */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 bg-background h-2 rounded-full overflow-hidden border">
                         <div
