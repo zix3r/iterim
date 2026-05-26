@@ -342,11 +342,13 @@ public class AtpaService : IAtpaService
 
             if (best == null) continue; // unreachable, but keep the compiler happy
 
-            // Update remaining capacity.
+            // Update remaining capacity (internal algorithm state only).
+            // NOTE: intentionally NOT reflected back to response.MemberCapacities —
+            // that DTO represents the *current* state (before applying suggestions).
+            // The frontend independently projects the post-suggestion state by summing
+            // the suggested SP via queuedByMember, so updating the DTO here would cause
+            // the capacity bar to double-count the suggested hours.
             best.AvailableHours = Math.Max(0.0, best.AvailableHours - workItemHours);
-            // Reflect change in the response capacity dto as well.
-            var capDto = response.MemberCapacities.First(c => c.MemberId == best.Member.Id);
-            capDto.AvailableCapacityHours = Math.Round(best.AvailableHours, 2);
 
             // Split matching tags so the FE can render explicit vs inferred differently.
             var explicitMatching = workItemTags
