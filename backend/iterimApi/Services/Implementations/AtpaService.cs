@@ -445,9 +445,9 @@ public class AtpaService : IAtpaService
     /// </summary>
     private static int CountWorkingDays(DateOnly start, DateOnly end)
     {
-        if (end < start) return 0;
+        if (end <= start) return 0;
         var days = 0;
-        for (var d = start; d <= end; d = d.AddDays(1))
+        for (var d = start; d < end; d = d.AddDays(1))
         {
             var dow = d.DayOfWeek;
             if (dow != DayOfWeek.Saturday && dow != DayOfWeek.Sunday)
