@@ -2,7 +2,7 @@ import type { TranslationKey } from '@/i18n/translations';
 
 type Translator = (key: TranslationKey) => string;
 
-export function formatDate(dateString: string, t?: Translator): string {
+export function formatDate(dateString: string, t?: Translator, locale?: string): string {
   if (!dateString) {
     return 'Unknown date';
   }
@@ -33,7 +33,7 @@ export function formatDate(dateString: string, t?: Translator): string {
     return `${n} day${n > 1 ? 's' : ''} ago`;
   }
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(locale ?? 'en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

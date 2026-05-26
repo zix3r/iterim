@@ -469,6 +469,12 @@ export type TranslationKey =
   | 'backlog.commentsFailedAdd'
   | 'backlog.commentsFailedUpdate'
   | 'backlog.commentsFailedDelete'
+  | 'backlog.iterationStatusPlanning'
+  | 'backlog.iterationStatusActive'
+  | 'backlog.iterationStatusCompleted'
+  | 'backlog.startIteration'
+  | 'backlog.addItemsFirst'
+  | 'backlog.doneCount'
 
   // ATPA – Automatinis Task'ų Priskyrimo Algoritmas
   | 'atpa.suggestButton'
@@ -667,6 +673,55 @@ export type TranslationKey =
   | 'admin.totalProducts'
   | 'admin.failedLoad'
   | 'admin.search'
+  | 'admin.sidebarOrganizations'
+  | 'admin.totalTeams'
+  | 'admin.totalWorkItems'
+  | 'admin.totalIterations'
+  | 'admin.usersTotal'
+  | 'admin.usersNewThisWeek'
+  | 'admin.usersNewThisMonth'
+  | 'admin.usersBlocked'
+  | 'admin.usersUnconfirmed'
+  | 'admin.workItemsByStatus'
+  | 'admin.lastRefresh'
+  | 'admin.rawJson'
+  | 'admin.healthHealthy'
+  | 'admin.healthDegraded'
+  | 'admin.healthUnhealthy'
+  | 'admin.healthConnected'
+  | 'admin.healthConnectionFailed'
+  | 'admin.healthResponseTime'
+  | 'admin.healthHighUsage'
+  | 'admin.healthNormalUsage'
+  | 'admin.healthOverall'
+  | 'admin.orgsTitle'
+  | 'admin.orgsDescription'
+  | 'admin.orgsSearchPlaceholder'
+  | 'admin.orgsColMembers'
+  | 'admin.orgsColProducts'
+  | 'admin.orgsColTeams'
+  | 'admin.orgsColCreated'
+  | 'admin.orgsColLastActivity'
+  | 'admin.orgsNotFound'
+  | 'admin.orgsUnknown'
+  | 'admin.orgsNever'
+  | 'admin.orgsViewDetails'
+  | 'admin.orgsDeleteOrg'
+  | 'admin.orgsDetailTitle'
+  | 'admin.orgsDetailCreated'
+  | 'admin.orgsDetailSlug'
+  | 'admin.orgsDetailMembers'
+  | 'admin.orgsDetailProducts'
+  | 'admin.orgsNoProducts'
+  | 'admin.orgsNoTeams'
+  | 'admin.orgsDeleteTitle'
+  | 'admin.orgsDeleteConfirm'
+  | 'admin.orgsDeleting'
+  | 'admin.orgsDeletePermanently'
+  | 'admin.orgsFailedLoad'
+  | 'admin.orgsFailedDetails'
+  | 'admin.orgsDeletedSuccess'
+  | 'admin.orgsFailedDelete'
 
   // Feedback (vartotojo forma)
   | 'feedback.headerTitle'
@@ -1266,10 +1321,16 @@ export const translations: Record<Language, Translations> = {
     'backlog.commentsFailedAdd': 'Nepavyko pridėti komentaro',
     'backlog.commentsFailedUpdate': 'Nepavyko atnaujinti komentaro',
     'backlog.commentsFailedDelete': 'Nepavyko ištrinti komentaro',
+    'backlog.iterationStatusPlanning': 'Planuojama',
+    'backlog.iterationStatusActive': 'Aktyvi',
+    'backlog.iterationStatusCompleted': 'Užbaigta',
+    'backlog.startIteration': 'Pradėti',
+    'backlog.addItemsFirst': 'Prieš pradedant pridėkite elementų',
+    'backlog.doneCount': 'atlikta',
 
     // ATPA
     'atpa.suggestButton': 'Siūlyti priskyrimus',
-    'atpa.title': 'ATPA siūlymai',
+    'atpa.title': 'Priskyrimų siūlymai',
     'atpa.subtitle': 'Automatinio užduočių priskyrimo algoritmas pasiūlė šiuos priskyrimus pagal žymes ir nario pajėgumą.',
     'atpa.loading': 'Skaičiuojami siūlymai…',
     'atpa.empty': 'Nėra naujų siūlymų.',
@@ -1296,7 +1357,7 @@ export const translations: Record<Language, Translations> = {
     'atpa.schedulePartTime': 'Dalinis etatas',
     'atpa.scheduleCustom': 'Individualus',
     'atpa.suggestedFor': 'Siūlomas',
-    'atpa.failedLoad': 'Nepavyko gauti ATPA siūlymų.',
+    'atpa.failedLoad': 'Nepavyko gauti pasiūlymų.',
     'atpa.appliedToast': 'Pritaikyti siūlymai',
     'atpa.partialAppliedToast': 'Dalis siūlymų nepavyko pritaikyti.',
     'atpa.failedApply': 'Nepavyko pritaikyti siūlymo.',
@@ -1464,6 +1525,55 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Iš viso produktų',
     'admin.failedLoad': 'Nepavyko įkelti duomenų.',
     'admin.search': 'Ieškoti vartotojų…',
+    'admin.sidebarOrganizations': 'Organizacijos',
+    'admin.totalTeams': 'Iš viso komandų',
+    'admin.totalWorkItems': 'Iš viso darbo elementų',
+    'admin.totalIterations': 'Iš viso iteracijų',
+    'admin.usersTotal': 'Iš viso',
+    'admin.usersNewThisWeek': 'Nauja šią savaitę',
+    'admin.usersNewThisMonth': 'Nauja šį mėnesį',
+    'admin.usersBlocked': 'Užblokuota',
+    'admin.usersUnconfirmed': 'Nepatvirtintas el. paštas',
+    'admin.workItemsByStatus': 'Darbo elementai pagal būseną',
+    'admin.lastRefresh': 'Paskutinis atnaujinimas:',
+    'admin.rawJson': 'Neapdoroti JSON duomenys',
+    'admin.healthHealthy': 'Sveika',
+    'admin.healthDegraded': 'Prasta',
+    'admin.healthUnhealthy': 'Neveikia',
+    'admin.healthConnected': 'Prisijungta ir reaguoja',
+    'admin.healthConnectionFailed': 'Prisijungimas nepavyko',
+    'admin.healthResponseTime': 'Atsako laikas:',
+    'admin.healthHighUsage': 'Didelė apkrova — rekomenduojama paleisti iš naujo',
+    'admin.healthNormalUsage': 'Normali apkrova',
+    'admin.healthOverall': 'Bendra būklė:',
+    'admin.orgsTitle': 'Sistemos administravimas',
+    'admin.orgsDescription': 'Valdyti visas platformos organizacijas.',
+    'admin.orgsSearchPlaceholder': 'Ieškoti organizacijų…',
+    'admin.orgsColMembers': 'Nariai',
+    'admin.orgsColProducts': 'Produktai',
+    'admin.orgsColTeams': 'Komandos',
+    'admin.orgsColCreated': 'Sukurta',
+    'admin.orgsColLastActivity': 'Paskutinė veikla',
+    'admin.orgsNotFound': 'Nerasta jokių organizacijų pagal paieškos užklausą.',
+    'admin.orgsUnknown': 'Nežinoma',
+    'admin.orgsNever': 'Niekada',
+    'admin.orgsViewDetails': 'Peržiūrėti detales',
+    'admin.orgsDeleteOrg': 'Ištrinti organizaciją',
+    'admin.orgsDetailTitle': 'Organizacijos detalės',
+    'admin.orgsDetailCreated': 'Sukurta:',
+    'admin.orgsDetailSlug': 'Slug:',
+    'admin.orgsDetailMembers': 'Nariai',
+    'admin.orgsDetailProducts': 'Produktai ir komandos',
+    'admin.orgsNoProducts': 'Nerasta jokių produktų.',
+    'admin.orgsNoTeams': 'Nėra komandų',
+    'admin.orgsDeleteTitle': 'Ištrinti organizaciją',
+    'admin.orgsDeleteConfirm': 'Ar tikrai? Tai visam laikui pašalins organizaciją su visais jos produktais, komandomis, darbo elementais ir nariais. Šio veiksmo negalima atšaukti.',
+    'admin.orgsDeleting': 'Trinama…',
+    'admin.orgsDeletePermanently': 'Ištrinti visam laikui',
+    'admin.orgsFailedLoad': 'Nepavyko įkelti organizacijų.',
+    'admin.orgsFailedDetails': 'Nepavyko įkelti organizacijos detalių.',
+    'admin.orgsDeletedSuccess': 'Organizacija sėkmingai ištrinta.',
+    'admin.orgsFailedDelete': 'Nepavyko ištrinti organizacijos.',
 
      // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
     'feedback.headerTitle': 'Atsiliepimo forma',
@@ -2060,10 +2170,16 @@ export const translations: Record<Language, Translations> = {
     'backlog.commentsFailedAdd': 'Failed to add comment',
     'backlog.commentsFailedUpdate': 'Failed to update comment',
     'backlog.commentsFailedDelete': 'Failed to delete comment',
+    'backlog.iterationStatusPlanning': 'Planning',
+    'backlog.iterationStatusActive': 'Active',
+    'backlog.iterationStatusCompleted': 'Completed',
+    'backlog.startIteration': 'Start',
+    'backlog.addItemsFirst': 'Add items before starting',
+    'backlog.doneCount': 'done',
 
     // ATPA
     'atpa.suggestButton': 'Suggest assignments',
-    'atpa.title': 'ATPA suggestions',
+    'atpa.title': 'Assignment suggestions',
     'atpa.subtitle': 'The automatic task-assignment algorithm proposed these assignments based on tags and member capacity.',
     'atpa.loading': 'Computing suggestions…',
     'atpa.empty': 'No new suggestions.',
@@ -2090,7 +2206,7 @@ export const translations: Record<Language, Translations> = {
     'atpa.schedulePartTime': 'Part-time',
     'atpa.scheduleCustom': 'Custom',
     'atpa.suggestedFor': 'Suggested',
-    'atpa.failedLoad': 'Failed to load ATPA suggestions.',
+    'atpa.failedLoad': 'Failed to load suggestions.',
     'atpa.appliedToast': 'Suggestions applied',
     'atpa.partialAppliedToast': 'Some suggestions could not be applied.',
     'atpa.failedApply': 'Failed to apply suggestion.',
@@ -2258,6 +2374,55 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Total products',
     'admin.failedLoad': 'Failed to load data.',
     'admin.search': 'Search users…',
+    'admin.sidebarOrganizations': 'Organizations',
+    'admin.totalTeams': 'Total teams',
+    'admin.totalWorkItems': 'Total work items',
+    'admin.totalIterations': 'Total iterations',
+    'admin.usersTotal': 'Total',
+    'admin.usersNewThisWeek': 'New this week',
+    'admin.usersNewThisMonth': 'New this month',
+    'admin.usersBlocked': 'Blocked',
+    'admin.usersUnconfirmed': 'Unconfirmed email',
+    'admin.workItemsByStatus': 'Work items by status',
+    'admin.lastRefresh': 'Last refresh:',
+    'admin.rawJson': 'Raw JSON',
+    'admin.healthHealthy': 'Healthy',
+    'admin.healthDegraded': 'Degraded',
+    'admin.healthUnhealthy': 'Unhealthy',
+    'admin.healthConnected': 'Connected and responding',
+    'admin.healthConnectionFailed': 'Connection failed',
+    'admin.healthResponseTime': 'Response time:',
+    'admin.healthHighUsage': 'High usage — consider restarting',
+    'admin.healthNormalUsage': 'Normal usage',
+    'admin.healthOverall': 'Overall:',
+    'admin.orgsTitle': 'System Administration',
+    'admin.orgsDescription': 'Manage all organizations across the platform.',
+    'admin.orgsSearchPlaceholder': 'Search organizations…',
+    'admin.orgsColMembers': 'Members',
+    'admin.orgsColProducts': 'Products',
+    'admin.orgsColTeams': 'Teams',
+    'admin.orgsColCreated': 'Created',
+    'admin.orgsColLastActivity': 'Last Activity',
+    'admin.orgsNotFound': 'No organizations found matching your search.',
+    'admin.orgsUnknown': 'Unknown',
+    'admin.orgsNever': 'Never',
+    'admin.orgsViewDetails': 'View Details',
+    'admin.orgsDeleteOrg': 'Delete Organization',
+    'admin.orgsDetailTitle': 'Organization Details',
+    'admin.orgsDetailCreated': 'Created:',
+    'admin.orgsDetailSlug': 'Slug:',
+    'admin.orgsDetailMembers': 'Members',
+    'admin.orgsDetailProducts': 'Products & Teams',
+    'admin.orgsNoProducts': 'No products found.',
+    'admin.orgsNoTeams': 'No teams',
+    'admin.orgsDeleteTitle': 'Delete Organization',
+    'admin.orgsDeleteConfirm': 'Are you absolutely sure? This will permanently delete the organization and ALL of its products, teams, work items, and members. This action cannot be undone.',
+    'admin.orgsDeleting': 'Deleting…',
+    'admin.orgsDeletePermanently': 'Permanently Delete',
+    'admin.orgsFailedLoad': 'Failed to load organizations.',
+    'admin.orgsFailedDetails': 'Failed to load organization details.',
+    'admin.orgsDeletedSuccess': 'Organization successfully deleted.',
+    'admin.orgsFailedDelete': 'Failed to delete organization.',
 
     // Feedback (user form)
     'feedback.headerTitle': 'Feedback form',

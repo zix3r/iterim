@@ -18,26 +18,6 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { TransferWorkItemModal } from './TransferWorkItemModal';
 
-const STATUS_OPTIONS = [
-  { value: 0, label: 'Backlog' },
-  { value: 1, label: 'To Do' },
-  { value: 2, label: 'In Progress' },
-  { value: 3, label: 'Review' },
-  { value: 4, label: 'Done' },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: 0, label: 'Low' },
-  { value: 1, label: 'Medium' },
-  { value: 2, label: 'High' },
-  { value: 3, label: 'Critical' },
-];
-
-const TYPE_OPTIONS = [
-  { value: 0, label: 'Story' },
-  { value: 1, label: 'Task' },
-  { value: 2, label: 'Bug' },
-];
 
 const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 
@@ -76,6 +56,27 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+
+  const STATUS_OPTIONS = [
+    { value: 0, label: t('backlog.statusBacklog') },
+    { value: 1, label: t('backlog.statusTodo') },
+    { value: 2, label: t('backlog.statusInProgress') },
+    { value: 3, label: t('backlog.statusReview') },
+    { value: 4, label: t('backlog.statusDone') },
+  ];
+
+  const PRIORITY_OPTIONS = [
+    { value: 0, label: t('backlog.priorityLow') },
+    { value: 1, label: t('backlog.priorityMedium') },
+    { value: 2, label: t('backlog.priorityHigh') },
+    { value: 3, label: t('backlog.priorityCritical') },
+  ];
+
+  const TYPE_OPTIONS = [
+    { value: 0, label: t('backlog.typeStory') },
+    { value: 1, label: t('backlog.typeTask') },
+    { value: 2, label: t('backlog.typeBug') },
+  ];
 
   const { values, errors, setFieldValue, validateForm, resetForm } = useFormValidation<EditWorkItemFormValues>(
     {

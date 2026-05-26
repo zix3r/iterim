@@ -9,6 +9,7 @@ import {
 import { Download } from 'lucide-react';
 import type { BacklogGroup, Iteration, TeamMember } from '@/lib/api';
 import { buildJiraCsv, type ExportFilters } from '../hooks/useJiraCsvExport';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   open: boolean;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function ExportJiraCsvModal({ open, onOpenChange, groups, iterations, members }: Props) {
+  const { t } = useLanguage();
   const allIds = useMemo<(number | null)[]>(
     () => [null, ...iterations.map(i => i.id)],
     [iterations],
@@ -139,7 +141,10 @@ export function ExportJiraCsvModal({ open, onOpenChange, groups, iterations, mem
                         ? 'bg-blue-100 text-blue-700'
                         : 'bg-muted text-muted-foreground'
                   }`}>
-                    {iter.status}
+                    {iter.status === 'Planning' ? t('backlog.iterationStatusPlanning')
+                      : iter.status === 'Active' ? t('backlog.iterationStatusActive')
+                      : iter.status === 'Completed' ? t('backlog.iterationStatusCompleted')
+                      : iter.status}
                   </span>
                 </label>
               ))}

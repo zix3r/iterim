@@ -107,7 +107,10 @@ export function IterationSection({
           <>
             <span className="font-semibold text-sm">{iteration?.name ?? `Iteration ${iteration?.id}`}</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusColor}`}>
-              {iteration?.status}
+              {iteration?.status === 'Planning' ? t('backlog.iterationStatusPlanning')
+                : iteration?.status === 'Active' ? t('backlog.iterationStatusActive')
+                : iteration?.status === 'Completed' ? t('backlog.iterationStatusCompleted')
+                : iteration?.status}
             </span>
             <span className="text-xs text-muted-foreground">
               {iteration?.startDate} — {iteration?.endDate}
@@ -123,7 +126,7 @@ export function IterationSection({
         {/* Completed summary */}
         {readOnly && (
           <span className="text-[10px] text-muted-foreground shrink-0">
-            {workItems.filter(wi => wi.status === 'Done').length}/{workItems.length} done
+            {workItems.filter(wi => wi.status === 'Done').length}/{workItems.length} {t('backlog.doneCount')}
             {' · '}
             {workItems.filter(wi => wi.status === 'Done').reduce((s, wi) => s + (wi.points ?? 0), 0)}/{totalPoints} SP
           </span>
@@ -153,9 +156,9 @@ export function IterationSection({
                   className="h-7 px-2 text-xs"
                   onClick={handleStart}
                   disabled={workItems.length === 0}
-                  title={workItems.length === 0 ? 'Add items before starting' : ''}
+                  title={workItems.length === 0 ? t('backlog.addItemsFirst') : ''}
                 >
-                  <Play className="h-3 w-3 mr-1" /> Start
+                  <Play className="h-3 w-3 mr-1" /> {t('backlog.startIteration')}
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => onEditIteration?.(iteration)}>
                   <Pencil className="h-3 w-3" />

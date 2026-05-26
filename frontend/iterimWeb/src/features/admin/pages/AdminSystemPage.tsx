@@ -65,10 +65,10 @@ export function AdminSystemPage() {
 
     function healthBadge(status: string) {
         if (status === 'Healthy')
-            return <Badge variant="outline" className="text-emerald-600 border-emerald-300">Healthy</Badge>;
+            return <Badge variant="outline" className="text-emerald-600 border-emerald-300">{t('admin.healthHealthy')}</Badge>;
         if (status === 'Degraded')
-            return <Badge variant="outline" className="text-amber-600 border-amber-300">Degraded</Badge>;
-        return <Badge variant="destructive">Unhealthy</Badge>;
+            return <Badge variant="outline" className="text-amber-600 border-amber-300">{t('admin.healthDegraded')}</Badge>;
+        return <Badge variant="destructive">{t('admin.healthUnhealthy')}</Badge>;
     }
 
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -86,9 +86,9 @@ export function AdminSystemPage() {
                             sub={`+${stats?.users.newThisWeek ?? 0}`} />
                         <StatCard icon={Building2} label={t('admin.totalOrganizations')} value={stats?.organizations.total ?? 0} />
                         <StatCard icon={Package} label={t('admin.totalProducts')} value={stats?.products.total ?? 0} />
-                        <StatCard icon={UsersRound} label="Teams" value={stats?.teams.total ?? 0} />
-                        <StatCard icon={ClipboardList} label="Work Items" value={stats?.workItems.total ?? 0} />
-                        <StatCard icon={Repeat} label="Iterations" value={stats?.iterations.total ?? 0}
+                        <StatCard icon={UsersRound} label={t('admin.totalTeams')} value={stats?.teams.total ?? 0} />
+                        <StatCard icon={ClipboardList} label={t('admin.totalWorkItems')} value={stats?.workItems.total ?? 0} />
+                        <StatCard icon={Repeat} label={t('admin.totalIterations')} value={stats?.iterations.total ?? 0}
                             sub={`${stats?.iterations.active ?? 0}`} />
                     </div>
 
@@ -97,22 +97,29 @@ export function AdminSystemPage() {
                         <div className="bg-white rounded-lg border border-zinc-200 p-5">
                             <h3 className="text-sm font-medium text-zinc-500 mb-4">{t('admin.activeUsers')}</h3>
                             <div className="space-y-3">
-                                <InfoRow label="Total" value={stats?.users.total ?? 0} />
-                                <InfoRow label="New this week" value={stats?.users.newThisWeek ?? 0} />
-                                <InfoRow label="New this month" value={stats?.users.newThisMonth ?? 0} />
-                                <InfoRow label="Blocked" value={stats?.users.blocked ?? 0}
+                                <InfoRow label={t('admin.usersTotal')} value={stats?.users.total ?? 0} />
+                                <InfoRow label={t('admin.usersNewThisWeek')} value={stats?.users.newThisWeek ?? 0} />
+                                <InfoRow label={t('admin.usersNewThisMonth')} value={stats?.users.newThisMonth ?? 0} />
+                                <InfoRow label={t('admin.usersBlocked')} value={stats?.users.blocked ?? 0}
                                     highlight={stats?.users.blocked ? 'red' : undefined} />
-                                <InfoRow label="Unconfirmed email" value={stats?.users.unconfirmed ?? 0}
+                                <InfoRow label={t('admin.usersUnconfirmed')} value={stats?.users.unconfirmed ?? 0}
                                     highlight={stats?.users.unconfirmed ? 'amber' : undefined} />
                             </div>
                         </div>
 
                         <div className="bg-white rounded-lg border border-zinc-200 p-5">
-                            <h3 className="text-sm font-medium text-zinc-500 mb-4">Work items by status</h3>
+                            <h3 className="text-sm font-medium text-zinc-500 mb-4">{t('admin.workItemsByStatus')}</h3>
                             <div className="space-y-3">
-                                {stats?.workItems.byStatus.map((s) => (
-                                    <InfoRow key={s.status} label={s.status} value={s.count} />
-                                ))}
+                                {stats?.workItems.byStatus.map((s) => {
+                                    const STATUS_LABEL: Record<string, string> = {
+                                        Backlog: t('backlog.statusBacklog'),
+                                        Todo: t('backlog.statusTodo'),
+                                        InProgress: t('backlog.statusInProgress'),
+                                        Review: t('backlog.statusReview'),
+                                        Done: t('backlog.statusDone'),
+                                    };
+                                    return <InfoRow key={s.status} label={STATUS_LABEL[s.status] ?? s.status} value={s.count} />;
+                                })}
                             </div>
                         </div>
                     </div>
@@ -125,7 +132,7 @@ export function AdminSystemPage() {
                         </h2>
                         <div className="flex items-center gap-3">
                             <span className="text-xs text-zinc-400">
-                                Last refresh: {lastRefresh.toLocaleTimeString()}
+                                {t('admin.lastRefresh')} {lastRefresh.toLocaleTimeString()}
                             </span>
                             <Button variant="outline" size="sm" onClick={fetchData}>
                                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
@@ -134,7 +141,7 @@ export function AdminSystemPage() {
                             <Button variant="outline" size="sm" asChild>
                                 <a href={healthDetailUrl} target="_blank" rel="noopener noreferrer">
                                     <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                                    Raw JSON
+                                    {t('admin.rawJson')}
                                 </a>
                             </Button>
                         </div>
@@ -144,7 +151,7 @@ export function AdminSystemPage() {
                     {health && (
                         <div className="flex items-center gap-3 mb-4">
                             {healthIcon(health.status)}
-                            <span className="font-medium text-zinc-900">Overall: {health.status}</span>
+                            <span className="font-medium text-zinc-900">{t('admin.healthOverall')} {health.status}</span>
                             <span className="text-sm text-zinc-500">({formatDuration(health.totalDuration)})</span>
                         </div>
                     )}
@@ -162,10 +169,10 @@ export function AdminSystemPage() {
                                     {healthBadge(check.status)}
                                 </div>
                                 <p className="text-sm text-zinc-600">
-                                    {check.status === 'Healthy' ? 'Connected and responding' : 'Connection failed'}
+                                    {check.status === 'Healthy' ? t('admin.healthConnected') : t('admin.healthConnectionFailed')}
                                 </p>
                                 <p className="text-xs text-zinc-400 mt-2">
-                                    Response time: {formatDuration(check.duration)}
+                                    {t('admin.healthResponseTime')} {formatDuration(check.duration)}
                                 </p>
                             </div>
                         ))}
@@ -205,7 +212,7 @@ export function AdminSystemPage() {
                                     {String(check.data?.allocatedMB ?? '—')} MB
                                 </p>
                                 <p className="text-sm text-zinc-500 mt-1">
-                                    {check.status === 'Degraded' ? 'High usage — consider restarting' : 'Normal usage'}
+                                    {check.status === 'Degraded' ? t('admin.healthHighUsage') : t('admin.healthNormalUsage')}
                                 </p>
                                 <p className="text-xs text-zinc-400 mt-2">
                                     GC cycles: {String(check.data?.gcGen0 ?? 0)} minor · {String(check.data?.gcGen1 ?? 0)} major · {String(check.data?.gcGen2 ?? 0)} full
