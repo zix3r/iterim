@@ -12,18 +12,7 @@ import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { useLanguage } from '@/context/LanguageContext';
 
-const TYPE_OPTIONS = [
-  { value: 0, label: 'Story', emoji: '🟦' },
-  { value: 1, label: 'Task', emoji: '🟨' },
-  { value: 2, label: 'Bug', emoji: '🟥' },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: 0, label: 'Low' },
-  { value: 1, label: 'Medium' },
-  { value: 2, label: 'High' },
-  { value: 3, label: 'Critical' },
-];
+const TYPE_EMOJIS = ['🟦', '🟨', '🟥'];
 
 interface Props {
   teamId: number;
@@ -49,6 +38,19 @@ export function CreateWorkItemModal({ teamId, orgId, members, open, onOpenChange
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  const TYPE_OPTIONS = [
+    { value: 0, label: t('backlog.typeStory'), emoji: TYPE_EMOJIS[0] },
+    { value: 1, label: t('backlog.typeTask'), emoji: TYPE_EMOJIS[1] },
+    { value: 2, label: t('backlog.typeBug'), emoji: TYPE_EMOJIS[2] },
+  ];
+
+  const PRIORITY_OPTIONS = [
+    { value: 0, label: t('backlog.priorityLow') },
+    { value: 1, label: t('backlog.priorityMedium') },
+    { value: 2, label: t('backlog.priorityHigh') },
+    { value: 3, label: t('backlog.priorityCritical') },
+  ];
 
   const emptyState: CreateWorkItemFormValues = {
     title: '',

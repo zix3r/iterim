@@ -17,10 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useToast } from '@/components/ui/toast';
 import { AlertCircle, Search, Trash2, Eye } from 'lucide-react';
 import { formatDate } from '@/lib/dates';
-
-// Svarbu: Pridėtas AdminLayout importas! 
-// (Jei tavo IDE meta klaidą, kad neranda kelio, tiesiog pakeisk '../components/AdminLayout' į teisingą kelią tavo projekte, pvz., iš kur importuojamas Users puslapyje)
-import { AdminLayout } from '../components/AdminLayout'; 
+import { useLanguage } from '@/context/LanguageContext';
+import { AdminLayout } from '../components/AdminLayout';
 
 export function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<AdminOrganizationListDto[]>([]);
@@ -35,6 +33,8 @@ export function AdminOrganizationsPage() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   const { toast } = useToast();
+  const { t, language } = useLanguage();
+  const locale = language === 'lt' ? 'lt-LT' : 'en-US';
 
   const loadOrganizations = useCallback(async () => {
     try {
@@ -43,7 +43,7 @@ export function AdminOrganizationsPage() {
       const data = await getAdminOrganizations();
       setOrganizations(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load organizations.');
+      setError(err instanceof Error ? err.message : t('admin.orgsFailedLoad'));
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +60,7 @@ export function AdminOrganizationsPage() {
       const data = await getAdminOrganizationDetails(id);
       setDetailsData(data);
     } catch {
-      toast({ variant: 'error', title: 'Error', description: 'Failed to load organization details.' });
+      toast({ variant: 'error', title: t('common.error'), description: t('admin.orgsFailedDetails') });
       setDetailsId(null);
     } finally {
       setIsLoadingDetails(false);
@@ -72,11 +72,11 @@ export function AdminOrganizationsPage() {
     setIsDeleting(true);
     try {
       await deleteAdminOrganization(deleteId);
-      toast({ variant: 'success', title: 'Deleted', description: 'Organization successfully deleted.' });
+      toast({ variant: 'success', title: t('common.success'), description: t('admin.orgsDeletedSuccess') });
       setDeleteId(null);
-      loadOrganizations(); // Refresh list
+      loadOrganizations();
     } catch {
-      toast({ variant: 'error', title: 'Error', description: 'Failed to delete organization.' });
+      toast({ variant: 'error', title: t('common.error'), description: t('admin.orgsFailedDelete') });
     } finally {
       setIsDeleting(false);
     }
@@ -109,9 +109,9 @@ export function AdminOrganizationsPage() {
         <div className="max-w-2xl mx-auto mt-12">
           <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
             <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-            <h3 className="text-lg font-semibold text-red-800">Error</h3>
+            <h3 className="text-lg font-semibold text-red-800">{t('common.error')}</h3>
             <p className="text-sm text-red-700">{error}</p>
-            <Button onClick={loadOrganizations} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">Try Again</Button>
+            <Button onClick={loadOrganizations} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">{t('common.tryAgain')}</Button>
           </div>
         </div>
       </AdminLayout>
@@ -129,8 +129,8 @@ export function AdminOrganizationsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">System Administration</h1>
-          <p className="text-muted-foreground">Manage all organizations across the platform.</p>
+          <h1 className="text-3xl font-bold">{t('admin.orgsTitle')}</h1>
+          <p className="text-muted-foreground">{t('admin.orgsDescription')}</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -138,7 +138,7 @@ export function AdminOrganizationsPage() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search organizations..."
+              placeholder={t('admin.orgsSearchPlaceholder')}
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -150,20 +150,20 @@ export function AdminOrganizationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="text-center">Members</TableHead>
-                <TableHead className="text-center">Products</TableHead>
-                <TableHead className="text-center">Teams</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Last Activity</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('common.name')}</TableHead>
+                <TableHead className="text-center">{t('admin.orgsColMembers')}</TableHead>
+                <TableHead className="text-center">{t('admin.orgsColProducts')}</TableHead>
+                <TableHead className="text-center">{t('admin.orgsColTeams')}</TableHead>
+                <TableHead>{t('admin.orgsColCreated')}</TableHead>
+                <TableHead>{t('admin.orgsColLastActivity')}</TableHead>
+                <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredOrgs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                    No organizations found matching your search.
+                    {t('admin.orgsNotFound')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -187,13 +187,13 @@ export function AdminOrganizationsPage() {
                       <TableCell className="text-center">{memberCount}</TableCell>
                       <TableCell className="text-center">{productCount}</TableCell>
                       <TableCell className="text-center">{teamCount}</TableCell>
-                      <TableCell>{createdAt ? formatDate(createdAt) : 'Unknown'}</TableCell>
-                      <TableCell>{lastActivityAt ? formatDate(lastActivityAt) : 'Never'}</TableCell>
+                      <TableCell>{createdAt ? formatDate(createdAt, t, locale) : t('admin.orgsUnknown')}</TableCell>
+                      <TableCell>{lastActivityAt ? formatDate(lastActivityAt, t, locale) : t('admin.orgsNever')}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => loadDetails(id)} title="View Details">
+                        <Button variant="ghost" size="icon" onClick={() => loadDetails(id)} title={t('admin.orgsViewDetails')}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(id)} title="Delete Organization">
+                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(id)} title={t('admin.orgsDeleteOrg')}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -209,7 +209,7 @@ export function AdminOrganizationsPage() {
         <Dialog open={detailsId !== null} onOpenChange={(v) => !v && setDetailsId(null)}>
           <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Organization Details</DialogTitle>
+              <DialogTitle>{t('admin.orgsDetailTitle')}</DialogTitle>
             </DialogHeader>
             
             {isLoadingDetails || !detailsData ? (
@@ -223,13 +223,13 @@ export function AdminOrganizationsPage() {
                 <div>
                   <h3 className="text-xl font-bold">{detailsName}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Created: {detailsCreatedAt ? formatDate(detailsCreatedAt) : 'Unknown'} | Slug: {detailsSlug}
+                    {t('admin.orgsDetailCreated')} {detailsCreatedAt ? formatDate(detailsCreatedAt, t, locale) : t('admin.orgsUnknown')} | {t('admin.orgsDetailSlug')} {detailsSlug}
                   </p>
                 </div>
 
                 <div>
                   <h4 className="font-semibold mb-2 border-b pb-1">
-                    Members ({detailsMembers.length})
+                    {t('admin.orgsDetailMembers')} ({detailsMembers.length})
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                     {detailsMembers.map((mItem) => {
@@ -251,10 +251,10 @@ export function AdminOrganizationsPage() {
 
                 <div>
                   <h4 className="font-semibold mb-2 border-b pb-1">
-                    Products & Teams ({detailsProducts.length} Products)
+                    {t('admin.orgsDetailProducts')} ({detailsProducts.length})
                   </h4>
                   {detailsProducts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No products found.</p>
+                    <p className="text-sm text-muted-foreground">{t('admin.orgsNoProducts')}</p>
                   ) : (
                     <div className="space-y-3">
                       {detailsProducts.map((pItem) => {
@@ -268,7 +268,7 @@ export function AdminOrganizationsPage() {
                             <div className="font-medium text-primary mb-1">{pName}</div>
                             <div className="text-sm pl-4 border-l-2 border-muted">
                               {pTeams.length === 0 ? (
-                                <span className="text-muted-foreground text-xs">No teams</span>
+                                <span className="text-muted-foreground text-xs">{t('admin.orgsNoTeams')}</span>
                               ) : (
                                 pTeams.map((tItem) => {
                                   const tRecord = tItem as unknown as Record<string, unknown>;
@@ -293,15 +293,15 @@ export function AdminOrganizationsPage() {
         <Dialog open={deleteId !== null} onOpenChange={(v) => !v && setDeleteId(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Organization</DialogTitle>
+              <DialogTitle>{t('admin.orgsDeleteTitle')}</DialogTitle>
               <DialogDescription>
-                Are you absolutely sure? This will permanently delete the organization and ALL of its products, teams, work items, and members. This action cannot be undone.
+                {t('admin.orgsDeleteConfirm')}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeleteId(null)} disabled={isDeleting}>Cancel</Button>
+              <Button variant="outline" onClick={() => setDeleteId(null)} disabled={isDeleting}>{t('common.cancel')}</Button>
               <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+                {isDeleting ? t('admin.orgsDeleting') : t('admin.orgsDeletePermanently')}
               </Button>
             </DialogFooter>
           </DialogContent>

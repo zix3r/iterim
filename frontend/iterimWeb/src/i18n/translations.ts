@@ -242,6 +242,8 @@ export type TranslationKey =
   | 'organizations.create'
   | 'organizations.createTitle'
   | 'organizations.createDescription'
+  | 'organizations.created'
+  | 'organizations.deleted'
   | 'organizations.namePlaceholder'
   | 'organizations.descriptionPlaceholder'
   | 'organizations.members'
@@ -305,6 +307,9 @@ export type TranslationKey =
   | 'products.title'
   | 'products.create'
   | 'products.createTitle'
+  | 'products.created'
+  | 'products.updated'
+  | 'products.deleted'
   | 'products.editTitle'
   | 'products.namePlaceholder'
   | 'products.descriptionPlaceholder'
@@ -335,6 +340,9 @@ export type TranslationKey =
   // Teams
   | 'teams.title'
   | 'teams.create'
+  | 'teams.updated'
+  | 'teams.memberAdded'
+  | 'teams.memberRemoved'
   | 'teams.createTitle'
   | 'teams.editTitle'
   | 'teams.namePlaceholder'
@@ -397,6 +405,7 @@ export type TranslationKey =
   | 'backlog.statusInProgress'
   | 'backlog.statusReview'
   | 'backlog.statusDone'
+  | 'backlog.blockedStatusHint'
   | 'backlog.statusBlocked'
   | 'backlog.points'
   | 'backlog.assignee'
@@ -469,8 +478,17 @@ export type TranslationKey =
   | 'backlog.commentsFailedAdd'
   | 'backlog.commentsFailedUpdate'
   | 'backlog.commentsFailedDelete'
+  | 'backlog.iterationStatusPlanning'
+  | 'backlog.iterationStatusActive'
+  | 'backlog.iterationStatusCompleted'
+  | 'backlog.startIteration'
+  | 'backlog.addItemsFirst'
+  | 'backlog.doneCount'
 
   // ATPA – Automatinis Task'ų Priskyrimo Algoritmas
+  | 'atpa.warnTitle'
+  | 'atpa.warnBody'
+  | 'atpa.warnContinue'
   | 'atpa.suggestButton'
   | 'atpa.title'
   | 'atpa.subtitle'
@@ -586,6 +604,9 @@ export type TranslationKey =
   | 'absences.typeOther'
   | 'absences.startDate'
   | 'absences.endDate'
+  | 'absences.startTime'
+  | 'absences.endTime'
+  | 'absences.timeRange'
   | 'absences.reason'
   | 'absences.reasonPlaceholder'
   | 'absences.status'
@@ -664,6 +685,55 @@ export type TranslationKey =
   | 'admin.totalProducts'
   | 'admin.failedLoad'
   | 'admin.search'
+  | 'admin.sidebarOrganizations'
+  | 'admin.totalTeams'
+  | 'admin.totalWorkItems'
+  | 'admin.totalIterations'
+  | 'admin.usersTotal'
+  | 'admin.usersNewThisWeek'
+  | 'admin.usersNewThisMonth'
+  | 'admin.usersBlocked'
+  | 'admin.usersUnconfirmed'
+  | 'admin.workItemsByStatus'
+  | 'admin.lastRefresh'
+  | 'admin.rawJson'
+  | 'admin.healthHealthy'
+  | 'admin.healthDegraded'
+  | 'admin.healthUnhealthy'
+  | 'admin.healthConnected'
+  | 'admin.healthConnectionFailed'
+  | 'admin.healthResponseTime'
+  | 'admin.healthHighUsage'
+  | 'admin.healthNormalUsage'
+  | 'admin.healthOverall'
+  | 'admin.orgsTitle'
+  | 'admin.orgsDescription'
+  | 'admin.orgsSearchPlaceholder'
+  | 'admin.orgsColMembers'
+  | 'admin.orgsColProducts'
+  | 'admin.orgsColTeams'
+  | 'admin.orgsColCreated'
+  | 'admin.orgsColLastActivity'
+  | 'admin.orgsNotFound'
+  | 'admin.orgsUnknown'
+  | 'admin.orgsNever'
+  | 'admin.orgsViewDetails'
+  | 'admin.orgsDeleteOrg'
+  | 'admin.orgsDetailTitle'
+  | 'admin.orgsDetailCreated'
+  | 'admin.orgsDetailSlug'
+  | 'admin.orgsDetailMembers'
+  | 'admin.orgsDetailProducts'
+  | 'admin.orgsNoProducts'
+  | 'admin.orgsNoTeams'
+  | 'admin.orgsDeleteTitle'
+  | 'admin.orgsDeleteConfirm'
+  | 'admin.orgsDeleting'
+  | 'admin.orgsDeletePermanently'
+  | 'admin.orgsFailedLoad'
+  | 'admin.orgsFailedDetails'
+  | 'admin.orgsDeletedSuccess'
+  | 'admin.orgsFailedDelete'
 
   // Feedback (vartotojo forma)
   | 'feedback.headerTitle'
@@ -779,6 +849,33 @@ export type TranslationKey =
   | 'retro.failedDelete'
   | 'retro.failedVote'
   | 'retro.iterationNotStarted'
+
+  // Quarter Plan
+  | 'quarterPlan.title'
+  | 'quarterPlan.subtitle'
+  | 'quarterPlan.recentPageLabel'
+  | 'quarterPlan.quarterShort'
+  | 'quarterPlan.noIterationsTitle'
+  | 'quarterPlan.noIterationsDescription'
+  | 'quarterPlan.spanningFeatures'
+  | 'quarterPlan.todo'
+  | 'quarterPlan.inProgress'
+  | 'quarterPlan.done'
+  | 'quarterPlan.spSuffix'
+  | 'quarterPlan.teamCapacity'
+  | 'quarterPlan.daysSuffix'
+  | 'quarterPlan.noFeatures'
+  | 'quarterPlan.statusPlanning'
+  | 'quarterPlan.statusActive'
+  | 'quarterPlan.statusCompleted'
+
+  // Errors
+  | 'errors.unauthenticated'
+  | 'errors.forbidden'
+  | 'errors.notFound'
+  | 'errors.validation'
+  | 'errors.conflict'
+  | 'errors.unexpected'
 
   // Kalbų pavadinimai
   | 'language.lt'
@@ -1015,6 +1112,8 @@ export const translations: Record<Language, Translations> = {
     // Organizations
     'organizations.title': 'Organizacijos',
     'organizations.create': 'Sukurti organizaciją',
+    'organizations.created': 'Organizacija sukurta',
+    'organizations.deleted': 'Organizacija ištrinta',
     'organizations.createTitle': 'Sukurti naują organizaciją',
     'organizations.createDescription': 'Sukurkite organizaciją, kad galėtumėte valdyti komandas ir produktus.',
     'organizations.namePlaceholder': 'Pvz., Iterim Ltd.',
@@ -1079,6 +1178,9 @@ export const translations: Record<Language, Translations> = {
     // Products
     'products.title': 'Produktai',
     'products.create': 'Sukurti produktą',
+    'products.created': 'Produktas sukurtas',
+    'products.updated': 'Produktas atnaujintas',
+    'products.deleted': 'Produktas ištrintas',
     'products.createTitle': 'Sukurti naują produktą',
     'products.editTitle': 'Redaguoti produktą',
     'products.namePlaceholder': 'Produkto pavadinimas',
@@ -1111,6 +1213,9 @@ export const translations: Record<Language, Translations> = {
     'teams.title': 'Komandos',
     'teams.create': 'Sukurti komandą',
     'teams.createTitle': 'Sukurti naują komandą',
+    'teams.updated': 'Komanda atnaujinta',
+    'teams.memberAdded': 'Narys pridėtas',
+    'teams.memberRemoved': 'Narys pašalintas',
     'teams.editTitle': 'Redaguoti komandą',
     'teams.namePlaceholder': 'Komandos pavadinimas',
     'teams.descriptionPlaceholder': 'Komandos aprašymas',
@@ -1172,6 +1277,7 @@ export const translations: Record<Language, Translations> = {
     'backlog.statusInProgress': 'Vykdoma',
     'backlog.statusReview': 'Peržiūrima',
     'backlog.statusDone': 'Užbaigta',
+    'backlog.blockedStatusHint': 'Šis darbas turi neužbaigtų blokuojančių darbų — jo negalima perkelti į „Vykdoma“, „Peržiūrima“ ar „Užbaigta“, kol jie neišspręsti.',
     'backlog.statusBlocked': 'Užblokuota',
     'backlog.points': 'Taškai',
     'backlog.assignee': 'Atsakingas',
@@ -1244,10 +1350,19 @@ export const translations: Record<Language, Translations> = {
     'backlog.commentsFailedAdd': 'Nepavyko pridėti komentaro',
     'backlog.commentsFailedUpdate': 'Nepavyko atnaujinti komentaro',
     'backlog.commentsFailedDelete': 'Nepavyko ištrinti komentaro',
+    'backlog.iterationStatusPlanning': 'Planuojama',
+    'backlog.iterationStatusActive': 'Aktyvi',
+    'backlog.iterationStatusCompleted': 'Užbaigta',
+    'backlog.startIteration': 'Pradėti',
+    'backlog.addItemsFirst': 'Prieš pradedant pridėkite elementų',
+    'backlog.doneCount': 'atlikta',
 
     // ATPA
+    'atpa.warnTitle': 'Prieš generuojant pasiūlymus',
+    'atpa.warnBody': 'Įsitikinkite, kad komandos pravaikštos (atostogos, ligos) yra atnaujintos — ATPA skaičiuoja pajėgumą pagal jas. Tęsti?',
+    'atpa.warnContinue': 'Generuoti',
     'atpa.suggestButton': 'Siūlyti priskyrimus',
-    'atpa.title': 'ATPA siūlymai',
+    'atpa.title': 'Priskyrimų siūlymai',
     'atpa.subtitle': 'Automatinio užduočių priskyrimo algoritmas pasiūlė šiuos priskyrimus pagal žymes ir nario pajėgumą.',
     'atpa.loading': 'Skaičiuojami siūlymai…',
     'atpa.empty': 'Nėra naujų siūlymų.',
@@ -1274,7 +1389,7 @@ export const translations: Record<Language, Translations> = {
     'atpa.schedulePartTime': 'Dalinis etatas',
     'atpa.scheduleCustom': 'Individualus',
     'atpa.suggestedFor': 'Siūlomas',
-    'atpa.failedLoad': 'Nepavyko gauti ATPA siūlymų.',
+    'atpa.failedLoad': 'Nepavyko gauti pasiūlymų.',
     'atpa.appliedToast': 'Pritaikyti siūlymai',
     'atpa.partialAppliedToast': 'Dalis siūlymų nepavyko pritaikyti.',
     'atpa.failedApply': 'Nepavyko pritaikyti siūlymo.',
@@ -1361,6 +1476,9 @@ export const translations: Record<Language, Translations> = {
     'absences.typeOther': 'Kita',
     'absences.startDate': 'Pradžios data',
     'absences.endDate': 'Pabaigos data',
+    'absences.startTime': 'Pradžios laikas',
+    'absences.endTime': 'Pabaigos laikas',
+    'absences.timeRange': 'Laikas',
     'absences.reason': 'Priežastis',
     'absences.reasonPlaceholder': 'Trumpas paaiškinimas',
     'absences.status': 'Būsena',
@@ -1439,8 +1557,57 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Iš viso produktų',
     'admin.failedLoad': 'Nepavyko įkelti duomenų.',
     'admin.search': 'Ieškoti vartotojų…',
+    'admin.sidebarOrganizations': 'Organizacijos',
+    'admin.totalTeams': 'Iš viso komandų',
+    'admin.totalWorkItems': 'Iš viso darbo elementų',
+    'admin.totalIterations': 'Iš viso iteracijų',
+    'admin.usersTotal': 'Iš viso',
+    'admin.usersNewThisWeek': 'Nauja šią savaitę',
+    'admin.usersNewThisMonth': 'Nauja šį mėnesį',
+    'admin.usersBlocked': 'Užblokuota',
+    'admin.usersUnconfirmed': 'Nepatvirtintas el. paštas',
+    'admin.workItemsByStatus': 'Darbo elementai pagal būseną',
+    'admin.lastRefresh': 'Paskutinis atnaujinimas:',
+    'admin.rawJson': 'Neapdoroti JSON duomenys',
+    'admin.healthHealthy': 'Sveika',
+    'admin.healthDegraded': 'Prasta',
+    'admin.healthUnhealthy': 'Neveikia',
+    'admin.healthConnected': 'Prisijungta ir reaguoja',
+    'admin.healthConnectionFailed': 'Prisijungimas nepavyko',
+    'admin.healthResponseTime': 'Atsako laikas:',
+    'admin.healthHighUsage': 'Didelė apkrova — rekomenduojama paleisti iš naujo',
+    'admin.healthNormalUsage': 'Normali apkrova',
+    'admin.healthOverall': 'Bendra būklė:',
+    'admin.orgsTitle': 'Sistemos administravimas',
+    'admin.orgsDescription': 'Valdyti visas platformos organizacijas.',
+    'admin.orgsSearchPlaceholder': 'Ieškoti organizacijų…',
+    'admin.orgsColMembers': 'Nariai',
+    'admin.orgsColProducts': 'Produktai',
+    'admin.orgsColTeams': 'Komandos',
+    'admin.orgsColCreated': 'Sukurta',
+    'admin.orgsColLastActivity': 'Paskutinė veikla',
+    'admin.orgsNotFound': 'Nerasta jokių organizacijų pagal paieškos užklausą.',
+    'admin.orgsUnknown': 'Nežinoma',
+    'admin.orgsNever': 'Niekada',
+    'admin.orgsViewDetails': 'Peržiūrėti detales',
+    'admin.orgsDeleteOrg': 'Ištrinti organizaciją',
+    'admin.orgsDetailTitle': 'Organizacijos detalės',
+    'admin.orgsDetailCreated': 'Sukurta:',
+    'admin.orgsDetailSlug': 'Slug:',
+    'admin.orgsDetailMembers': 'Nariai',
+    'admin.orgsDetailProducts': 'Produktai ir komandos',
+    'admin.orgsNoProducts': 'Nerasta jokių produktų.',
+    'admin.orgsNoTeams': 'Nėra komandų',
+    'admin.orgsDeleteTitle': 'Ištrinti organizaciją',
+    'admin.orgsDeleteConfirm': 'Ar tikrai? Tai visam laikui pašalins organizaciją su visais jos produktais, komandomis, darbo elementais ir nariais. Šio veiksmo negalima atšaukti.',
+    'admin.orgsDeleting': 'Trinama…',
+    'admin.orgsDeletePermanently': 'Ištrinti visam laikui',
+    'admin.orgsFailedLoad': 'Nepavyko įkelti organizacijų.',
+    'admin.orgsFailedDetails': 'Nepavyko įkelti organizacijos detalių.',
+    'admin.orgsDeletedSuccess': 'Organizacija sėkmingai ištrinta.',
+    'admin.orgsFailedDelete': 'Nepavyko ištrinti organizacijos.',
 
-     // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
+    // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
     'feedback.headerTitle': 'Atsiliepimo forma',
     'feedback.headerSubtitle': 'Pasidalinkite savo patirtimi naudojant Iterim. Jūsų atsiliepimas padės mums tobulinti sistemą.',
     'feedback.headerButton': 'Atsiliepimas',
@@ -1554,6 +1721,33 @@ export const translations: Record<Language, Translations> = {
     'retro.failedDelete': 'Nepavyko ištrinti kortelės.',
     'retro.failedVote': 'Nepavyko balsuoti.',
     'retro.iterationNotStarted': 'Retrospektyva pasiekiama tik aktyvioms ar užbaigtoms iteracijoms.',
+
+    // Ketvirčio planas
+    'quarterPlan.title': 'Ketvirčio planas',
+    'quarterPlan.subtitle': 'Strateginė iteracijų ir funkcijų apžvalga.',
+    'quarterPlan.recentPageLabel': 'Ketvirčio planas',
+    'quarterPlan.quarterShort': 'K',
+    'quarterPlan.noIterationsTitle': 'Iteracijų nerasta',
+    'quarterPlan.noIterationsDescription': 'Pasirinktame laikotarpyje suplanuotų iteracijų nėra.',
+    'quarterPlan.spanningFeatures': 'Apjungiančios funkcijos',
+    'quarterPlan.todo': 'Atlikti',
+    'quarterPlan.inProgress': 'Vykdoma',
+    'quarterPlan.done': 'Užbaigta',
+    'quarterPlan.spSuffix': 'TT',
+    'quarterPlan.teamCapacity': 'Komandos pajėgumas:',
+    'quarterPlan.daysSuffix': 'd.',
+    'quarterPlan.noFeatures': 'Šiame laikotarpyje nerasta kelias iteracijas apimančių funkcijų.',
+    'quarterPlan.statusPlanning': 'Planuojama',
+    'quarterPlan.statusActive': 'Aktyvi',
+    'quarterPlan.statusCompleted': 'Užbaigta',
+
+    // Klaidų pranešimai
+    'errors.unauthenticated': 'Sesija pasibaigė. Prisijunkite iš naujo.',
+    'errors.forbidden': 'Neturite teisių atlikti šio veiksmo.',
+    'errors.notFound': 'Prašomas elementas nerastas.',
+    'errors.validation': 'Neteisingi duomenys. Patikrinkite įvestį.',
+    'errors.conflict': 'Veiksmas prieštarauja esamai būsenai.',
+    'errors.unexpected': 'Įvyko nenumatyta klaida. Bandykite dar kartą.',
 
     // Kalbų pavadinimai
     'language.lt': 'Lietuvių',
@@ -1788,6 +1982,8 @@ export const translations: Record<Language, Translations> = {
     'organizations.title': 'Organizations',
     'organizations.create': 'Create organization',
     'organizations.createTitle': 'Create new organization',
+    'organizations.created': 'Organization created',
+    'organizations.deleted': 'Organization deleted',
     'organizations.createDescription': 'Create an organization to manage teams and products.',
     'organizations.namePlaceholder': 'e.g., Iterim Ltd.',
     'organizations.descriptionPlaceholder': 'Brief description of the organization',
@@ -1851,6 +2047,9 @@ export const translations: Record<Language, Translations> = {
     // Products
     'products.title': 'Products',
     'products.create': 'Create product',
+    'products.created': 'Product created',
+    'products.updated': 'Product updated',
+    'products.deleted': 'Product deleted',
     'products.createTitle': 'Create new product',
     'products.editTitle': 'Edit product',
     'products.namePlaceholder': 'Product name',
@@ -1882,6 +2081,9 @@ export const translations: Record<Language, Translations> = {
     // Teams
     'teams.title': 'Teams',
     'teams.create': 'Create team',
+    'teams.updated': 'Team updated',
+    'teams.memberAdded': 'Member added',
+    'teams.memberRemoved': 'Member removed',
     'teams.createTitle': 'Create new team',
     'teams.editTitle': 'Edit team',
     'teams.namePlaceholder': 'Team name',
@@ -1944,6 +2146,7 @@ export const translations: Record<Language, Translations> = {
     'backlog.statusInProgress': 'In progress',
     'backlog.statusReview': 'Review',
     'backlog.statusDone': 'Done',
+    'backlog.blockedStatusHint': 'This item has unfinished blockers — it cannot move to In Progress, Review or Done until they are resolved.',
     'backlog.statusBlocked': 'Blocked',
     'backlog.points': 'Points',
     'backlog.assignee': 'Assignee',
@@ -2016,10 +2219,19 @@ export const translations: Record<Language, Translations> = {
     'backlog.commentsFailedAdd': 'Failed to add comment',
     'backlog.commentsFailedUpdate': 'Failed to update comment',
     'backlog.commentsFailedDelete': 'Failed to delete comment',
+    'backlog.iterationStatusPlanning': 'Planning',
+    'backlog.iterationStatusActive': 'Active',
+    'backlog.iterationStatusCompleted': 'Completed',
+    'backlog.startIteration': 'Start',
+    'backlog.addItemsFirst': 'Add items before starting',
+    'backlog.doneCount': 'done',
 
     // ATPA
+    'atpa.warnTitle': 'Before generating suggestions',
+    'atpa.warnBody': "Make sure the team's absences (vacations, sick days) are up to date — ATPA bases capacity on them. Continue?",
+    'atpa.warnContinue': 'Generate',
     'atpa.suggestButton': 'Suggest assignments',
-    'atpa.title': 'ATPA suggestions',
+    'atpa.title': 'Assignment suggestions',
     'atpa.subtitle': 'The automatic task-assignment algorithm proposed these assignments based on tags and member capacity.',
     'atpa.loading': 'Computing suggestions…',
     'atpa.empty': 'No new suggestions.',
@@ -2046,7 +2258,7 @@ export const translations: Record<Language, Translations> = {
     'atpa.schedulePartTime': 'Part-time',
     'atpa.scheduleCustom': 'Custom',
     'atpa.suggestedFor': 'Suggested',
-    'atpa.failedLoad': 'Failed to load ATPA suggestions.',
+    'atpa.failedLoad': 'Failed to load suggestions.',
     'atpa.appliedToast': 'Suggestions applied',
     'atpa.partialAppliedToast': 'Some suggestions could not be applied.',
     'atpa.failedApply': 'Failed to apply suggestion.',
@@ -2133,6 +2345,9 @@ export const translations: Record<Language, Translations> = {
     'absences.typeOther': 'Other',
     'absences.startDate': 'Start date',
     'absences.endDate': 'End date',
+    'absences.startTime': 'Start time',
+    'absences.endTime': 'End time',
+    'absences.timeRange': 'Time',
     'absences.reason': 'Reason',
     'absences.reasonPlaceholder': 'Brief explanation',
     'absences.status': 'Status',
@@ -2211,6 +2426,55 @@ export const translations: Record<Language, Translations> = {
     'admin.totalProducts': 'Total products',
     'admin.failedLoad': 'Failed to load data.',
     'admin.search': 'Search users…',
+    'admin.sidebarOrganizations': 'Organizations',
+    'admin.totalTeams': 'Total teams',
+    'admin.totalWorkItems': 'Total work items',
+    'admin.totalIterations': 'Total iterations',
+    'admin.usersTotal': 'Total',
+    'admin.usersNewThisWeek': 'New this week',
+    'admin.usersNewThisMonth': 'New this month',
+    'admin.usersBlocked': 'Blocked',
+    'admin.usersUnconfirmed': 'Unconfirmed email',
+    'admin.workItemsByStatus': 'Work items by status',
+    'admin.lastRefresh': 'Last refresh:',
+    'admin.rawJson': 'Raw JSON',
+    'admin.healthHealthy': 'Healthy',
+    'admin.healthDegraded': 'Degraded',
+    'admin.healthUnhealthy': 'Unhealthy',
+    'admin.healthConnected': 'Connected and responding',
+    'admin.healthConnectionFailed': 'Connection failed',
+    'admin.healthResponseTime': 'Response time:',
+    'admin.healthHighUsage': 'High usage — consider restarting',
+    'admin.healthNormalUsage': 'Normal usage',
+    'admin.healthOverall': 'Overall:',
+    'admin.orgsTitle': 'System Administration',
+    'admin.orgsDescription': 'Manage all organizations across the platform.',
+    'admin.orgsSearchPlaceholder': 'Search organizations…',
+    'admin.orgsColMembers': 'Members',
+    'admin.orgsColProducts': 'Products',
+    'admin.orgsColTeams': 'Teams',
+    'admin.orgsColCreated': 'Created',
+    'admin.orgsColLastActivity': 'Last Activity',
+    'admin.orgsNotFound': 'No organizations found matching your search.',
+    'admin.orgsUnknown': 'Unknown',
+    'admin.orgsNever': 'Never',
+    'admin.orgsViewDetails': 'View Details',
+    'admin.orgsDeleteOrg': 'Delete Organization',
+    'admin.orgsDetailTitle': 'Organization Details',
+    'admin.orgsDetailCreated': 'Created:',
+    'admin.orgsDetailSlug': 'Slug:',
+    'admin.orgsDetailMembers': 'Members',
+    'admin.orgsDetailProducts': 'Products & Teams',
+    'admin.orgsNoProducts': 'No products found.',
+    'admin.orgsNoTeams': 'No teams',
+    'admin.orgsDeleteTitle': 'Delete Organization',
+    'admin.orgsDeleteConfirm': 'Are you absolutely sure? This will permanently delete the organization and ALL of its products, teams, work items, and members. This action cannot be undone.',
+    'admin.orgsDeleting': 'Deleting…',
+    'admin.orgsDeletePermanently': 'Permanently Delete',
+    'admin.orgsFailedLoad': 'Failed to load organizations.',
+    'admin.orgsFailedDetails': 'Failed to load organization details.',
+    'admin.orgsDeletedSuccess': 'Organization successfully deleted.',
+    'admin.orgsFailedDelete': 'Failed to delete organization.',
 
     // Feedback (user form)
     'feedback.headerTitle': 'Feedback form',
@@ -2326,6 +2590,33 @@ export const translations: Record<Language, Translations> = {
     'retro.failedDelete': 'Failed to delete the card.',
     'retro.failedVote': 'Failed to vote.',
     'retro.iterationNotStarted': 'The retrospective is only available for active or completed iterations.',
+
+    // Quarter Plan
+    'quarterPlan.title': 'Quarterly Plan',
+    'quarterPlan.subtitle': 'Strategic overview of iterations and features.',
+    'quarterPlan.recentPageLabel': 'Quarter Plan',
+    'quarterPlan.quarterShort': 'Q',
+    'quarterPlan.noIterationsTitle': 'No Iterations Found',
+    'quarterPlan.noIterationsDescription': 'There are no planned iterations for the selected date range.',
+    'quarterPlan.spanningFeatures': 'Spanning Features',
+    'quarterPlan.todo': 'Todo',
+    'quarterPlan.inProgress': 'In Prog',
+    'quarterPlan.done': 'Done',
+    'quarterPlan.spSuffix': 'SP',
+    'quarterPlan.teamCapacity': 'Team Capacity:',
+    'quarterPlan.daysSuffix': 'Days',
+    'quarterPlan.noFeatures': 'No cross-iteration features found in this period.',
+    'quarterPlan.statusPlanning': 'Planning',
+    'quarterPlan.statusActive': 'Active',
+    'quarterPlan.statusCompleted': 'Completed',
+
+    // Errors
+    'errors.unauthenticated': 'Your session expired. Please sign in again.',
+    'errors.forbidden': 'You do not have permission to perform this action.',
+    'errors.notFound': 'The requested item was not found.',
+    'errors.validation': 'Invalid input. Please check your data.',
+    'errors.conflict': 'This action conflicts with the current state.',
+    'errors.unexpected': 'An unexpected error occurred. Please try again.',
 
     // Language names
     'language.lt': 'Lithuanian',

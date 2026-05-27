@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { updateAbsence } from '@/lib/api';
 import type { AbsenceReason, MemberAbsence, OrganizationMember } from '@/lib/api';
-import { dateOnOrAfter, required, requiredWhen } from '@/lib/validation';
+import { dateOnOrAfter, required, requiredWhen, timeOnOrAfterWhenSameDate } from '@/lib/validation';
 import { PencilIcon } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -33,6 +33,11 @@ const parseReason = (reasonText: string): AbsenceReason => {
     : 'Other';
 };
 
+const toTimeInputValue = (value?: string | null): string => {
+  if (!value) return '';
+  return value.slice(0, 5);
+};
+
 interface Props {
   absence: MemberAbsence;
   members: OrganizationMember[];
@@ -52,6 +57,8 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
       orgMemberId: absence.orgMemberId.toString(),
       fromDate: absence.fromDate.slice(0, 10),
       toDate: absence.toDate.slice(0, 10),
+      fromTime: toTimeInputValue(absence.fromTime),
+      toTime: toTimeInputValue(absence.toTime),
       reason: parsedReason,
       otherReason: absence.reasonDetails ?? '',
     },
@@ -59,6 +66,7 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
       orgMemberId: [required(t('common.name'))],
       fromDate: [required(t('absences.startDate'))],
       toDate: [required(t('absences.endDate')), dateOnOrAfter('fromDate', t('validation.endBeforeStart'))],
+      toTime: [timeOnOrAfterWhenSameDate('fromTime', 'fromDate', 'toDate', t('validation.endBeforeStart'))],
       reason: [required(t('absences.reason'))],
       otherReason: [
         requiredWhen(
@@ -81,6 +89,8 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
       orgMemberId: absence.orgMemberId.toString(),
       fromDate: absence.fromDate.slice(0, 10),
       toDate: absence.toDate.slice(0, 10),
+      fromTime: toTimeInputValue(absence.fromTime),
+      toTime: toTimeInputValue(absence.toTime),
       reason: currentReason,
       otherReason: absence.reasonDetails ?? '',
     });
@@ -100,6 +110,8 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
         orgMemberId: Number(values.orgMemberId),
         fromDate: values.fromDate,
         toDate: values.toDate,
+        fromTime: values.fromTime || null,
+        toTime: values.toTime || null,
         reason: values.reason,
         otherReason: values.otherReason.trim() || undefined,
       });
@@ -197,6 +209,33 @@ export function EditAbsenceModal({ absence, members, onUpdated }: Props) {
                 aria-describedby={errors.toDate ? `edit-absence-to-date-error-${absence.id}` : undefined}
               />
               <FieldError id={`edit-absence-to-date-error-${absence.id}`} message={errors.toDate} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-from-time-${absence.id}`}>
+                {t('absences.startTime')} <span className="text-muted-foreground">({t('common.optional')})</span>
+              </label>
+              <Input
+                id={`edit-absence-from-time-${absence.id}`}
+                type="time"
+                value={values.fromTime}
+                onChange={(e) => setFieldValue('fromTime', e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-2" htmlFor={`edit-absence-to-time-${absence.id}`}>
+                {t('absences.endTime')} <span className="text-muted-foreground">({t('common.optional')})</span>
+              </label>
+              <Input
+                id={`edit-absence-to-time-${absence.id}`}
+                type="time"
+                value={values.toTime}
+                onChange={(e) => setFieldValue('toTime', e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.toTime}
+                aria-describedby={errors.toTime ? `edit-absence-to-time-error-${absence.id}` : undefined}
+              />
+              <FieldError id={`edit-absence-to-time-error-${absence.id}`} message={errors.toTime} />
             </div>
           </div>
 

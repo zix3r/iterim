@@ -276,8 +276,8 @@ function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProp
           {iterations.map((iter) => (
             <option key={iter.id} value={iter.id}>
               {iter.name ?? `Sprint #${iter.id}`}
-              {iter.status === 'Active' ? ' (Active)' : ''}
-              {iter.status === 'Planning' ? ' (Planning)' : ''}
+              {iter.status === 'Active' ? ` (${t('backlog.iterationStatusActive')})` : ''}
+              {iter.status === 'Planning' ? ` (${t('backlog.iterationStatusPlanning')})` : ''}
             </option>
           ))}
         </select>
@@ -290,7 +290,10 @@ function SprintSelector({ iterations, selectedId, onChange }: SprintSelectorProp
             variant="outline"
             className={`text-[10px] px-1.5 py-0 ${STATUS_BADGE[selected.status] ?? ''}`}
           >
-            {selected.status}
+            {selected.status === 'Planning' ? t('backlog.iterationStatusPlanning')
+              : selected.status === 'Active' ? t('backlog.iterationStatusActive')
+              : selected.status === 'Completed' ? t('backlog.iterationStatusCompleted')
+              : selected.status}
           </Badge>
         </div>
       )}

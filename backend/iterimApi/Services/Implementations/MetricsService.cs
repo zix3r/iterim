@@ -297,14 +297,16 @@ public class MetricsService : IMetricsService
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Counts Monday–Friday days in an inclusive date range.
+    /// Counts Monday–Friday days in a half-open date range [from, to).
+    /// The end date is exclusive — the last day of an iteration is not counted
+    /// as a working day (it is reserved for review/retro, not development work).
     /// </summary>
     private static int CountWorkDays(DateOnly from, DateOnly to)
     {
-        if (from > to) return 0;
+        if (from >= to) return 0;
 
         int count = 0;
-        for (var d = from; d <= to; d = d.AddDays(1))
+        for (var d = from; d < to; d = d.AddDays(1))
         {
             var dow = d.DayOfWeek;
             if (dow != DayOfWeek.Saturday && dow != DayOfWeek.Sunday)

@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { createOrganizationAbsence } from '@/lib/api';
 import type { AbsenceReason, OrganizationMember } from '@/lib/api';
-import { dateOnOrAfter, required, requiredWhen } from '@/lib/validation';
+import { dateOnOrAfter, required, requiredWhen, timeOnOrAfterWhenSameDate } from '@/lib/validation';
 import { PlusIcon } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -80,6 +80,8 @@ export function CreateAbsenceModal({
       orgMemberId: resolvedInitialMemberId,
       fromDate: getToday(),
       toDate: getToday(),
+      fromTime: '',
+      toTime: '',
       reason: 'Vacation' as AbsenceReason,
       otherReason: '',
     },
@@ -87,6 +89,7 @@ export function CreateAbsenceModal({
       orgMemberId: [required(t('common.name'))],
       fromDate: [required(t('absences.startDate'))],
       toDate: [required(t('absences.endDate')), dateOnOrAfter('fromDate', t('validation.endBeforeStart'))],
+      toTime: [timeOnOrAfterWhenSameDate('fromTime', 'fromDate', 'toDate', t('validation.endBeforeStart'))],
       reason: [required(t('absences.reason'))],
       otherReason: [
         requiredWhen(
@@ -105,6 +108,8 @@ export function CreateAbsenceModal({
       orgMemberId: resolvedInitialMemberId,
       fromDate: getToday(),
       toDate: getToday(),
+      fromTime: '',
+      toTime: '',
       reason: 'Vacation',
       otherReason: '',
     });
@@ -131,6 +136,8 @@ export function CreateAbsenceModal({
         orgMemberId: Number(submitOrgMemberId),
         fromDate: values.fromDate,
         toDate: values.toDate,
+        fromTime: values.fromTime || null,
+        toTime: values.toTime || null,
         reason: values.reason,
         otherReason: values.otherReason.trim() || undefined,
       });
@@ -238,6 +245,33 @@ export function CreateAbsenceModal({
                 aria-describedby={errors.toDate ? 'create-absence-to-date-error' : undefined}
               />
               <FieldError id="create-absence-to-date-error" message={errors.toDate} />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-2" htmlFor="create-absence-from-time">
+                {t('absences.startTime')} <span className="text-muted-foreground">({t('common.optional')})</span>
+              </label>
+              <Input
+                id="create-absence-from-time"
+                type="time"
+                value={values.fromTime}
+                onChange={(e) => setFieldValue('fromTime', e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium block mb-2" htmlFor="create-absence-to-time">
+                {t('absences.endTime')} <span className="text-muted-foreground">({t('common.optional')})</span>
+              </label>
+              <Input
+                id="create-absence-to-time"
+                type="time"
+                value={values.toTime}
+                onChange={(e) => setFieldValue('toTime', e.target.value)}
+                disabled={isLoading}
+                aria-invalid={!!errors.toTime}
+                aria-describedby={errors.toTime ? 'create-absence-to-time-error' : undefined}
+              />
+              <FieldError id="create-absence-to-time-error" message={errors.toTime} />
             </div>
           </div>
 

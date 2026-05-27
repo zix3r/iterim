@@ -72,7 +72,7 @@ export function AddTeamMemberModal({ teamId, availableMembers, currentMembers, o
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedCreate')
+        description: t('teams.memberAdded'),
       });
       setOpen(false);
       resetForm({ selectedUserId: '', selectedRole: '1' });

@@ -89,7 +89,7 @@ export function EditProductModal({ product, open, onOpenChange, onUpdated }: Pro
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('products.failedUpdate')
+        description: t('products.updated')
       });
       onOpenChange(false);
       onUpdated();

@@ -4,11 +4,12 @@ import { User, Lock, ArrowRight, MessageSquare } from 'lucide-react';
 import type { WorkItem } from '@/lib/api';
 import { TagBadge } from '@/components/shared/TagBadge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useLanguage } from '@/context/LanguageContext';
 
-const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  Story: { label: 'STORY', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-  Task: { label: 'TASK', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
-  Bug: { label: 'BUG', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
+const TYPE_COLORS: Record<string, string> = {
+  Story: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  Task: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  Bug: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 };
 
 const PRIORITY_CONFIG: Record<string, { color: string }> = {
@@ -18,12 +19,12 @@ const PRIORITY_CONFIG: Record<string, { color: string }> = {
   Low: { color: 'text-gray-400' },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  Backlog: { label: 'Backlog', color: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
-  Todo: { label: 'To Do', color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' },
-  InProgress: { label: 'In Progress', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-  Review: { label: 'Review', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-  Done: { label: 'Done', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+const STATUS_COLORS: Record<string, string> = {
+  Backlog: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+  Todo: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+  InProgress: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  Review: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+  Done: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
 };
 
 interface Props {
@@ -35,6 +36,7 @@ interface Props {
 }
 
 export function WorkItemRow({ item, readOnly = false, onClick, isSelected = false, onToggleSelection }: Props) {
+  const { t } = useLanguage();
   const {
     attributes,
     listeners,
@@ -52,9 +54,22 @@ export function WorkItemRow({ item, readOnly = false, onClick, isSelected = fals
     transition,
   };
 
-  const typeConfig = TYPE_CONFIG[item.type] ?? { label: item.type, color: 'bg-gray-100 text-gray-600' };
+  const TYPE_LABELS: Record<string, string> = {
+    Story: t('backlog.typeStory').toUpperCase(),
+    Task: t('backlog.typeTask').toUpperCase(),
+    Bug: t('backlog.typeBug').toUpperCase(),
+  };
+  const STATUS_LABELS: Record<string, string> = {
+    Backlog: t('backlog.statusBacklog'),
+    Todo: t('backlog.statusTodo'),
+    InProgress: t('backlog.statusInProgress'),
+    Review: t('backlog.statusReview'),
+    Done: t('backlog.statusDone'),
+  };
+
+  const typeConfig = { label: TYPE_LABELS[item.type] ?? item.type, color: TYPE_COLORS[item.type] ?? 'bg-gray-100 text-gray-600' };
   const priorityConfig = PRIORITY_CONFIG[item.priority] ?? { color: 'text-gray-400' };
-  const statusConfig = STATUS_CONFIG[item.status] ?? { label: item.status, color: 'bg-gray-100 text-gray-600' };
+  const statusConfig = { label: STATUS_LABELS[item.status] ?? item.status, color: STATUS_COLORS[item.status] ?? 'bg-gray-100 text-gray-600' };
 
   return (
     <div

@@ -61,7 +61,7 @@ export function CreateProductModal({ orgId, onCreated }: Props) {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('products.failedCreate')
+        description: t('products.created')
       });
       setOpen(false);
       resetForm({ name: '', description: '' });

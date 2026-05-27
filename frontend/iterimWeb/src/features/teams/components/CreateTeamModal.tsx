@@ -61,7 +61,7 @@ export function CreateTeamModal({ productId, onCreated }: Props) {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedCreate')
+        description: t('teams.created'),
       });
       setOpen(false);
       resetForm({ name: '', description: '' });

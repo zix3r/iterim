@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ChevronDown, ChevronRight, Play, CheckCircle2, Pencil, Trash2, LayoutList, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, CheckCircle2, Pencil, Trash2, LayoutList, MessageSquare, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { startIteration, deleteIteration } from '@/lib/api';
@@ -22,11 +22,12 @@ interface Props {
   // NAUJI PROPSAI:
   selectedIds?: number[];
   onToggleSelection?: (id: number) => void;
+  onSuggest?: (iteration: Iteration) => void;
 }
 
 export function IterationSection({
   iteration, workItems, isBacklog = false, readOnly = false,
-  onEditIteration, onCompleteIteration, onWorkItemClick, onRefresh,
+  onEditIteration, onCompleteIteration, onWorkItemClick, onRefresh, onSuggest,
   selectedIds = [], onToggleSelection,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
@@ -59,8 +60,9 @@ export function IterationSection({
       await startIteration(iteration.id);
       toast({ variant: 'success', title: t('common.success') });
       onRefresh();
-    } catch (error: any) {
-      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedUpdate') });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('backlog.failedUpdate');
+      toast({ variant: 'error', title: t('common.error'), description: message });
     }
   };
 
@@ -72,8 +74,9 @@ export function IterationSection({
       toast({ variant: 'success', title: t('common.success') });
       setConfirmDelete(false);
       onRefresh();
-    } catch (error: any) {
-      toast({ variant: 'error', title: t('common.error'), description: error.message || t('backlog.failedDelete') });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('backlog.failedDelete');
+      toast({ variant: 'error', title: t('common.error'), description: message });
     } finally {
       setIsDeleting(false);
     }
@@ -105,7 +108,10 @@ export function IterationSection({
           <>
             <span className="font-semibold text-sm">{iteration?.name ?? `Iteration ${iteration?.id}`}</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusColor}`}>
-              {iteration?.status}
+              {iteration?.status === 'Planning' ? t('backlog.iterationStatusPlanning')
+                : iteration?.status === 'Active' ? t('backlog.iterationStatusActive')
+                  : iteration?.status === 'Completed' ? t('backlog.iterationStatusCompleted')
+                    : iteration?.status}
             </span>
             <span className="text-xs text-muted-foreground">
               {iteration?.startDate} — {iteration?.endDate}
@@ -121,7 +127,7 @@ export function IterationSection({
         {/* Completed summary */}
         {readOnly && (
           <span className="text-[10px] text-muted-foreground shrink-0">
-            {workItems.filter(wi => wi.status === 'Done').length}/{workItems.length} done
+            {workItems.filter(wi => wi.status === 'Done').length}/{workItems.length} {t('backlog.doneCount')}
             {' · '}
             {workItems.filter(wi => wi.status === 'Done').reduce((s, wi) => s + (wi.points ?? 0), 0)}/{totalPoints} SP
           </span>
@@ -145,15 +151,18 @@ export function IterationSection({
           <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
             {iteration.status === 'Planning' && (
               <>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onSuggest?.(iteration)}>
+                  <Sparkles className="h-3 w-3 mr-1" /> {t('atpa.suggestButton')}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs"
                   onClick={handleStart}
                   disabled={workItems.length === 0}
-                  title={workItems.length === 0 ? 'Add items before starting' : ''}
+                  title={workItems.length === 0 ? t('backlog.addItemsFirst') : ''}
                 >
-                  <Play className="h-3 w-3 mr-1" /> Start
+                  <Play className="h-3 w-3 mr-1" /> {t('backlog.startIteration')}
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 px-2" onClick={() => onEditIteration?.(iteration)}>
                   <Pencil className="h-3 w-3" />
@@ -176,6 +185,9 @@ export function IterationSection({
             )}
             {iteration.status === 'Active' && (
               <>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onSuggest?.(iteration)}>
+                  <Sparkles className="h-3 w-3 mr-1" /> {t('atpa.suggestButton')}
+                </Button>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onCompleteIteration?.(iteration)}>
                   <CheckCircle2 className="h-3 w-3 mr-1" /> {t('backlog.completeIteration')}
                 </Button>
@@ -210,10 +222,10 @@ export function IterationSection({
               </p>
             ) : (
               workItems.map((item) => (
-                <WorkItemRow 
-                  key={item.id} 
-                  item={item} 
-                  readOnly={readOnly} 
+                <WorkItemRow
+                  key={item.id}
+                  item={item}
+                  readOnly={readOnly}
                   onClick={onWorkItemClick}
                   // PAKEITIMAS: perduodame state mygtukams
                   isSelected={selectedIds.includes(item.id)}

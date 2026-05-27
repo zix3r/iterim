@@ -9,7 +9,7 @@ import { updateMyTheme } from '@/lib/api';
 
 const ADMIN_TABS: { labelKey: TranslationKey; path: string; icon: typeof Users }[] = [
   { labelKey: 'admin.sidebarUsers', path: '/admin/users', icon: Users },
-  { labelKey: 'Organizations' as TranslationKey, path: '/admin/organizations', icon: Building2 },
+  { labelKey: 'admin.sidebarOrganizations', path: '/admin/organizations', icon: Building2 },
   { labelKey: 'admin.sidebarFeedback', path: '/admin/feedback', icon: MessageSquareText },
   { labelKey: 'admin.sidebarSystem', path: '/admin/system', icon: Activity },
 ];
