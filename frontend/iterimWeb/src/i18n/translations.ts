@@ -970,7 +970,7 @@ export const translations: Record<Language, Translations> = {
     'notifications.preferences.blockerResolved': 'Blokatorius pašalintas',
     'notifications.preferences.addedToTeam': 'Pridėta prie komandos',
     'notifications.preferences.addedToOrganization': 'Pridėta prie organizacijos',
-    'notifications.preferences.passwordResetNote': "Password reset notifications can't be turned off.",
+    'notifications.preferences.passwordResetNote': "Spaltažodžio atkūrimo pranešimai yra privalomi ir negali būti išjungti, nes jie yra būtini paskyros saugumui užtikrinti.",
     'notifications.preferences.savedToast': 'Pranešimų nustatymai išsaugoti',
     'notifications.preferences.errorToast': 'Nepavyko išsaugoti nustatymų',
 
