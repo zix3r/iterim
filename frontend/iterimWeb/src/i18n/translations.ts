@@ -949,7 +949,7 @@ export const translations: Record<Language, Translations> = {
     'notifications.dropdownTitle': 'Pranešimai',
     'notifications.markAllRead': 'Pažymėti visus kaip skaitytus',
     'notifications.empty': 'Pranešimų dar nėra',
-    'notifications.emptyDescription': "We'll let you know when something happens.",
+    'notifications.emptyDescription': "Pranešime, kai kas nors atsitiks.",
     'notifications.loading': 'Kraunama...',
     'notifications.unreadBadge': 'Neskaityta: {count}',
     'notifications.workItemAssigned.title': 'Priskirtas darbo elementas',
