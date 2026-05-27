@@ -51,7 +51,7 @@ export function CreateOrganizationModal({ onCreated }: Props) {
       await createOrganization(values.name.trim());
       toast({
         variant: 'success',
-        title: t('organizations.memberInvited'),
+        title: t('organizations.created'),
       });
       setOpen(false);
       resetForm();

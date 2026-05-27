@@ -89,7 +89,7 @@ export function EditTeamModal({ team, open, onOpenChange, onUpdated }: Props) {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedUpdate'),
+        description: t('teams.updated'),
       });
       onOpenChange(false);
       onUpdated();

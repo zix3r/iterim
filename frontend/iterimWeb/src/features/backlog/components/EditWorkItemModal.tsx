@@ -7,11 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Markdown } from '@/components/ui/markdown';
 import { useToast } from '@/components/ui/toast';
 import { useFormValidation } from '@/hooks/useFormValidation';
-import { updateWorkItem, deleteWorkItem, assignWorkItemTags } from '@/lib/api';
+import { updateWorkItem, deleteWorkItem, assignWorkItemTags, getWorkItemDependencies, BlockedByDependenciesError } from '@/lib/api';
 import type { WorkItem, TeamMember, Tag } from '@/lib/api';
 import { TagSelector } from '@/components/shared/TagSelector';
 import { maxLength, nonNegativeNumber, required } from '@/lib/validation';
-import { ArrowRightLeft, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Trash2, Lock } from 'lucide-react';
 import { DependencySection } from './DependencySection';
 import { CommentSection } from './CommentSection';
 import { useLanguage } from '@/context/LanguageContext';
@@ -23,6 +23,7 @@ const TYPE_MAP: Record<string, number> = { Story: 0, Task: 1, Bug: 2 };
 
 // Map string enum values from backend to numeric values
 const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
+const BLOCKED_GATED_STATUSES = [2, 3, 4];
 const PRIORITY_MAP: Record<string, number> = { Low: 0, Medium: 1, High: 2, Critical: 3 };
 
 interface Props {
@@ -56,6 +57,7 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [hasUnfinishedBlockers, setHasUnfinishedBlockers] = useState(false);
 
   const STATUS_OPTIONS = [
     { value: 0, label: t('backlog.statusBacklog') },
@@ -120,6 +122,28 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
     }
   }, [item, resetForm]);
 
+  // Load dependency state so forward statuses can be locked while the item is blocked.
+  useEffect(() => {
+    if (!item || !open) {
+      setHasUnfinishedBlockers(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const deps = await getWorkItemDependencies(item.id);
+        if (!cancelled) {
+          setHasUnfinishedBlockers(deps.blockedBy.some((d) => d.status !== 'Done'));
+        }
+      } catch {
+        if (!cancelled) setHasUnfinishedBlockers(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [item, open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!item) return;
@@ -128,6 +152,20 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
       toast({
         variant: 'warning',
         title: 'Please fix validation errors',
+      });
+      return;
+    }
+
+    // Defensive guard (backend enforces the same): no forward transition while blocked.
+    if (
+      hasUnfinishedBlockers &&
+      BLOCKED_GATED_STATUSES.includes(values.status) &&
+      STATUS_MAP[item.status] !== values.status
+    ) {
+      toast({
+        variant: 'warning',
+        title: t('common.error'),
+        description: t('backlog.blockedStatusHint'),
       });
       return;
     }
@@ -149,11 +187,20 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
       onOpenChange(false);
       onUpdated();
     } catch (error) {
-      toast({
-        variant: 'error',
-        title: t('common.error'),
-        description: getMessageFromError(error, t('backlog.failedUpdate')),
-      });
+      if (error instanceof BlockedByDependenciesError) {
+        setHasUnfinishedBlockers(true);
+        toast({
+          variant: 'error',
+          title: t('common.error'),
+          description: t('backlog.blockedStatusHint'),
+        });
+      } else {
+        toast({
+          variant: 'error',
+          title: t('common.error'),
+          description: getMessageFromError(error, t('backlog.failedUpdate')),
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -240,11 +287,28 @@ export function EditWorkItemModal({ item, orgId, members, canTransferWorkItem = 
                 onChange={(e) => setFieldValue('status', Number(e.target.value))}
                 className={selectClass}
                 disabled={isLoading}
+                title={hasUnfinishedBlockers ? t('backlog.blockedStatusHint') : undefined}
               >
                 {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option
+                    key={o.value}
+                    value={o.value}
+                    disabled={
+                      hasUnfinishedBlockers &&
+                      BLOCKED_GATED_STATUSES.includes(o.value) &&
+                      o.value !== values.status
+                    }
+                  >
+                    {o.label}
+                  </option>
                 ))}
               </select>
+              {hasUnfinishedBlockers && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <Lock className="h-3 w-3 shrink-0" />
+                  <span>{t('backlog.blockedStatusHint')}</span>
+                </p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium">{t('backlog.priority')}</label>

@@ -66,7 +66,7 @@ export function ProductPage() {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('products.failedDelete')
+        description: t('products.deleted')
       });
       navigate(`/org/${orgId}/products`);
     } catch (err) {

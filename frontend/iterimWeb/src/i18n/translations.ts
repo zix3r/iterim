@@ -242,6 +242,8 @@ export type TranslationKey =
   | 'organizations.create'
   | 'organizations.createTitle'
   | 'organizations.createDescription'
+  | 'organizations.created'
+  | 'organizations.deleted'
   | 'organizations.namePlaceholder'
   | 'organizations.descriptionPlaceholder'
   | 'organizations.members'
@@ -305,6 +307,9 @@ export type TranslationKey =
   | 'products.title'
   | 'products.create'
   | 'products.createTitle'
+  | 'products.created'
+  | 'products.updated'
+  | 'products.deleted'
   | 'products.editTitle'
   | 'products.namePlaceholder'
   | 'products.descriptionPlaceholder'
@@ -335,6 +340,9 @@ export type TranslationKey =
   // Teams
   | 'teams.title'
   | 'teams.create'
+  | 'teams.updated'
+  | 'teams.memberAdded'
+  | 'teams.memberRemoved'
   | 'teams.createTitle'
   | 'teams.editTitle'
   | 'teams.namePlaceholder'
@@ -397,6 +405,7 @@ export type TranslationKey =
   | 'backlog.statusInProgress'
   | 'backlog.statusReview'
   | 'backlog.statusDone'
+  | 'backlog.blockedStatusHint'
   | 'backlog.statusBlocked'
   | 'backlog.points'
   | 'backlog.assignee'
@@ -1092,6 +1101,8 @@ export const translations: Record<Language, Translations> = {
     // Organizations
     'organizations.title': 'Organizacijos',
     'organizations.create': 'Sukurti organizaciją',
+    'organizations.created': 'Organizacija sukurta',
+    'organizations.deleted': 'Organizacija ištrinta',
     'organizations.createTitle': 'Sukurti naują organizaciją',
     'organizations.createDescription': 'Sukurkite organizaciją, kad galėtumėte valdyti komandas ir produktus.',
     'organizations.namePlaceholder': 'Pvz., Iterim Ltd.',
@@ -1156,6 +1167,9 @@ export const translations: Record<Language, Translations> = {
     // Products
     'products.title': 'Produktai',
     'products.create': 'Sukurti produktą',
+    'products.created': 'Produktas sukurtas',
+    'products.updated': 'Produktas atnaujintas',
+    'products.deleted': 'Produktas ištrintas',
     'products.createTitle': 'Sukurti naują produktą',
     'products.editTitle': 'Redaguoti produktą',
     'products.namePlaceholder': 'Produkto pavadinimas',
@@ -1188,6 +1202,9 @@ export const translations: Record<Language, Translations> = {
     'teams.title': 'Komandos',
     'teams.create': 'Sukurti komandą',
     'teams.createTitle': 'Sukurti naują komandą',
+    'teams.updated': 'Komanda atnaujinta',
+    'teams.memberAdded': 'Narys pridėtas',
+    'teams.memberRemoved': 'Narys pašalintas',
     'teams.editTitle': 'Redaguoti komandą',
     'teams.namePlaceholder': 'Komandos pavadinimas',
     'teams.descriptionPlaceholder': 'Komandos aprašymas',
@@ -1249,6 +1266,7 @@ export const translations: Record<Language, Translations> = {
     'backlog.statusInProgress': 'Vykdoma',
     'backlog.statusReview': 'Peržiūrima',
     'backlog.statusDone': 'Užbaigta',
+    'backlog.blockedStatusHint': 'Šis darbas turi neužbaigtų blokuojančių darbų — jo negalima perkelti į „Vykdoma“, „Peržiūrima“ ar „Užbaigta“, kol jie neišspręsti.',
     'backlog.statusBlocked': 'Užblokuota',
     'backlog.points': 'Taškai',
     'backlog.assignee': 'Atsakingas',
@@ -1575,7 +1593,7 @@ export const translations: Record<Language, Translations> = {
     'admin.orgsDeletedSuccess': 'Organizacija sėkmingai ištrinta.',
     'admin.orgsFailedDelete': 'Nepavyko ištrinti organizacijos.',
 
-     // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
+    // Feedback (vartotojo forma) — AI vertimas, prašome peržiūrėti
     'feedback.headerTitle': 'Atsiliepimo forma',
     'feedback.headerSubtitle': 'Pasidalinkite savo patirtimi naudojant Iterim. Jūsų atsiliepimas padės mums tobulinti sistemą.',
     'feedback.headerButton': 'Atsiliepimas',
@@ -1942,6 +1960,8 @@ export const translations: Record<Language, Translations> = {
     'organizations.title': 'Organizations',
     'organizations.create': 'Create organization',
     'organizations.createTitle': 'Create new organization',
+    'organizations.created': 'Organization created',
+    'organizations.deleted': 'Organization deleted',
     'organizations.createDescription': 'Create an organization to manage teams and products.',
     'organizations.namePlaceholder': 'e.g., Iterim Ltd.',
     'organizations.descriptionPlaceholder': 'Brief description of the organization',
@@ -2005,6 +2025,9 @@ export const translations: Record<Language, Translations> = {
     // Products
     'products.title': 'Products',
     'products.create': 'Create product',
+    'products.created': 'Product created',
+    'products.updated': 'Product updated',
+    'products.deleted': 'Product deleted',
     'products.createTitle': 'Create new product',
     'products.editTitle': 'Edit product',
     'products.namePlaceholder': 'Product name',
@@ -2036,6 +2059,9 @@ export const translations: Record<Language, Translations> = {
     // Teams
     'teams.title': 'Teams',
     'teams.create': 'Create team',
+    'teams.updated': 'Team updated',
+    'teams.memberAdded': 'Member added',
+    'teams.memberRemoved': 'Member removed',
     'teams.createTitle': 'Create new team',
     'teams.editTitle': 'Edit team',
     'teams.namePlaceholder': 'Team name',
@@ -2098,6 +2124,7 @@ export const translations: Record<Language, Translations> = {
     'backlog.statusInProgress': 'In progress',
     'backlog.statusReview': 'Review',
     'backlog.statusDone': 'Done',
+    'backlog.blockedStatusHint': 'This item has unfinished blockers — it cannot move to In Progress, Review or Done until they are resolved.',
     'backlog.statusBlocked': 'Blocked',
     'backlog.points': 'Points',
     'backlog.assignee': 'Assignee',

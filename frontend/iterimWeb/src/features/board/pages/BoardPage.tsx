@@ -16,7 +16,7 @@ export function BoardPage() {
   const { orgId, productId, teamId } = useParams();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  
+
   // Nuskaitome iterationId iš URL, jei jis ten yra
   const urlIterationId = searchParams.get('iterationId');
 
@@ -25,7 +25,7 @@ export function BoardPage() {
   const [org, setOrg] = useState<OrganizationDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [editItem, setEditItem] = useState<WorkItem | null>(null);
 
   const tid = Number(teamId);
@@ -36,7 +36,7 @@ export function BoardPage() {
       setError(null);
 
       // Jei turime ID iš URL – krauname konkrečią iteraciją, kitaip – aktyvią
-      const boardPromise = urlIterationId 
+      const boardPromise = urlIterationId
         ? getBoardByIterationId(tid, Number(urlIterationId))
         : getActiveBoard(tid);
 
@@ -92,7 +92,7 @@ export function BoardPage() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-48" />
         </div>
-        
+
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 pt-4">
           {[1, 2, 3, 4].map(i => (
             <div key={i} className="flex flex-col gap-4 bg-muted/10 p-4 rounded-xl border border-dashed">
@@ -126,7 +126,7 @@ export function BoardPage() {
   );
 
   return (
-    <div className="flex flex-col h-full px-4 py-3 max-w-[1600px] mx-auto space-y-3 overflow-hidden">
+    <div className="flex flex-col h-full px-4 py-3 w-fit max-w-[1600px] mx-auto space-y-3 overflow-hidden">
       <div className="flex-shrink-0 flex items-center justify-between gap-3">
         <div className="flex items-baseline gap-3 min-w-0">
           {/* PAKEITIMAS: Pridėtas mygtukas grįžti atgal į planą, jei atidaryta sena iteracija */}
@@ -141,9 +141,9 @@ export function BoardPage() {
           <p className="text-sm text-muted-foreground truncate">
             {boardData?.iteration.name ? boardData.iteration.name : team.name}
             {boardData?.iteration.status && (
-               <span className="ml-2 text-[10px] uppercase font-bold bg-muted px-2 py-0.5 rounded">
-                 {boardData.iteration.status}
-               </span>
+              <span className="ml-2 text-[10px] uppercase font-bold bg-muted px-2 py-0.5 rounded">
+                {boardData.iteration.status}
+              </span>
             )}
           </p>
         </div>
@@ -157,31 +157,31 @@ export function BoardPage() {
 
       <div className="flex-1 min-h-0">
         {!boardData ? (
-           <EmptyState
-             title={t('board.noActiveIteration')}
-             description={t('backlog.failedLoad')}
-             icon={<LayoutGrid className="h-8 w-8" />}
-             action={
-               <Button asChild>
-                 <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
-                   {t('products.backlog')}
-                 </Link>
-               </Button>
-             }
-           />
+          <EmptyState
+            title={t('board.noActiveIteration')}
+            description={t('backlog.failedLoad')}
+            icon={<LayoutGrid className="h-8 w-8" />}
+            action={
+              <Button asChild>
+                <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
+                  {t('products.backlog')}
+                </Link>
+              </Button>
+            }
+          />
         ) : isIterationEmpty ? (
-           <EmptyState
-             title={t('board.noItemsInColumn')}
-             description={t('backlog.failedLoad')}
-             icon={<LayoutList className="h-8 w-8" />}
-             action={
-               <Button asChild>
-                 <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
-                   {t('products.backlog')}
-                 </Link>
-               </Button>
-             }
-           />
+          <EmptyState
+            title={t('board.noItemsInColumn')}
+            description={t('backlog.failedLoad')}
+            icon={<LayoutList className="h-8 w-8" />}
+            action={
+              <Button asChild>
+                <Link to={`/org/${orgId}/products/${productId}/teams/${teamId}/backlog`}>
+                  {t('products.backlog')}
+                </Link>
+              </Button>
+            }
+          />
         ) : (
           <KanbanBoard
             boardData={boardData}

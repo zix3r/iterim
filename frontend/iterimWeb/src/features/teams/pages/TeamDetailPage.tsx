@@ -94,7 +94,7 @@ export function TeamDetailPage() {
       toast({
         variant: 'success',
         title: t('common.success'),
-        description: t('teams.failedDelete') // Pakeiskite į sėkmės pranešimą, jei norite
+        description: t('teams.memberRemoved')
       });
       setDeleteMemberDialogOpen(false);
       setMemberToDelete(null);

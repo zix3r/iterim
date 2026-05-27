@@ -251,8 +251,12 @@ public class WorkItemService : IWorkItemService
         if (orgMember == null)
             throw new UnauthorizedAccessException("User is not a member of this team");
 
-        // Block transition to InProgress if there are unfinished blockers
-        if (dto.Status == WorkItemStatus.InProgress && workItem.Status != WorkItemStatus.InProgress)
+        // Block ALL forward transitions while unfinished blockers exist — not just InProgress.
+        // This is the single chokepoint: board drag, edit modal, API and import all pass here.
+        if ((dto.Status == WorkItemStatus.InProgress ||
+             dto.Status == WorkItemStatus.Review ||
+             dto.Status == WorkItemStatus.Done)
+            && dto.Status != workItem.Status)
         {
             var unfinishedBlockers = await _dependencyService.GetUnfinishedBlockersAsync(workItem.Id);
             if (unfinishedBlockers.Count > 0)
@@ -385,16 +389,16 @@ public class WorkItemService : IWorkItemService
         var historyEntry = new WorkItemHistory
         {
             WorkItemId = workItem.Id,
-            FieldName  = "AssignedTo",
-            OldValue   = workItem.AssignedTo?.ToString(),
-            NewValue   = assignedTo?.ToString(),
-            ChangedAt  = now,
-            ChangedBy  = orgMember.Id,
+            FieldName = "AssignedTo",
+            OldValue = workItem.AssignedTo?.ToString(),
+            NewValue = assignedTo?.ToString(),
+            ChangedAt = now,
+            ChangedBy = orgMember.Id,
         };
 
         workItem.AssignedTo = assignedTo;
-        workItem.UpdatedBy  = userId;
-        workItem.UpdatedAt  = now;
+        workItem.UpdatedBy = userId;
+        workItem.UpdatedAt = now;
         _db.WorkItemHistories.Add(historyEntry);
 
         await _db.SaveChangesAsync();

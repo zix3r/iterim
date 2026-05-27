@@ -134,7 +134,7 @@ export function OrganizationPage() {
     setIsDeletingOrg(true);
     try {
       await deleteOrganization(Number(orgId));
-      toast({ title: t('common.success'), description: t('organizations.failedDelete') });
+      toast({ variant: 'success', title: t('common.success'), description: t('organizations.deleted') });
       navigate('/dashboard');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : t('organizations.failedDelete');
