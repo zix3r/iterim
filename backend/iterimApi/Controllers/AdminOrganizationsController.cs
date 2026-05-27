@@ -27,23 +27,16 @@ public class AdminOrganizationsController : ControllerBase
     public async Task<ActionResult<AdminOrganizationDetailDto>> GetOrganizationDetails(int orgId)
     {
         var org = await _adminOrgService.GetOrganizationDetailsAsync(orgId);
-        if (org == null) 
+        if (org == null)
             return NotFound(new { message = "Organization not found" });
-            
+
         return Ok(org);
     }
 
     [HttpDelete("{orgId}")]
     public async Task<IActionResult> DeleteOrganization(int orgId)
     {
-        try
-        {
-            await _adminOrgService.DeleteOrganizationAsync(orgId);
-            return NoContent(); // 204 No Content (sėkmingai ištrinta)
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
+        await _adminOrgService.DeleteOrganizationAsync(orgId);
+        return NoContent(); // 204 No Content (sėkmingai ištrinta)
     }
 }

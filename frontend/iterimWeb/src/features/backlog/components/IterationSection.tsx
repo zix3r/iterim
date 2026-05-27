@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { ChevronDown, ChevronRight, Play, CheckCircle2, Pencil, Trash2, LayoutList, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronRight, Play, CheckCircle2, Pencil, Trash2, LayoutList, MessageSquare, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { startIteration, deleteIteration } from '@/lib/api';
@@ -22,11 +22,12 @@ interface Props {
   // NAUJI PROPSAI:
   selectedIds?: number[];
   onToggleSelection?: (id: number) => void;
+  onSuggest?: (iteration: Iteration) => void;
 }
 
 export function IterationSection({
   iteration, workItems, isBacklog = false, readOnly = false,
-  onEditIteration, onCompleteIteration, onWorkItemClick, onRefresh,
+  onEditIteration, onCompleteIteration, onWorkItemClick, onRefresh, onSuggest,
   selectedIds = [], onToggleSelection,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);
@@ -109,8 +110,8 @@ export function IterationSection({
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${statusColor}`}>
               {iteration?.status === 'Planning' ? t('backlog.iterationStatusPlanning')
                 : iteration?.status === 'Active' ? t('backlog.iterationStatusActive')
-                : iteration?.status === 'Completed' ? t('backlog.iterationStatusCompleted')
-                : iteration?.status}
+                  : iteration?.status === 'Completed' ? t('backlog.iterationStatusCompleted')
+                    : iteration?.status}
             </span>
             <span className="text-xs text-muted-foreground">
               {iteration?.startDate} — {iteration?.endDate}
@@ -150,6 +151,9 @@ export function IterationSection({
           <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
             {iteration.status === 'Planning' && (
               <>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onSuggest?.(iteration)}>
+                  <Sparkles className="h-3 w-3 mr-1" /> {t('atpa.suggestButton')}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -181,6 +185,9 @@ export function IterationSection({
             )}
             {iteration.status === 'Active' && (
               <>
+                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onSuggest?.(iteration)}>
+                  <Sparkles className="h-3 w-3 mr-1" /> {t('atpa.suggestButton')}
+                </Button>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => onCompleteIteration?.(iteration)}>
                   <CheckCircle2 className="h-3 w-3 mr-1" /> {t('backlog.completeIteration')}
                 </Button>
@@ -215,10 +222,10 @@ export function IterationSection({
               </p>
             ) : (
               workItems.map((item) => (
-                <WorkItemRow 
-                  key={item.id} 
-                  item={item} 
-                  readOnly={readOnly} 
+                <WorkItemRow
+                  key={item.id}
+                  item={item}
+                  readOnly={readOnly}
                   onClick={onWorkItemClick}
                   // PAKEITIMAS: perduodame state mygtukams
                   isSelected={selectedIds.includes(item.id)}

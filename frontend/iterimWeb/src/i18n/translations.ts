@@ -486,6 +486,9 @@ export type TranslationKey =
   | 'backlog.doneCount'
 
   // ATPA – Automatinis Task'ų Priskyrimo Algoritmas
+  | 'atpa.warnTitle'
+  | 'atpa.warnBody'
+  | 'atpa.warnContinue'
   | 'atpa.suggestButton'
   | 'atpa.title'
   | 'atpa.subtitle'
@@ -865,6 +868,14 @@ export type TranslationKey =
   | 'quarterPlan.statusPlanning'
   | 'quarterPlan.statusActive'
   | 'quarterPlan.statusCompleted'
+
+  // Errors
+  | 'errors.unauthenticated'
+  | 'errors.forbidden'
+  | 'errors.notFound'
+  | 'errors.validation'
+  | 'errors.conflict'
+  | 'errors.unexpected'
 
   // Kalbų pavadinimai
   | 'language.lt'
@@ -1347,6 +1358,9 @@ export const translations: Record<Language, Translations> = {
     'backlog.doneCount': 'atlikta',
 
     // ATPA
+    'atpa.warnTitle': 'Prieš generuojant pasiūlymus',
+    'atpa.warnBody': 'Įsitikinkite, kad komandos pravaikštos (atostogos, ligos) yra atnaujintos — ATPA skaičiuoja pajėgumą pagal jas. Tęsti?',
+    'atpa.warnContinue': 'Generuoti',
     'atpa.suggestButton': 'Siūlyti priskyrimus',
     'atpa.title': 'Priskyrimų siūlymai',
     'atpa.subtitle': 'Automatinio užduočių priskyrimo algoritmas pasiūlė šiuos priskyrimus pagal žymes ir nario pajėgumą.',
@@ -1726,6 +1740,14 @@ export const translations: Record<Language, Translations> = {
     'quarterPlan.statusPlanning': 'Planuojama',
     'quarterPlan.statusActive': 'Aktyvi',
     'quarterPlan.statusCompleted': 'Užbaigta',
+
+    // Klaidų pranešimai
+    'errors.unauthenticated': 'Sesija pasibaigė. Prisijunkite iš naujo.',
+    'errors.forbidden': 'Neturite teisių atlikti šio veiksmo.',
+    'errors.notFound': 'Prašomas elementas nerastas.',
+    'errors.validation': 'Neteisingi duomenys. Patikrinkite įvestį.',
+    'errors.conflict': 'Veiksmas prieštarauja esamai būsenai.',
+    'errors.unexpected': 'Įvyko nenumatyta klaida. Bandykite dar kartą.',
 
     // Kalbų pavadinimai
     'language.lt': 'Lietuvių',
@@ -2205,6 +2227,9 @@ export const translations: Record<Language, Translations> = {
     'backlog.doneCount': 'done',
 
     // ATPA
+    'atpa.warnTitle': 'Before generating suggestions',
+    'atpa.warnBody': "Make sure the team's absences (vacations, sick days) are up to date — ATPA bases capacity on them. Continue?",
+    'atpa.warnContinue': 'Generate',
     'atpa.suggestButton': 'Suggest assignments',
     'atpa.title': 'Assignment suggestions',
     'atpa.subtitle': 'The automatic task-assignment algorithm proposed these assignments based on tags and member capacity.',
@@ -2584,6 +2609,14 @@ export const translations: Record<Language, Translations> = {
     'quarterPlan.statusPlanning': 'Planning',
     'quarterPlan.statusActive': 'Active',
     'quarterPlan.statusCompleted': 'Completed',
+
+    // Errors
+    'errors.unauthenticated': 'Your session expired. Please sign in again.',
+    'errors.forbidden': 'You do not have permission to perform this action.',
+    'errors.notFound': 'The requested item was not found.',
+    'errors.validation': 'Invalid input. Please check your data.',
+    'errors.conflict': 'This action conflicts with the current state.',
+    'errors.unexpected': 'An unexpected error occurred. Please try again.',
 
     // Language names
     'language.lt': 'Lithuanian',

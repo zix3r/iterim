@@ -33,24 +33,9 @@ public class WorkItemsController : ControllerBase
     [HttpGet("api/teams/{teamId}/workitems")]
     public async Task<IActionResult> GetWorkItemsByTeam(int teamId, [FromQuery] WorkItemFilterDto filters)
     {
-        try
-        {
-            var userId = GetUserId();
-            var workItems = await _workItemService.GetWorkItemsByTeamAsync(teamId, filters, userId);
-            return Ok(workItems);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while retrieving work items", error = ex.Message });
-        }
+        var userId = GetUserId();
+        var workItems = await _workItemService.GetWorkItemsByTeamAsync(teamId, filters, userId);
+        return Ok(workItems);
     }
 
     /// <summary>
@@ -61,24 +46,9 @@ public class WorkItemsController : ControllerBase
     [HttpGet("api/teams/{teamId}/workitems/grouped")]
     public async Task<IActionResult> GetWorkItemsGrouped(int teamId)
     {
-        try
-        {
-            var userId = GetUserId();
-            var groups = await _workItemService.GetBacklogGroupedByIterationAsync(teamId, userId);
-            return Ok(groups);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while retrieving grouped work items", error = ex.Message });
-        }
+        var userId = GetUserId();
+        var groups = await _workItemService.GetBacklogGroupedByIterationAsync(teamId, userId);
+        return Ok(groups);
     }
 
     /// <summary>
@@ -88,26 +58,15 @@ public class WorkItemsController : ControllerBase
     [HttpGet("api/workitems/{id}")]
     public async Task<IActionResult> GetWorkItemById(int id)
     {
-        try
-        {
-            var userId = GetUserId();
-            var workItem = await _workItemService.GetWorkItemByIdAsync(id, userId);
+        var userId = GetUserId();
+        var workItem = await _workItemService.GetWorkItemByIdAsync(id, userId);
 
-            if (workItem == null)
-            {
-                return NotFound(new { message = "Work item not found" });
-            }
+        if (workItem == null)
+        {
+            return NotFound(new { message = "Work item not found" });
+        }
 
-            return Ok(workItem);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while retrieving the work item", error = ex.Message });
-        }
+        return Ok(workItem);
     }
 
     /// <summary>
@@ -122,38 +81,20 @@ public class WorkItemsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            var userId = GetUserId();
-            var workItem = await _workItemService.CreateWorkItemAsync(teamId, dto, userId);
 
-            if (workItem == null)
-            {
-                return BadRequest(new { message = "Failed to create work item" });
-            }
+        var userId = GetUserId();
+        var workItem = await _workItemService.CreateWorkItemAsync(teamId, dto, userId);
 
-            return CreatedAtAction(
-                nameof(GetWorkItemById),
-                new { id = workItem.Id },
-                workItem
-            );
-        }
-        catch (KeyNotFoundException ex)
+        if (workItem == null)
         {
-            return NotFound(new { message = ex.Message });
+            return BadRequest(new { message = "Failed to create work item" });
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while creating the work item", error = ex.Message });
-        }
+
+        return CreatedAtAction(
+            nameof(GetWorkItemById),
+            new { id = workItem.Id },
+            workItem
+        );
     }
 
     /// <summary>
@@ -169,38 +110,15 @@ public class WorkItemsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            var userId = GetUserId();
-            var workItem = await _workItemService.UpdateWorkItemAsync(id, dto, userId);
+        var userId = GetUserId();
+        var workItem = await _workItemService.UpdateWorkItemAsync(id, dto, userId);
 
-            if (workItem == null)
-            {
-                return NotFound(new { message = "Work item not found" });
-            }
+        if (workItem == null)
+        {
+            return NotFound(new { message = "Work item not found" });
+        }
 
-            return Ok(workItem);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (BlockedByDependenciesException ex)
-        {
-            return BadRequest(new { message = ex.Message, blockers = ex.Blockers });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while updating the work item", error = ex.Message });
-        }
+        return Ok(workItem);
     }
 
     /// <summary>
@@ -217,34 +135,16 @@ public class WorkItemsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            var userId = GetUserId();
-            var workItem = await _workItemService.AssignWorkItemAsync(id, dto.AssignedTo, userId);
 
-            if (workItem == null)
-            {
-                return NotFound(new { message = "Work item not found" });
-            }
+        var userId = GetUserId();
+        var workItem = await _workItemService.AssignWorkItemAsync(id, dto.AssignedTo, userId);
 
-            return Ok(workItem);
-        }
-        catch (KeyNotFoundException ex)
+        if (workItem == null)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new { message = "Work item not found" });
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while assigning the work item", error = ex.Message });
-        }
+
+        return Ok(workItem);
     }
 
     /// <summary>
@@ -259,34 +159,15 @@ public class WorkItemsController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        try
-        {
-            var userId = GetUserId();
-            var workItem = await _workItemService.TransferWorkItemAsync(id, dto.TargetTeamId, userId);
+        var userId = GetUserId();
+        var workItem = await _workItemService.TransferWorkItemAsync(id, dto.TargetTeamId, userId);
 
-            if (workItem == null)
-            {
-                return NotFound(new { message = "Work item not found" });
-            }
+        if (workItem == null)
+        {
+            return NotFound(new { message = "Work item not found" });
+        }
 
-            return Ok(workItem);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while transferring the work item", error = ex.Message });
-        }
+        return Ok(workItem);
     }
 
     /// <summary>
@@ -296,30 +177,15 @@ public class WorkItemsController : ControllerBase
     [HttpDelete("api/workitems/{id}")]
     public async Task<IActionResult> DeleteWorkItem(int id)
     {
-        try
-        {
-            var userId = GetUserId();
-            var result = await _workItemService.DeleteWorkItemAsync(id, userId);
+        var userId = GetUserId();
+        var result = await _workItemService.DeleteWorkItemAsync(id, userId);
 
-            if (!result)
-            {
-                return NotFound(new { message = "Work item not found" });
-            }
+        if (!result)
+        {
+            return NotFound(new { message = "Work item not found" });
+        }
 
-            return Ok(new { message = "Work item deleted successfully" });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while deleting the work item", error = ex.Message });
-        }
+        return Ok(new { message = "Work item deleted successfully" });
     }
     /// <summary>
     /// Reorder work items within an iteration or backlog.
@@ -332,29 +198,9 @@ public class WorkItemsController : ControllerBase
         {
             return ValidationProblem(ModelState);
         }
-
-        try
-        {
-            var userId = GetUserId();
-            await _workItemService.ReorderWorkItemsAsync(teamId, dto, userId);
-            return Ok(new { message = "Reorder successful" });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while reordering", error = ex.Message });
-        }
+        var userId = GetUserId();
+        await _workItemService.ReorderWorkItemsAsync(teamId, dto, userId);
+        return Ok(new { message = "Reorder successful" });
     }
 
     /// <summary>
@@ -365,31 +211,11 @@ public class WorkItemsController : ControllerBase
     [HttpPost("api/teams/{teamId}/workitems/bulk")]
     public async Task<IActionResult> BulkCreateWorkItems(int teamId, [FromBody] BulkCreateWorkItemsDto dto)
     {
-        if (!ModelState.IsValid)
-            return ValidationProblem(ModelState);
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
 
-        try
-        {
-            var userId = GetUserId();
-            var count = await _workItemService.BulkCreateWorkItemsAsync(teamId, dto, userId);
-            return Ok(new { importedCount = count });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return StatusCode(403, new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while importing work items", error = ex.Message });
-        }
+        var userId = GetUserId();
+        var count = await _workItemService.BulkCreateWorkItemsAsync(teamId, dto, userId);
+        return Ok(new { importedCount = count });
     }
 
     /// <summary>
@@ -399,49 +225,42 @@ public class WorkItemsController : ControllerBase
     [HttpGet("api/workitems/{id}/comments")]
     public async Task<IActionResult> GetComments(int id)
     {
-        try
-        {
-            var userId = GetUserId();
-            var workItem = await _db.WorkItems
-                .Include(wi => wi.Team).ThenInclude(t => t.Product)
-                .FirstOrDefaultAsync(wi => wi.Id == id);
+        var userId = GetUserId();
+        var workItem = await _db.WorkItems
+            .Include(wi => wi.Team).ThenInclude(t => t.Product)
+            .FirstOrDefaultAsync(wi => wi.Id == id);
 
-            if (workItem == null)
-                return NotFound(new { message = "Work item not found" });
+        if (workItem == null)
+            return NotFound(new { message = "Work item not found" });
 
-            var isMember = await _db.OrganizationMembers
-                .AnyAsync(om =>
-                    om.UserId == userId &&
-                    om.OrganizationId == workItem.Team.Product.OrganizationId &&
-                    om.Status == OrgMemberStatus.Active);
+        var isMember = await _db.OrganizationMembers
+            .AnyAsync(om =>
+                om.UserId == userId &&
+                om.OrganizationId == workItem.Team.Product.OrganizationId &&
+                om.Status == OrgMemberStatus.Active);
 
-            if (!isMember)
-                return StatusCode(403, new { message = "You are not a member of this organization" });
+        if (!isMember)
+            return StatusCode(403, new { message = "You are not a member of this organization" });
 
-            var comments = await _db.WorkItemComments
-                .Where(c => c.WorkItemId == id && c.ParentCommentId == null)
-                .Include(c => c.Author).ThenInclude(om => om.User)
-                .OrderBy(c => c.CreatedAt)
-                .Select(c => new WorkItemCommentDto
-                {
-                    Id = c.Id,
-                    WorkItemId = c.WorkItemId,
-                    AuthorId = c.AuthorId,
-                    AuthorUserId = c.Author.UserId,
-                    AuthorName = c.Author.User.Name,
-                    AuthorAvatarUrl = c.Author.User.AvatarUrl,
-                    Content = c.Message,
-                    CreatedAt = c.CreatedAt,
-                    UpdatedAt = c.UpdatedAt,
-                })
-                .ToListAsync();
+        var comments = await _db.WorkItemComments
+            .Where(c => c.WorkItemId == id && c.ParentCommentId == null)
+            .Include(c => c.Author).ThenInclude(om => om.User)
+            .OrderBy(c => c.CreatedAt)
+            .Select(c => new WorkItemCommentDto
+            {
+                Id = c.Id,
+                WorkItemId = c.WorkItemId,
+                AuthorId = c.AuthorId,
+                AuthorUserId = c.Author.UserId,
+                AuthorName = c.Author.User.Name,
+                AuthorAvatarUrl = c.Author.User.AvatarUrl,
+                Content = c.Message,
+                CreatedAt = c.CreatedAt,
+                UpdatedAt = c.UpdatedAt,
+            })
+            .ToListAsync();
 
-            return Ok(comments);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while retrieving comments", error = ex.Message });
-        }
+        return Ok(comments);
     }
 
     /// <summary>
@@ -454,56 +273,49 @@ public class WorkItemsController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        try
+        var userId = GetUserId();
+        var workItem = await _db.WorkItems
+            .Include(wi => wi.Team).ThenInclude(t => t.Product)
+            .FirstOrDefaultAsync(wi => wi.Id == id);
+
+        if (workItem == null)
+            return NotFound(new { message = "Work item not found" });
+
+        var author = await _db.OrganizationMembers
+            .Include(om => om.User)
+            .FirstOrDefaultAsync(om =>
+                om.UserId == userId &&
+                om.OrganizationId == workItem.Team.Product.OrganizationId &&
+                om.Status == OrgMemberStatus.Active);
+
+        if (author == null)
+            return StatusCode(403, new { message = "You are not a member of this organization" });
+
+        var now = DateTime.UtcNow;
+        var comment = new WorkItemComment
         {
-            var userId = GetUserId();
-            var workItem = await _db.WorkItems
-                .Include(wi => wi.Team).ThenInclude(t => t.Product)
-                .FirstOrDefaultAsync(wi => wi.Id == id);
+            WorkItemId = id,
+            AuthorId = author.Id,
+            Message = dto.Content.Trim(),
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
 
-            if (workItem == null)
-                return NotFound(new { message = "Work item not found" });
+        _db.WorkItemComments.Add(comment);
+        await _db.SaveChangesAsync();
 
-            var author = await _db.OrganizationMembers
-                .Include(om => om.User)
-                .FirstOrDefaultAsync(om =>
-                    om.UserId == userId &&
-                    om.OrganizationId == workItem.Team.Product.OrganizationId &&
-                    om.Status == OrgMemberStatus.Active);
-
-            if (author == null)
-                return StatusCode(403, new { message = "You are not a member of this organization" });
-
-            var now = DateTime.UtcNow;
-            var comment = new WorkItemComment
-            {
-                WorkItemId = id,
-                AuthorId = author.Id,
-                Message = dto.Content.Trim(),
-                CreatedAt = now,
-                UpdatedAt = now,
-            };
-
-            _db.WorkItemComments.Add(comment);
-            await _db.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetComments), new { id }, new WorkItemCommentDto
-            {
-                Id = comment.Id,
-                WorkItemId = comment.WorkItemId,
-                AuthorId = comment.AuthorId,
-                AuthorUserId = author.UserId,
-                AuthorName = author.User.Name,
-                AuthorAvatarUrl = author.User.AvatarUrl,
-                Content = comment.Message,
-                CreatedAt = comment.CreatedAt,
-                UpdatedAt = comment.UpdatedAt,
-            });
-        }
-        catch (Exception ex)
+        return CreatedAtAction(nameof(GetComments), new { id }, new WorkItemCommentDto
         {
-            return StatusCode(500, new { message = "An error occurred while adding the comment", error = ex.Message });
-        }
+            Id = comment.Id,
+            WorkItemId = comment.WorkItemId,
+            AuthorId = comment.AuthorId,
+            AuthorUserId = author.UserId,
+            AuthorName = author.User.Name,
+            AuthorAvatarUrl = author.User.AvatarUrl,
+            Content = comment.Message,
+            CreatedAt = comment.CreatedAt,
+            UpdatedAt = comment.UpdatedAt,
+        });
     }
 
     /// <summary>
@@ -516,40 +328,33 @@ public class WorkItemsController : ControllerBase
         if (!ModelState.IsValid)
             return ValidationProblem(ModelState);
 
-        try
+        var userId = GetUserId();
+        var comment = await _db.WorkItemComments
+            .Include(c => c.Author).ThenInclude(om => om.User)
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.WorkItemId == id);
+
+        if (comment == null)
+            return NotFound(new { message = "Comment not found" });
+
+        if (comment.Author.UserId != userId)
+            return StatusCode(403, new { message = "Only the author can edit this comment" });
+
+        comment.Message = dto.Content.Trim();
+        comment.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return Ok(new WorkItemCommentDto
         {
-            var userId = GetUserId();
-            var comment = await _db.WorkItemComments
-                .Include(c => c.Author).ThenInclude(om => om.User)
-                .FirstOrDefaultAsync(c => c.Id == commentId && c.WorkItemId == id);
-
-            if (comment == null)
-                return NotFound(new { message = "Comment not found" });
-
-            if (comment.Author.UserId != userId)
-                return StatusCode(403, new { message = "Only the author can edit this comment" });
-
-            comment.Message = dto.Content.Trim();
-            comment.UpdatedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
-
-            return Ok(new WorkItemCommentDto
-            {
-                Id = comment.Id,
-                WorkItemId = comment.WorkItemId,
-                AuthorId = comment.AuthorId,
-                AuthorUserId = comment.Author.UserId,
-                AuthorName = comment.Author.User.Name,
-                AuthorAvatarUrl = comment.Author.User.AvatarUrl,
-                Content = comment.Message,
-                CreatedAt = comment.CreatedAt,
-                UpdatedAt = comment.UpdatedAt,
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while editing the comment", error = ex.Message });
-        }
+            Id = comment.Id,
+            WorkItemId = comment.WorkItemId,
+            AuthorId = comment.AuthorId,
+            AuthorUserId = comment.Author.UserId,
+            AuthorName = comment.Author.User.Name,
+            AuthorAvatarUrl = comment.Author.User.AvatarUrl,
+            Content = comment.Message,
+            CreatedAt = comment.CreatedAt,
+            UpdatedAt = comment.UpdatedAt,
+        });
     }
 
     /// <summary>
@@ -559,40 +364,33 @@ public class WorkItemsController : ControllerBase
     [HttpDelete("api/workitems/{id}/comments/{commentId}")]
     public async Task<IActionResult> DeleteComment(int id, int commentId)
     {
-        try
+        var userId = GetUserId();
+        var comment = await _db.WorkItemComments
+            .Include(c => c.WorkItem).ThenInclude(wi => wi.Team).ThenInclude(t => t.Product)
+            .Include(c => c.Author)
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.WorkItemId == id);
+
+        if (comment == null)
+            return NotFound(new { message = "Comment not found" });
+
+        var isAuthor = comment.Author.UserId == userId;
+
+        if (!isAuthor)
         {
-            var userId = GetUserId();
-            var comment = await _db.WorkItemComments
-                .Include(c => c.WorkItem).ThenInclude(wi => wi.Team).ThenInclude(t => t.Product)
-                .Include(c => c.Author)
-                .FirstOrDefaultAsync(c => c.Id == commentId && c.WorkItemId == id);
+            var isTeamLeader = await _db.TeamMembers
+                .AnyAsync(tm =>
+                    tm.TeamId == comment.WorkItem.TeamId &&
+                    tm.OrgMember.UserId == userId &&
+                    tm.Role == TeamMemberRole.Admin);
 
-            if (comment == null)
-                return NotFound(new { message = "Comment not found" });
-
-            var isAuthor = comment.Author.UserId == userId;
-
-            if (!isAuthor)
-            {
-                var isTeamLeader = await _db.TeamMembers
-                    .AnyAsync(tm =>
-                        tm.TeamId == comment.WorkItem.TeamId &&
-                        tm.OrgMember.UserId == userId &&
-                        tm.Role == TeamMemberRole.Admin);
-
-                if (!isTeamLeader)
-                    return StatusCode(403, new { message = "Only the author or a team leader can delete this comment" });
-            }
-
-            _db.WorkItemComments.Remove(comment);
-            await _db.SaveChangesAsync();
-
-            return Ok(new { message = "Comment deleted successfully" });
+            if (!isTeamLeader)
+                return StatusCode(403, new { message = "Only the author or a team leader can delete this comment" });
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred while deleting the comment", error = ex.Message });
-        }
+
+        _db.WorkItemComments.Remove(comment);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Comment deleted successfully" });
     }
 
     /// <summary>

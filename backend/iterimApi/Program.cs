@@ -6,6 +6,7 @@ using iterimApi.Models.Entities;
 using iterimApi.Models.Settings;
 using iterimApi.Services.Implementations;
 using iterimApi.Services.Interfaces;
+using iterimApi.Exceptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -103,6 +104,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IRetroService, RetroService>();
 builder.Services.AddHostedService<NotificationCleanupService>();
 builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
@@ -167,6 +169,8 @@ builder.Services.AddHealthChecks()
     .AddCheck<MemoryHealthCheck>("memory");
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 // Trust reverse proxy headers (Caddy sends X-Forwarded-For, X-Forwarded-Proto)
 app.UseForwardedHeaders(new ForwardedHeadersOptions

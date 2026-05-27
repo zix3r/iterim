@@ -33,6 +33,7 @@ import { ExportJiraCsvModal } from '../components/ExportJiraCsvModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { addRecentPage } from '@/lib/recentPages';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 // Map backend string status to numeric for PUT
 const STATUS_MAP: Record<string, number> = { Backlog: 0, Todo: 1, InProgress: 2, Review: 3, Done: 4 };
@@ -72,10 +73,13 @@ export function BacklogPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
+  const [suggestionsTarget, setSuggestionsTarget] = useState<Iteration | null>(null);
+  const [atpaWarnOpen, setAtpaWarnOpen] = useState(false);
+
   // DnD & Selection
   const [activeItem, setActiveItem] = useState<WorkItem | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]); // NAUJA: Masiniam žymėjimui
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
@@ -118,7 +122,7 @@ export function BacklogPage() {
     if (itemId && groups.length > 0) {
       const id = Number(itemId);
       let foundItem: WorkItem | null = null;
-      
+
       for (const group of groups) {
         const item = group.workItems.find(wi => wi.id === id);
         if (item) {
@@ -147,9 +151,9 @@ export function BacklogPage() {
   }, [team, orgId, productId, teamId]);
 
   // ── Multi-select & Bulk Move Logic ─────────────────────
-  
+
   const toggleSelection = (id: number) => {
-    setSelectedItemIds(prev => 
+    setSelectedItemIds(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
   };
@@ -183,7 +187,7 @@ export function BacklogPage() {
           iterationId: targetIterationId,
         });
       }));
-      
+
       setSelectedItemIds([]);
       toast({ title: t('common.success'), description: `Moved ${itemsToMove.length} items successfully.` });
       await loadData();
@@ -373,11 +377,11 @@ export function BacklogPage() {
   if (error || !team || !org) {
     return (
       <div className="p-8 max-w-2xl mx-auto mt-12">
-        <div className="rounded-xl bg-red-50 p-6 border border-red-200 flex flex-col items-center text-center gap-3 shadow-sm">
-          <AlertCircle className="h-10 w-10 text-red-600 mb-2" />
-          <h3 className="text-lg font-semibold text-red-800">{t('backlog.failedLoad')}</h3>
-          <p className="text-sm text-red-700">{error || "Failed to load team data."}</p>
-          <Button onClick={loadData} variant="outline" className="mt-4 border-red-200 hover:bg-red-100 text-red-800">
+        <div className="rounded-xl bg-red-50 dark:bg-red-950/30 p-6 border border-red-200 dark:border-red-900/50 flex flex-col items-center text-center gap-3 shadow-sm">
+          <AlertCircle className="h-10 w-10 text-red-600 dark:text-red-400 mb-2" />
+          <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">{t('backlog.failedLoad')}</h3>
+          <p className="text-sm text-red-700 dark:text-red-300">{error || "Failed to load team data."}</p>
+          <Button onClick={loadData} variant="outline" className="mt-4 border-red-200 dark:border-red-900/60 hover:bg-red-100 dark:hover:bg-red-950/50 text-red-800 dark:text-red-300">
             {t('common.retry')}
           </Button>
         </div>
@@ -393,10 +397,12 @@ export function BacklogPage() {
     (member) => member.userId === team.currentUserId && member.role === 'Admin'
   );
 
-  const suggestionsTarget: Iteration | null =
+  const defaultAtpaTarget: Iteration | null =
     iterations.find((i) => i.status === 'Active') ??
     iterations.find((i) => i.status === 'Planning') ??
     null;
+  
+  const openAtpa = (it: Iteration) => { setSuggestionsTarget(it); setAtpaWarnOpen(true); };
 
   const renderSection = (
     iteration: Iteration | null,
@@ -414,6 +420,7 @@ export function BacklogPage() {
       onCompleteIteration={setCompleteIteration}
       onWorkItemClick={setEditItem}
       onRefresh={loadData}
+      onSuggest={openAtpa}
       // NAUJA: Perduodame žymėjimo būseną
       selectedIds={selectedItemIds}
       onToggleSelection={toggleSelection}
@@ -453,9 +460,9 @@ export function BacklogPage() {
           <Button
             size="sm"
             variant="outline"
-            disabled={!suggestionsTarget}
-            title={suggestionsTarget ? undefined : t('atpa.noActiveIteration')}
-            onClick={() => setSuggestionsOpen(true)}
+            disabled={!defaultAtpaTarget}
+            title={defaultAtpaTarget ? undefined : t('atpa.noActiveIteration')}
+            onClick={() => defaultAtpaTarget && openAtpa(defaultAtpaTarget)}
           >
             <Sparkles className="h-4 w-4 mr-2" /> {t('atpa.suggestButton')}
           </Button>
@@ -494,7 +501,7 @@ export function BacklogPage() {
             onTagChange={setTagFilter}
             onSearchChange={setSearchQuery}
           />
-<div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
             <span>🟦 {t('backlog.typeStory')}</span>
             <span>🟨 {t('backlog.typeTask')}</span>
             <span>🟥 {t('backlog.typeBug')}</span>
@@ -586,7 +593,7 @@ export function BacklogPage() {
             <span className="text-sm font-medium">{t('backlog.selected')}</span>
           </div>
           <div className="h-4 w-px bg-border" />
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" variant="secondary" className="gap-2">
@@ -611,6 +618,19 @@ export function BacklogPage() {
           </Button>
         </div>
       )}
+
+      <Dialog open={atpaWarnOpen} onOpenChange={setAtpaWarnOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('atpa.warnTitle')}</DialogTitle>
+            <DialogDescription>{t('atpa.warnBody')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAtpaWarnOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={() => { setAtpaWarnOpen(false); setSuggestionsOpen(true); }}>{t('atpa.warnContinue')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modals */}
       <CreateWorkItemModal teamId={tid} orgId={Number(orgId)} members={members} open={createItemOpen} onOpenChange={setCreateItemOpen} onCreated={loadData} />

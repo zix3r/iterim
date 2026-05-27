@@ -83,7 +83,7 @@ public class AtpaService : IAtpaService
         var response = new SuggestAssignmentsResponseDto
         {
             IterationId = iteration.Id,
-            TeamId      = iteration.TeamId,
+            TeamId = iteration.TeamId,
         };
 
         // ── 2. Load team members (with tags, absences, currently assigned items) ──
@@ -100,8 +100,8 @@ public class AtpaService : IAtpaService
             response.Warnings.Add(new AtpaWarningDto
             {
                 Severity = "warning",
-                Code     = "NO_TEAM_MEMBERS",
-                Message  = "Team has no members; cannot suggest assignments.",
+                Code = "NO_TEAM_MEMBERS",
+                Message = "Team has no members; cannot suggest assignments.",
             });
             return response;
         }
@@ -141,11 +141,11 @@ public class AtpaService : IAtpaService
 
             // Absence impact — count working days inside the iteration that
             // overlap any of the member's absences.
-            var absenceWorkdays = CountAbsenceWorkdays(
+            var absenceHours = CountAbsenceHours(
                 m.OrgMember.Absences,
                 iteration.StartDate,
-                iteration.EndDate);
-            var absenceHours = absenceWorkdays * hoursPerDay;
+                iteration.EndDate,
+                hoursPerDay);
 
             // Already-assigned load (work items currently owned by this member
             // that belong to THIS iteration and are not Done).
@@ -179,32 +179,32 @@ public class AtpaService : IAtpaService
 
             memberStates.Add(new MemberState
             {
-                Member               = m,
-                WeeklyHours          = weeklyHours,
-                BaseCapacityHours    = baseCapacity,
-                AbsenceHours         = absenceHours,
+                Member = m,
+                WeeklyHours = weeklyHours,
+                BaseCapacityHours = baseCapacity,
+                AbsenceHours = absenceHours,
                 AlreadyAssignedHours = alreadyAssignedHours,
-                AvailableHours       = available,
-                VelocityAvg          = velocityAvg,
-                ExplicitTags         = explicitTags,
-                InferredTags         = inferredTags,
-                Tags                 = combinedTags,
+                AvailableHours = available,
+                VelocityAvg = velocityAvg,
+                ExplicitTags = explicitTags,
+                InferredTags = inferredTags,
+                Tags = combinedTags,
             });
 
             response.MemberCapacities.Add(new MemberCapacityDto
             {
-                MemberId               = m.Id,
-                MemberName             = m.OrgMember.User.Name,
-                AvatarUrl              = m.OrgMember.User.AvatarUrl,
-                ScheduleType           = m.ScheduleType.ToString(),
-                WeeklyHours            = weeklyHours,
-                BaseCapacityHours      = Math.Round(baseCapacity, 2),
-                AbsenceHours           = Math.Round(absenceHours, 2),
-                AlreadyAssignedHours   = Math.Round(alreadyAssignedHours, 2),
+                MemberId = m.Id,
+                MemberName = m.OrgMember.User.Name,
+                AvatarUrl = m.OrgMember.User.AvatarUrl,
+                ScheduleType = m.ScheduleType.ToString(),
+                WeeklyHours = weeklyHours,
+                BaseCapacityHours = Math.Round(baseCapacity, 2),
+                AbsenceHours = Math.Round(absenceHours, 2),
+                AlreadyAssignedHours = Math.Round(alreadyAssignedHours, 2),
                 AvailableCapacityHours = Math.Round(available, 2),
-                VelocityAvgPoints      = Math.Round(velocityAvg, 2),
-                Tags                   = explicitTags.ToList(),
-                InferredTags           = inferredTags.ToList(),
+                VelocityAvgPoints = Math.Round(velocityAvg, 2),
+                Tags = explicitTags.ToList(),
+                InferredTags = inferredTags.ToList(),
             });
         }
 
@@ -225,9 +225,9 @@ public class AtpaService : IAtpaService
         // ── 8. Assignment loop ───────────────────────────────────────────────
         foreach (var wi in unassignedItems)
         {
-            var workItemSp     = wi.Points ?? 0;
-            var workItemHours  = workItemSp * hoursPerSp;
-            var workItemTags   = wi.Tags
+            var workItemSp = wi.Points ?? 0;
+            var workItemHours = workItemSp * hoursPerSp;
+            var workItemTags = wi.Tags
                 .Select(t => t.Tag.Name)
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -240,10 +240,10 @@ public class AtpaService : IAtpaService
             {
                 response.Warnings.Add(new AtpaWarningDto
                 {
-                    Severity        = "info",
-                    Code            = "NO_TAG_MATCH",
-                    Message         = $"\"{wi.Title}\" has tags no member shares (neither explicit nor inferred); assigned by capacity only.",
-                    MessageParams   = new() { ["title"] = wi.Title },
+                    Severity = "info",
+                    Code = "NO_TAG_MATCH",
+                    Message = $"\"{wi.Title}\" has tags no member shares (neither explicit nor inferred); assigned by capacity only.",
+                    MessageParams = new() { ["title"] = wi.Title },
                     RelatedEntityId = wi.Id,
                 });
             }
@@ -263,7 +263,7 @@ public class AtpaService : IAtpaService
                     .DefaultIfEmpty(0)
                     .Max();
                 var titleParam = wi.Title;
-                var spParam    = workItemSp.ToString();
+                var spParam = workItemSp.ToString();
 
                 // Note: distinct names from the assigned-suggestion path below (`reasonText`,
                 // `reasonCodes`) — C# disallows shadowing within the same local-variable
@@ -277,10 +277,10 @@ public class AtpaService : IAtpaService
                     unassignedReasonText = $"\"{wi.Title}\" SP ({workItemSp}) exceeds every member's full capacity.";
                     response.Warnings.Add(new AtpaWarningDto
                     {
-                        Severity        = "warning",
-                        Code            = "SP_EXCEEDS_CAPACITY",
-                        Message         = $"\"{wi.Title}\" SP ({workItemSp}) exceeds every member's capacity — consider splitting.",
-                        MessageParams   = new() { ["title"] = titleParam, ["sp"] = spParam },
+                        Severity = "warning",
+                        Code = "SP_EXCEEDS_CAPACITY",
+                        Message = $"\"{wi.Title}\" SP ({workItemSp}) exceeds every member's capacity — consider splitting.",
+                        MessageParams = new() { ["title"] = titleParam, ["sp"] = spParam },
                         RelatedEntityId = wi.Id,
                     });
                 }
@@ -295,23 +295,23 @@ public class AtpaService : IAtpaService
 
                     response.Warnings.Add(new AtpaWarningDto
                     {
-                        Severity        = "warning",
-                        Code            = "ALL_MEMBERS_OVERLOADED",
-                        Message         = $"Couldn't assign \"{wi.Title}\" — all members are at capacity.",
-                        MessageParams   = new() { ["title"] = titleParam },
+                        Severity = "warning",
+                        Code = "ALL_MEMBERS_OVERLOADED",
+                        Message = $"Couldn't assign \"{wi.Title}\" — all members are at capacity.",
+                        MessageParams = new() { ["title"] = titleParam },
                         RelatedEntityId = wi.Id,
                     });
                 }
 
                 response.Unassigned.Add(new UnassignedItemDto
                 {
-                    WorkItemId     = wi.Id,
-                    WorkItemTitle  = wi.Title,
+                    WorkItemId = wi.Id,
+                    WorkItemTitle = wi.Title,
                     WorkItemPoints = workItemSp,
-                    WorkItemTags   = workItemTags.ToList(),
-                    Reason         = unassignedReasonText,
-                    ReasonCode     = unassignedReasonCode,
-                    ReasonParams   = new() { ["title"] = titleParam, ["sp"] = spParam },
+                    WorkItemTags = workItemTags.ToList(),
+                    Reason = unassignedReasonText,
+                    ReasonCode = unassignedReasonCode,
+                    ReasonParams = new() { ["title"] = titleParam, ["sp"] = spParam },
                 });
                 continue;
             }
@@ -320,22 +320,22 @@ public class AtpaService : IAtpaService
             var maxAvailable = candidates.Max(c => c.AvailableHours);
             if (maxAvailable <= 0) maxAvailable = 1; // safety guard
 
-            MemberState? best     = null;
-            double       bestScore = double.NegativeInfinity;
-            double       bestTagScore     = 0;
-            double       bestCapacityScore = 0;
+            MemberState? best = null;
+            double bestScore = double.NegativeInfinity;
+            double bestTagScore = 0;
+            double bestCapacityScore = 0;
 
             foreach (var c in candidates)
             {
-                var tagScore     = ComputeTagMatchScore(workItemTags, c.ExplicitTags, c.InferredTags);
+                var tagScore = ComputeTagMatchScore(workItemTags, c.ExplicitTags, c.InferredTags);
                 var capacityScore = c.AvailableHours / maxAvailable;
-                var finalScore   = tagScore * TagWeight + capacityScore * CapacityWeight;
+                var finalScore = tagScore * TagWeight + capacityScore * CapacityWeight;
 
                 if (finalScore > bestScore)
                 {
-                    bestScore         = finalScore;
-                    best              = c;
-                    bestTagScore      = tagScore;
+                    bestScore = finalScore;
+                    best = c;
+                    bestTagScore = tagScore;
                     bestCapacityScore = capacityScore;
                 }
             }
@@ -365,22 +365,22 @@ public class AtpaService : IAtpaService
 
             response.Suggestions.Add(new AssignmentSuggestionDto
             {
-                WorkItemId           = wi.Id,
-                WorkItemTitle        = wi.Title,
-                WorkItemType         = wi.Type.ToString(),
-                WorkItemPoints       = workItemSp,
-                WorkItemTags         = workItemTags.ToList(),
-                SuggestedMemberId    = best.Member.Id,
-                MemberName           = best.Member.OrgMember.User.Name,
-                MemberAvatarUrl      = best.Member.OrgMember.User.AvatarUrl,
-                MemberTags           = best.ExplicitTags.ToList(),
-                MemberInferredTags   = best.InferredTags.ToList(),
-                MatchingTags         = explicitMatching,
+                WorkItemId = wi.Id,
+                WorkItemTitle = wi.Title,
+                WorkItemType = wi.Type.ToString(),
+                WorkItemPoints = workItemSp,
+                WorkItemTags = workItemTags.ToList(),
+                SuggestedMemberId = best.Member.Id,
+                MemberName = best.Member.OrgMember.User.Name,
+                MemberAvatarUrl = best.Member.OrgMember.User.AvatarUrl,
+                MemberTags = best.ExplicitTags.ToList(),
+                MemberInferredTags = best.InferredTags.ToList(),
+                MatchingTags = explicitMatching,
                 MatchingInferredTags = inferredMatching,
-                Confidence           = Math.Round(bestScore * 100.0, 1),
-                Reason               = reasonText,
-                ReasonCodes          = reasonCodes,
-                ReasonParams         = reasonParams,
+                Confidence = Math.Round(bestScore * 100.0, 1),
+                Reason = reasonText,
+                ReasonCodes = reasonCodes,
+                ReasonParams = reasonParams,
             });
         }
 
@@ -391,10 +391,10 @@ public class AtpaService : IAtpaService
             {
                 response.Warnings.Add(new AtpaWarningDto
                 {
-                    Severity        = "warning",
-                    Code            = "MEMBER_OVERLOADED",
-                    Message         = $"{s.Member.OrgMember.User.Name} reached capacity — no further items can be assigned.",
-                    MessageParams   = new() { ["name"] = s.Member.OrgMember.User.Name },
+                    Severity = "warning",
+                    Code = "MEMBER_OVERLOADED",
+                    Message = $"{s.Member.OrgMember.User.Name} reached capacity — no further items can be assigned.",
+                    MessageParams = new() { ["name"] = s.Member.OrgMember.User.Name },
                     RelatedEntityId = s.Member.Id,
                 });
             }
@@ -445,9 +445,9 @@ public class AtpaService : IAtpaService
     /// </summary>
     private static int CountWorkingDays(DateOnly start, DateOnly end)
     {
-        if (end <= start) return 0;
+        if (end < start) return 0;                 // was: end <= start
         var days = 0;
-        for (var d = start; d < end; d = d.AddDays(1))
+        for (var d = start; d <= end; d = d.AddDays(1))   // was: d < end
         {
             var dow = d.DayOfWeek;
             if (dow != DayOfWeek.Saturday && dow != DayOfWeek.Sunday)
@@ -457,20 +457,36 @@ public class AtpaService : IAtpaService
     }
 
     /// <summary>
-    /// Counts working days the member was absent inside the iteration window.
+    /// Hours the member is absent inside the iteration window. Full-day absences
+    /// cost hoursPerDay per working day; a single-day absence with explicit
+    /// FromTime/ToTime (IT-155) costs only its actual duration.
     /// </summary>
-    private static int CountAbsenceWorkdays(
+    private static double CountAbsenceHours(
         IEnumerable<MemberAbsence> absences,
         DateOnly iterationStart,
-        DateOnly iterationEnd)
+        DateOnly iterationEnd,
+        double hoursPerDay)
     {
-        var total = 0;
+        double total = 0;
         foreach (var a in absences)
         {
             var from = a.FromDate < iterationStart ? iterationStart : a.FromDate;
-            var to   = a.ToDate   > iterationEnd   ? iterationEnd   : a.ToDate;
+            var to = a.ToDate > iterationEnd ? iterationEnd : a.ToDate;
             if (to < from) continue;
-            total += CountWorkingDays(from, to);
+
+            // Partial single-day absence with explicit hours.
+            if (a.FromDate == a.ToDate && a.FromTime.HasValue && a.ToTime.HasValue
+                && from == a.FromDate && to == a.ToDate)
+            {
+                var dow = from.DayOfWeek;
+                if (dow == DayOfWeek.Saturday || dow == DayOfWeek.Sunday) continue;
+                var hrs = (a.ToTime.Value - a.FromTime.Value).TotalHours;
+                total += Math.Clamp(hrs, 0, hoursPerDay);
+            }
+            else
+            {
+                total += CountWorkingDays(from, to) * hoursPerDay;
+            }
         }
         return total;
     }
@@ -557,7 +573,7 @@ public class AtpaService : IAtpaService
             .SelectMany(wi => wi.Tags.Select(wt => new
             {
                 MemberId = wi.AssignedTo!.Value,
-                TagName  = wt.Tag.Name,
+                TagName = wt.Tag.Name,
             }))
             .ToListAsync();
 
@@ -609,7 +625,7 @@ public class AtpaService : IAtpaService
     {
         var codes = new List<string>();
         var parts = new List<string>();
-        var prms  = new Dictionary<string, string>
+        var prms = new Dictionary<string, string>
         {
             ["explicitMatchCount"] = explicitMatchCount.ToString(),
             ["inferredMatchCount"] = inferredMatchCount.ToString(),

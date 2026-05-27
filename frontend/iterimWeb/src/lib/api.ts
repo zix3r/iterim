@@ -1,3 +1,5 @@
+import { translations, isLanguage, DEFAULT_LANGUAGE, type Language, type TranslationKey } from '@/i18n/translations';
+
 // Tipai, atitinkantys C# DTOs
 export interface Organization {
   id: number;
@@ -364,13 +366,33 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5229/api';
 let isRefreshing = false;
 let refreshQueue: Array<(ok: boolean) => void> = [];
 
-// Patogus žodynas, verčiantis HTTP kodus į žmogui suprantamą anglų kalbą
-const HTTP_ERROR_MESSAGES: Record<number, string> = {
-  400: "Bad request. Please check your input and try again.",
-  403: "You do not have permission to perform this action.",
-  404: "The requested resource was not found.",
-  409: "Conflict detected. This action cannot be completed in the current state.",
-  500: "An unexpected server error occurred. Please try again later.",
+const LANGUAGE_STORAGE_KEY = 'iterim_language'; // matches LanguageContext
+
+function currentLanguage(): Language {
+  try {
+    const raw = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return isLanguage(raw) ? raw : DEFAULT_LANGUAGE;
+  } catch {
+    return DEFAULT_LANGUAGE;
+  }
+}
+
+const ERROR_CODE_KEYS: Record<string, TranslationKey> = {
+  UNAUTHENTICATED: 'errors.unauthenticated',
+  FORBIDDEN: 'errors.forbidden',
+  NOT_FOUND: 'errors.notFound',
+  VALIDATION: 'errors.validation',
+  CONFLICT: 'errors.conflict',
+  INTERNAL: 'errors.unexpected',
+};
+
+const STATUS_KEYS: Record<number, TranslationKey> = {
+  400: 'errors.validation',
+  401: 'errors.unauthenticated',
+  403: 'errors.forbidden',
+  404: 'errors.notFound',
+  409: 'errors.conflict',
+  500: 'errors.unexpected',
 };
 
 export async function fetchWithAuth(
@@ -423,40 +445,31 @@ export async function fetchWithAuth(
 // Helper to extract error message from API response
 async function getErrorMessage(response: Response): Promise<string> {
   const status = response.status;
-  let backendMessage = "";
+  const lang = currentLanguage();
+  let code: string | undefined;
+  let backendMessage = '';
 
   try {
-    const text = await response.text();
-    const json = JSON.parse(text);
+    const json = JSON.parse(await response.text());
+    code = typeof json.code === 'string' ? json.code : undefined;
 
-    // Supports both { errors: ["..."] } and ModelState { errors: { field: ["..."] } }
-    if (Array.isArray(json.errors) && json.errors.length > 0) {
-      return String(json.errors[0]);
-    }
-
+    // Field-level (ModelState) validation: keep the specific field error.
+    if (Array.isArray(json.errors) && json.errors.length > 0) return String(json.errors[0]);
     if (json.errors && typeof json.errors === 'object') {
-      const firstErrorKey = Object.keys(json.errors)[0];
-      const firstError = json.errors[firstErrorKey];
-      if (Array.isArray(firstError) && firstError.length > 0) {
-        return String(firstError[0]);
-      }
-      if (typeof firstError === 'string' && firstError.length > 0) {
-        return firstError;
-      }
+      const first = json.errors[Object.keys(json.errors)[0]];
+      if (Array.isArray(first) && first.length > 0) return String(first[0]);
+      if (typeof first === 'string' && first.length > 0) return first;
     }
-
-    backendMessage = json.message || json.title || text;
+    backendMessage = json.message || json.title || '';
   } catch {
-    // Ignoruojame, jei ne JSON
+    /* not JSON */
   }
 
-  // Jei gavome 500 klaidą, slepiame techninį tekstą nuo vartotojo
-  if (status === 500) {
-    return HTTP_ERROR_MESSAGES[500];
-  }
+  // Prefer a stable code, then HTTP status — both localize cleanly.
+  const key = (code && ERROR_CODE_KEYS[code]) || STATUS_KEYS[status];
+  if (key) return translations[lang][key];
 
-  // Grąžiname backend'o žinutę arba mūsų paruoštą universalų tekstą
-  return backendMessage || HTTP_ERROR_MESSAGES[status] || "An unexpected error occurred.";
+  return backendMessage || translations[lang]['errors.unexpected'];
 }
 
 // ── API helpers ───────────────────────────────────────────────────────────────
