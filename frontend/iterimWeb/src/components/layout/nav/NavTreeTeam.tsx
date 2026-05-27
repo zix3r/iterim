@@ -36,12 +36,11 @@ export function NavTreeTeam({ team, orgId, productId }: Props) {
           <NavRow to={`${base}/backlog`} label={t('layout.breadcrumbBacklog')} icon={ClipboardList} depth={5} />
           <NavRow to={`${base}/board`} label={t('layout.breadcrumbBoard')} icon={LayoutGrid} depth={5} />
           
-          {/* NAUJAS MYGTUKAS: Quarter Plan */}
-          <NavRow 
-            to={`${base}/quarter`} 
-            label="Quarter Plan" 
-            icon={CalendarRange} 
-            depth={5} 
+          <NavRow
+            to={`${base}/quarter`}
+            label={t('quarterPlan.recentPageLabel')}
+            icon={CalendarRange}
+            depth={5}
           />
 
           <NavRow to={`${base}/metrics`} label={t('layout.breadcrumbMetrics')} icon={BarChart2} depth={5} />
